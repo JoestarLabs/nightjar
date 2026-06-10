@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Nightjar</string>
+
+    <!-- Hemskärm -->
+    <string name="timer_idle_hint">Ange en tid för att låsa skärmen</string>
+    <string name="btn_start_timer">Starta timer</string>
+    <string name="btn_stop_timer">Stoppa timer</string>
+    <string name="status_running">Timer aktiv</string>
+    <string name="status_idle">Redo</string>
+    <string name="status_finished">Låser skärmen…</string>
+
+    <!-- Förinställda tider -->
+    <string name="preset_5m">5 min</string>
+    <string name="preset_15m">15 min</string>
+    <string name="preset_30m">30 min</string>
+    <string name="preset_1h">1 timme</string>
+
+    <!-- Timervisning -->
+    <string name="timer_format_hms">%1$02d:%2$02d:%3$02d</string>
+    <string name="timer_format_ms">%1$02d:%2$02d</string>
+
+    <!-- Avisering -->
+    <string name="notification_channel_name">Skärmlåstimer</string>
+    <string name="notification_channel_description">Visar nedräkning innan skärmen låses</string>
+    <string name="notification_title">Skärmen låses om…</string>
+    <string name="notification_action_cancel">Avbryt</string>
+    <string name="notification_finished">Låser skärmen nu</string>
+
+    <!-- Tillgänglighetstjänst -->
+    <string name="accessibility_service_label">Nightjar skärmlås</string>
+    <string name="accessibility_service_description">
+        Nightjar använder den här behörigheten enbart för att låsa skärmen när timern är slut.
+        Appen läser, spelar inte in eller skickar ingen skärminnehåll eller personuppgifter.
+        Fingeravtryck och ansigtsigenkänning fungerar fortfarande efter låsning.
+    </string>
+
+    <!-- Behörighetsdialoger -->
+    <string name="dialog_notification_title">Tillåt aviseringar</string>
+    <string name="dialog_notification_body">
+        Nightjar behöver visa en beständig avisering medan timern är aktiv
+        för att kunna räkna ned tillförlitligt i bakgrunden.
+    </string>
+    <string name="dialog_accessibility_title">Aktivera skärmlåsåtkomst</string>
+    <string name="dialog_accessibility_body">
+        För att låsa skärmen när timern slutar behöver Nightjar en speciell behörighet:
+        tillgänglighetstjänsten. Den används enbart för att utlösa skärmlåset – inget annat.
+        Appen kan inte läsa din skärm eller komma åt dina uppgifter.
+        Du skickas till Android-inställningar för att aktivera den.
+    </string>
+    <string name="dialog_btn_allow">Tillåt</string>
+    <string name="dialog_btn_open_settings">Öppna inställningar</string>
+    <string name="dialog_btn_not_now">Inte nu</string>
+
+    <!-- Inställningar -->
+    <string name="settings_title">Inställningar</string>
+    <string name="settings_section_language">Språk</string>
+    <string name="settings_language_system">Systemets standard</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_sv">Svenska</string>
+    <string name="settings_section_permissions">Behörigheter</string>
+    <string name="settings_perm_accessibility">Tillgänglighetstjänst</string>
+    <string name="settings_perm_accessibility_desc">Krävs för att låsa skärmen när timern slutar</string>
+    <string name="settings_perm_accessibility_enabled">Aktiverad</string>
+    <string name="settings_perm_accessibility_disabled">Inaktiverad — tryck för att aktivera</string>
+    <string name="settings_perm_notification">Aviseringar</string>
+    <string name="settings_perm_notification_desc">Visa en nedräkning medan timern är aktiv</string>
+    <string name="settings_section_about">Om appen</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_license">Öppen källkod-licenser</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Hem</string>
+    <string name="nav_settings">Inställningar</string>
+
+    <!-- Innehållsbeskrivningar -->
+    <string name="cd_timer_dial">Timerurval — dra för att justera</string>
+    <string name="cd_lock_icon">Lås</string>
+    <string name="cd_settings_icon">Inställningar</string>
+    <string name="cd_back">Tillbaka</string>
+</resources>

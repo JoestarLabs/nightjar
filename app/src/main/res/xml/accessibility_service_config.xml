@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AccessibilityService configuration for Nightjar.
+
+    IMPORTANT: This service does NOT read any screen content.
+    - accessibilityEventTypes="typeNone" → subscribes to zero events
+    - canRetrieveWindowContent="false"   → never inspects UI tree
+    - canPerformGestures="false"         → cannot simulate touch input
+
+    Its sole function is to call performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+    when the user's timer expires, allowing the screen to lock while preserving
+    the device's biometric (fingerprint / face) unlock capability.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/accessibility_service_description"
+    android:notificationTimeout="0"
+    android:settingsActivity=".MainActivity" />

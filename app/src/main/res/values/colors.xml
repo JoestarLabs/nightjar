@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Zen palette surface colors (used in XML theme splash/windowBackground) -->
+    <color name="bamboo_green_40">#FF006D3D</color>
+    <color name="bamboo_green_80">#FF5FE09A</color>
+    <color name="washi_surface">#FFF8F5EF</color>
+    <color name="ink_surface">#FF111210</color>
+    <color name="transparent">#00000000</color>
+</resources>

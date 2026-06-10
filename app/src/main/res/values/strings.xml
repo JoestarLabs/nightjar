@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Nightjar</string>
+
+    <!-- Home Screen -->
+    <string name="timer_idle_hint">Set a timer to lock your screen</string>
+    <string name="btn_start_timer">Start timer</string>
+    <string name="btn_stop_timer">Stop timer</string>
+    <string name="status_running">Timer running</string>
+    <string name="status_idle">Ready</string>
+    <string name="status_finished">Locking screen…</string>
+
+    <!-- Preset chips -->
+    <string name="preset_5m">5 min</string>
+    <string name="preset_15m">15 min</string>
+    <string name="preset_30m">30 min</string>
+    <string name="preset_1h">1 hour</string>
+
+    <!-- Timer display -->
+    <string name="timer_format_hms">%1$02d:%2$02d:%3$02d</string>
+    <string name="timer_format_ms">%1$02d:%2$02d</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Lock Timer</string>
+    <string name="notification_channel_description">Shows the active countdown before your screen locks</string>
+    <string name="notification_title">Screen locking in…</string>
+    <string name="notification_action_cancel">Cancel</string>
+    <string name="notification_finished">Locking screen now</string>
+
+    <!-- Accessibility service -->
+    <string name="accessibility_service_label">Nightjar Screen Lock</string>
+    <string name="accessibility_service_description">
+        Nightjar uses this permission only to lock your screen when the timer expires.
+        It does not read, record, or transmit any screen content or personal data.
+        Your fingerprint and face unlock remain fully functional after locking.
+    </string>
+
+    <!-- Permission dialogs -->
+    <string name="dialog_notification_title">Allow notifications</string>
+    <string name="dialog_notification_body">
+        Nightjar needs to show a persistent notification while the timer is running,
+        so it can count down reliably in the background.
+    </string>
+    <string name="dialog_accessibility_title">Enable screen-lock access</string>
+    <string name="dialog_accessibility_body">
+        To lock your screen when the timer ends, Nightjar needs one special permission:
+        the Accessibility Service. This lets the app trigger the lock screen — and nothing else.
+        It cannot read your screen or access your data.
+        You will be taken to Android Settings to enable it.
+    </string>
+    <string name="dialog_btn_allow">Allow</string>
+    <string name="dialog_btn_open_settings">Open Settings</string>
+    <string name="dialog_btn_not_now">Not now</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_language">Language</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_sv">Svenska</string>
+    <string name="settings_section_permissions">Permissions</string>
+    <string name="settings_perm_accessibility">Accessibility service</string>
+    <string name="settings_perm_accessibility_desc">Required to lock the screen when the timer ends</string>
+    <string name="settings_perm_accessibility_enabled">Enabled</string>
+    <string name="settings_perm_accessibility_disabled">Disabled — tap to enable</string>
+    <string name="settings_perm_notification">Notifications</string>
+    <string name="settings_perm_notification_desc">Show a countdown notification while the timer runs</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_license">Open-source licenses</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_timer_dial">Timer duration dial — drag to adjust</string>
+    <string name="cd_lock_icon">Lock</string>
+    <string name="cd_settings_icon">Settings</string>
+    <string name="cd_back">Back</string>
+</resources>

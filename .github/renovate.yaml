@@ -1,0 +1,19 @@
+$schema: https://docs.renovatebot.com/renovate-schema.json
+
+extends:
+  - config:recommended
+
+dependencyDashboard: true
+
+# Run checks weekly on Monday mornings
+schedule:
+  - "before 8am on Monday"
+
+# Apply a label to all Renovate PRs
+labels:
+  - "dependencies"
+
+packageRules:
+  - matchPackagePatterns:
+      - "*"
+    groupName: "all dependencies"

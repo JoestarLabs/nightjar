@@ -1,0 +1,48 @@
+# Gradle
+.gradle/
+**/build/
+build/
+/local.properties
+
+# Android Studio / IntelliJ IDEA
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/navEditor.xml
+.idea/deviceStreaming.xml
+.idea/deploymentTargetSelector.xml
+.idea/compiler.xml
+.idea/modules.xml
+*.iml
+
+# NDK / C++
+.externalNativeBuild/
+.cxx/
+ndkBuild/
+
+# System / OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Built artifacts
+*.apk
+*.aar
+*.aab
+*.ap_
+
+# Kotlin compiler files
+.kotlin/
+*.kotlin_module
+
+# Keystore and signing files (CRITICAL: Never commit these)
+*.keystore
+*.jks
+*.keystore.b64
+*.jks.b64
+keystore/*.keystore
+keystore/*.jks
