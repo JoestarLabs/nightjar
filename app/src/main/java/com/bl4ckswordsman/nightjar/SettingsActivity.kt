@@ -1,33 +1,24 @@
 package com.bl4ckswordsman.nightjar
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import com.bl4ckswordsman.nightjar.ui.screen.HomeScreen
+import com.bl4ckswordsman.nightjar.ui.screen.SettingsScreen
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
-import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
-
-    private val timerViewModel: TimerViewModel by viewModels()
-
+class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             NightjarTheme {
-                HomeScreen(
-                    viewModel = timerViewModel,
-                    onNavigateToSettings = {
-                        startActivity(Intent(this, SettingsActivity::class.java))
-                    },
+                SettingsScreen(
+                    onNavigateBack = { finish() },
                     modifier = Modifier.fillMaxSize()
                 )
             }
