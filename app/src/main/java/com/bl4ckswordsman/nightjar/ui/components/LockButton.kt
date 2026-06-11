@@ -3,6 +3,7 @@ package com.bl4ckswordsman.nightjar.ui.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
@@ -61,6 +63,19 @@ fun LockButton(
         label = "lock_btn_scale"
     )
 
+    val cornerPercent by animateIntAsState(
+        targetValue = when {
+            isLocked  -> 8      // Shield shape (8% corner radius)
+            isRunning -> 18     // Warning squircle (18% corner radius)
+            else      -> 50     // Standard pill (50% corner radius)
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness    = Spring.StiffnessLow,
+        ),
+        label = "btn_shape_corners"
+    )
+
     val containerColor = when {
         isLocked  -> MaterialTheme.colorScheme.surfaceVariant
         isRunning -> MaterialTheme.colorScheme.errorContainer
@@ -76,6 +91,7 @@ fun LockButton(
         onClick = onClick,
         containerColor = containerColor,
         contentColor   = contentColor,
+        shape          = RoundedCornerShape(percent = cornerPercent),
         modifier = modifier.scale(scale),
         icon = {
             AnimatedContent(

@@ -1,10 +1,12 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -45,15 +47,33 @@ fun PresetChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier,
     ) {
+        val anySelected = presets.any { selectedSeconds == it.seconds }
+
         presets.forEach { preset ->
             val isSelected = selectedSeconds == preset.seconds
+            
+            val targetScale = when {
+                isSelected -> 1.12f
+                anySelected -> 0.94f
+                else -> 1.0f
+            }
+
             val scale by animateFloatAsState(
-                targetValue = if (isSelected) 1.08f else 1f,
+                targetValue = targetScale,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessMedium,
                 ),
                 label = "chip_scale_${preset.seconds}"
+            )
+
+            val yOffset by animateDpAsState(
+                targetValue = if (isSelected) (-4).dp else 0.dp,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness    = Spring.StiffnessMedium,
+                ),
+                label = "chip_y_offset_${preset.seconds}"
             )
 
             FilterChip(
@@ -78,6 +98,7 @@ fun PresetChips(
                 ),
                 modifier = Modifier
                     .scale(scale)
+                    .offset(y = yOffset)
                     .padding(vertical = 2.dp),
             )
         }

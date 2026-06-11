@@ -1,5 +1,6 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,7 +46,7 @@ fun StatusChip(
         else        -> stringResource(R.string.status_idle)
     }
 
-    // Pulse animation for running state
+    // Pulse and breathing transitions
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -55,6 +57,18 @@ fun StatusChip(
         ),
         label = "status_pulse"
     )
+
+    val breatheScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue  = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "status_breathe"
+    )
+
+    val currentScale = if (isRunning || isFinishing) breatheScale else 1f
 
     val chipColors = AssistChipDefaults.assistChipColors(
         containerColor = when {
@@ -88,7 +102,10 @@ fun StatusChip(
         },
         colors = chipColors,
         border = null,
-        modifier = modifier,
+        modifier = modifier.graphicsLayer {
+            scaleX = currentScale
+            scaleY = currentScale
+        },
     )
 }
 
