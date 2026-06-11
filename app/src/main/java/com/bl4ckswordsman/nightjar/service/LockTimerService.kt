@@ -6,9 +6,13 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.bl4ckswordsman.nightjar.MainActivity
 import com.bl4ckswordsman.nightjar.NightjarApp
 import com.bl4ckswordsman.nightjar.R
@@ -78,7 +82,7 @@ class LockTimerService : Service() {
         }
 
         // Post initial foreground notification so the service is promoted immediately
-        startForeground(NOTIFICATION_ID, buildNotification(durationSeconds, startedAt + durationSeconds * 1_000))
+        startForeground(NOTIFICATION_ID, buildNotification(durationSeconds, startedAt + durationSeconds * 1_000, durationSeconds))
 
         timerJob = serviceScope.launch {
             var remaining = durationSeconds
@@ -99,6 +103,7 @@ class LockTimerService : Service() {
                         startedAtMillis = startedAt
                     )
                 )
+                nm.notify(NOTIFICATION_ID, buildNotification(durationSeconds, startedAt + durationSeconds * 1_000, remaining))
             }
             if (isActive) onTimerExpired()
         }
@@ -150,7 +155,7 @@ class LockTimerService : Service() {
         return createConfigurationContext(config)
     }
 
-    private fun buildNotification(durationSeconds: Long, countdownEndEpochMs: Long): Notification {
+    private fun buildNotification(durationSeconds: Long, countdownEndEpochMs: Long, remainingSeconds: Long): Notification {
         val localizedContext = getLocalizedContext()
         val tapIntent = PendingIntent.getActivity(
             this, 0,
@@ -166,28 +171,72 @@ class LockTimerService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val builder = NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
-            .setSmallIcon(R.drawable.ic_lock_notification)
-            .setContentTitle(localizedContext.getString(R.string.notification_title))
-            .setWhen(countdownEndEpochMs)
-            .setUsesChronometer(true)
-            .setChronometerCountDown(true)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setShowWhen(true)
-            .setContentIntent(tapIntent)
-            .addAction(
-                R.drawable.ic_cancel,
+        if (Build.VERSION.SDK_INT >= 36) {
+            val progressStyle = Notification.ProgressStyle()
+                .setProgress((durationSeconds - remainingSeconds).toInt())
+                .addProgressSegment(
+                    Notification.ProgressStyle.Segment(durationSeconds.toInt())
+                        .setColor(ContextCompat.getColor(this, R.color.bamboo_green_40))
+                )
+                .setProgressEndIcon(
+                    Icon.createWithResource(this, R.drawable.ic_lock_notification)
+                        .setTint(ContextCompat.getColor(this, R.color.notification_icon_tint))
+                )
+
+            val cancelAction = Notification.Action.Builder(
+                Icon.createWithResource(this, R.drawable.ic_cancel),
                 localizedContext.getString(R.string.notification_action_cancel),
                 cancelIntent
+            ).build()
+
+            return Notification.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
+                .setSmallIcon(R.drawable.ic_lock_notification)
+                .setContentTitle(localizedContext.getString(R.string.notification_title))
+                .setWhen(countdownEndEpochMs)
+                .setUsesChronometer(true)
+                .setChronometerCountDown(true)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(true)
+                .setContentIntent(tapIntent)
+                .setStyle(progressStyle)
+                .addAction(cancelAction)
+                .addExtras(android.os.Bundle().apply {
+                    putBoolean("android.requestPromotedOngoing", true)
+                })
+                .build()
+        } else {
+            val lockDrawable = ContextCompat.getDrawable(localizedContext, R.drawable.ic_lock_notification)
+            val lockBitmap = lockDrawable?.toBitmap(
+                width = 120,
+                height = 120,
+                config = android.graphics.Bitmap.Config.ARGB_8888
             )
 
-        // Request Live Update / Promoted Ongoing Notification (Android 16+)
-        builder.extras.apply {
-            putBoolean("android.requestPromotedOngoing", true)
-        }
+            val builder = NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
+                .setSmallIcon(R.drawable.ic_lock_notification)
+                .setContentTitle(localizedContext.getString(R.string.notification_title))
+                .setWhen(countdownEndEpochMs)
+                .setUsesChronometer(true)
+                .setChronometerCountDown(true)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(true)
+                .setContentIntent(tapIntent)
+                .setProgress(durationSeconds.toInt(), (durationSeconds - remainingSeconds).toInt(), false)
+                .setLargeIcon(lockBitmap)
+                .addAction(
+                    R.drawable.ic_cancel,
+                    localizedContext.getString(R.string.notification_action_cancel),
+                    cancelIntent
+                )
 
-        return builder.build()
+            builder.extras.apply {
+                putBoolean("android.requestPromotedOngoing", true)
+            }
+
+            return builder.build()
+        }
     }
 
     private fun buildFinishedNotification(): Notification {

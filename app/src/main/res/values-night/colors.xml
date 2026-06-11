@@ -2,4 +2,5 @@
 <resources>
     <!-- Background color for dark mode window startup / transition -->
     <color name="theme_window_background">@color/ink_surface</color>
+    <color name="notification_icon_tint">@color/washi_surface</color>
 </resources>
