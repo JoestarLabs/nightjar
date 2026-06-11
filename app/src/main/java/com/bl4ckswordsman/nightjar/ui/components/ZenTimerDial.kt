@@ -2,6 +2,7 @@ package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -13,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -86,6 +88,27 @@ fun ZenTimerDial(
 
     var dragCenter by remember { mutableFloatStateOf(0f) }
 
+    // ── Drag & tactile physics animations ──────────────────────────────────────
+    var isDragging by remember { mutableStateOf(false) }
+
+    val strokeWidth by animateDpAsState(
+        targetValue = if (isDragging) 26.dp else 20.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness    = Spring.StiffnessMedium,
+        ),
+        label = "dial_stroke_width"
+    )
+
+    val handleRadius by animateDpAsState(
+        targetValue = if (isDragging) 18.dp else 12.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness    = Spring.StiffnessMedium,
+        ),
+        label = "handle_radius"
+    )
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -102,6 +125,7 @@ fun ZenTimerDial(
                     detectDragGestures(
                         onDragStart = { offset ->
                             dragCenter = size.toPx() / 2f
+                            isDragging = true
                         },
                         onDrag = { change, _ ->
                             change.consume()
@@ -121,6 +145,7 @@ fun ZenTimerDial(
                             onSecondsChanged(newSeconds)
                         },
                         onDragEnd = {
+                            isDragging = false
                             // Spring-snap to the nearest second boundary
                             scope.launch {
                                 val snapped = sweepAnim.value
@@ -132,15 +157,18 @@ fun ZenTimerDial(
                                     )
                                 )
                             }
+                        },
+                        onDragCancel = {
+                            isDragging = false
                         }
                     )
                 }
         ) {
             val sweep = sweepAnim.value
-            drawDialTrack(surfaceVariant)
-            drawDialArc(sweep, primary, secondary)
+            drawDialTrack(surfaceVariant, strokeWidth.toPx())
+            drawDialArc(sweep, primary, secondary, strokeWidth.toPx())
             drawTickMarks(onSurface)
-            drawDragHandle(sweep, primary, onSurface)
+            drawDragHandle(sweep, primary, onSurface, handleRadius.toPx())
         }
 
         // Centre text: HH:MM:SS
@@ -154,19 +182,19 @@ fun ZenTimerDial(
 
 // ── Draw helpers ──────────────────────────────────────────────────────────────
 
-private fun DrawScope.drawDialTrack(color: Color) {
+private fun DrawScope.drawDialTrack(color: Color, strokeWidthPx: Float) {
     drawArc(
         color = color.copy(alpha = 0.35f),
         startAngle = -90f,
         sweepAngle = 360f,
         useCenter = false,
-        style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round),
+        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
         topLeft = Offset(20.dp.toPx(), 20.dp.toPx()),
         size = Size(size.width - 40.dp.toPx(), size.height - 40.dp.toPx()),
     )
 }
 
-private fun DrawScope.drawDialArc(sweep: Float, primary: Color, secondary: Color) {
+private fun DrawScope.drawDialArc(sweep: Float, primary: Color, secondary: Color, strokeWidthPx: Float) {
     if (sweep <= 0f) return
     val gradient = Brush.sweepGradient(
         0f   to secondary.copy(alpha = 0.6f),
@@ -178,7 +206,7 @@ private fun DrawScope.drawDialArc(sweep: Float, primary: Color, secondary: Color
         startAngle = -90f,
         sweepAngle = sweep.coerceIn(0f, 360f),
         useCenter = false,
-        style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round),
+        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
         topLeft = Offset(20.dp.toPx(), 20.dp.toPx()),
         size = Size(size.width - 40.dp.toPx(), size.height - 40.dp.toPx()),
     )
@@ -206,7 +234,7 @@ private fun DrawScope.drawTickMarks(color: Color) {
     }
 }
 
-private fun DrawScope.drawDragHandle(sweep: Float, primary: Color, onSurface: Color) {
+private fun DrawScope.drawDragHandle(sweep: Float, primary: Color, onSurface: Color, handleRadiusPx: Float) {
     val cx = size.width / 2f
     val cy = size.height / 2f
     val radius = size.width / 2f - 20.dp.toPx()
@@ -217,19 +245,19 @@ private fun DrawScope.drawDragHandle(sweep: Float, primary: Color, onSurface: Co
     // Shadow
     drawCircle(
         color = Color.Black.copy(alpha = 0.15f),
-        radius = 12.dp.toPx(),
+        radius = handleRadiusPx,
         center = Offset(hx + 1.dp.toPx(), hy + 2.dp.toPx()),
     )
     // Handle
     drawCircle(
         color = primary,
-        radius = 12.dp.toPx(),
+        radius = handleRadiusPx,
         center = Offset(hx, hy),
     )
     // Inner dot
     drawCircle(
         color = onSurface.copy(alpha = 0.15f),
-        radius = 4.dp.toPx(),
+        radius = (handleRadiusPx / 3f).coerceAtLeast(2.dp.toPx()),
         center = Offset(hx, hy),
     )
 }
