@@ -140,7 +140,17 @@ class LockTimerService : Service() {
      * [countdownEndEpochMs] = the wall-clock time when the timer reaches zero.
      * The OS renders the countdown in the notification without any Gradle-side polling.
      */
+    private fun getLocalizedContext(): Context {
+        val localeList = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
+        if (localeList.isEmpty) return this
+        val locale = localeList.get(0) ?: return this
+        val config = android.content.res.Configuration(resources.configuration)
+        config.setLocale(locale)
+        return createConfigurationContext(config)
+    }
+
     private fun buildNotification(durationSeconds: Long, countdownEndEpochMs: Long): Notification {
+        val localizedContext = getLocalizedContext()
         val tapIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MainActivity::class.java).apply {
@@ -155,9 +165,9 @@ class LockTimerService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        return NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
+        val builder = NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
             .setSmallIcon(R.drawable.ic_lock_notification)
-            .setContentTitle(getString(R.string.notification_title))
+            .setContentTitle(localizedContext.getString(R.string.notification_title))
             .setWhen(countdownEndEpochMs)
             .setUsesChronometer(true)
             .setChronometerCountDown(true)
@@ -167,18 +177,26 @@ class LockTimerService : Service() {
             .setContentIntent(tapIntent)
             .addAction(
                 R.drawable.ic_cancel,
-                getString(R.string.notification_action_cancel),
+                localizedContext.getString(R.string.notification_action_cancel),
                 cancelIntent
             )
-            .build()
+
+        // Request Live Update / Promoted Ongoing Notification (Android 16+)
+        builder.extras.apply {
+            putBoolean("android.requestPromotedOngoing", true)
+        }
+
+        return builder.build()
     }
 
-    private fun buildFinishedNotification(): Notification =
-        NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
+    private fun buildFinishedNotification(): Notification {
+        val localizedContext = getLocalizedContext()
+        return NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
             .setSmallIcon(R.drawable.ic_lock_notification)
-            .setContentTitle(getString(R.string.notification_finished))
+            .setContentTitle(localizedContext.getString(R.string.notification_finished))
             .setOngoing(false)
             .build()
+    }
 
     // ── Static helpers ────────────────────────────────────────────────────────
 

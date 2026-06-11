@@ -9,6 +9,9 @@ import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.service.LockTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,25 +34,23 @@ class TimerViewModel @Inject constructor(
     /** Live timer state — collect in composables with [androidx.lifecycle.compose.collectAsStateWithLifecycle]. */
     val timerState: StateFlow<TimerState> = repository.timerState
 
-    // ── Selected duration (dial / chips) ──────────────────────────────────────
-
-    private var _selectedSeconds: Long = 300L  // default 5 min
-    val selectedSeconds: Long get() = _selectedSeconds
+    private val _selectedSeconds = mutableStateOf(300L)
+    val selectedSeconds: Long get() = _selectedSeconds.value
 
     fun setSelectedSeconds(seconds: Long) {
-        _selectedSeconds = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
+        _selectedSeconds.value = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
     }
 
     // ── Commands ──────────────────────────────────────────────────────────────
 
     fun startTimer() {
-        if (_selectedSeconds <= 0) return
+        if (selectedSeconds <= 0) return
         ContextCompat.startForegroundService(
             context,
-            LockTimerService.startIntent(context, _selectedSeconds)
+            LockTimerService.startIntent(context, selectedSeconds)
         )
         viewModelScope.launch {
-            repository.preferencesDataSource.saveLastDuration(_selectedSeconds)
+            repository.preferencesDataSource.saveLastDuration(selectedSeconds)
         }
     }
 
@@ -71,7 +72,7 @@ class TimerViewModel @Inject constructor(
             repository.preferencesDataSource.preferences.collect { prefs ->
                 // Only update selected seconds if timer is not running
                 if (repository.currentState is TimerState.Idle) {
-                    _selectedSeconds = prefs.lastDurationSeconds
+                    setSelectedSeconds(prefs.lastDurationSeconds)
                 }
             }
         }

@@ -27,6 +27,7 @@
     <string name="notification_title">Screen locking in…</string>
     <string name="notification_action_cancel">Cancel</string>
     <string name="notification_finished">Locking screen now</string>
+    <string name="notification_short_critical">Active</string>
 
     <!-- Accessibility service -->
     <string name="accessibility_service_label">Nightjar Screen Lock</string>

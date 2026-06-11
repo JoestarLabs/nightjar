@@ -27,6 +27,7 @@
     <string name="notification_title">Skärmen låses om…</string>
     <string name="notification_action_cancel">Avbryt</string>
     <string name="notification_finished">Låser skärmen nu</string>
+    <string name="notification_short_critical">Aktiv</string>
 
     <!-- Tillgänglighetstjänst -->
     <string name="accessibility_service_label">Nightjar skärmlås</string>

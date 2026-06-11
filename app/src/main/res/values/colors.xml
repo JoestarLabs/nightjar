@@ -6,4 +6,5 @@
     <color name="washi_surface">#FFF8F5EF</color>
     <color name="ink_surface">#FF111210</color>
     <color name="transparent">#00000000</color>
+    <color name="theme_window_background">@color/washi_surface</color>
 </resources>
