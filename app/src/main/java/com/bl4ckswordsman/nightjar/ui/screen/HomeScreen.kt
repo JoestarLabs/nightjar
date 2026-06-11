@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
 package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.Manifest
@@ -7,12 +8,16 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,6 +102,44 @@ fun HomeScreen(
         label = "dial_elevation"
     )
 
+    // ── Title stretch/weight animation ─────────────────────────────────────────
+    val titleWidth = remember { Animatable(25f) }
+    val titleWeight = remember { Animatable(300f) }
+
+    LaunchedEffect(Unit) {
+        // Bounce the width (stretch) from 25f up to 150f and settle down at 120f
+        titleWidth.animateTo(
+            targetValue = 120f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness    = Spring.StiffnessLow,
+            )
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        // Animate weight from 300f (Light) to 800f (Extra Bold)
+        titleWeight.animateTo(
+            targetValue = 800f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness    = Spring.StiffnessLow,
+            )
+        )
+    }
+
+    val animatedTitleFontFamily = remember(titleWidth.value, titleWeight.value) {
+        FontFamily(
+            Font(
+                resId = R.font.google_sans_flex,
+                variationSettings = FontVariation.Settings(
+                    FontVariation.width(titleWidth.value),
+                    FontVariation.weight(titleWeight.value.toInt())
+                )
+            )
+        )
+    }
+
     // ── Dialogs ───────────────────────────────────────────────────────────────
     if (showNotifDialog) {
         NotificationPermissionDialog(
@@ -130,7 +173,7 @@ fun HomeScreen(
                     Text(
                         text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Light
+                            fontFamily = animatedTitleFontFamily
                         ),
                     )
                 },

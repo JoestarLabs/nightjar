@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.bl4ckswordsman.nightjar.ui.theme.NotoSerifJPFamily
+import com.bl4ckswordsman.nightjar.ui.theme.GoogleSansFlexFamily
 
 /**
  * Formats [seconds] as HH:MM:SS or MM:SS and displays it as a large
@@ -27,7 +27,7 @@ fun TimerText(
     Text(
         text = text,
         style = MaterialTheme.typography.displaySmall.copy(
-            fontFamily = NotoSerifJPFamily,
+            fontFamily = GoogleSansFlexFamily,
             fontWeight = if (isRunning) FontWeight.Normal else FontWeight.Light,
             color = if (isRunning) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurface,
