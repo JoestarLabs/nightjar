@@ -7,6 +7,7 @@
     <string name="timer_idle_hint">Ange en tid för att låsa skärmen</string>
     <string name="btn_start_timer">Starta timer</string>
     <string name="btn_stop_timer">Stoppa timer</string>
+    <string name="btn_commitment_locked">Timer låst</string>
     <string name="status_running">Timer aktiv</string>
     <string name="status_idle">Redo</string>
     <string name="status_finished">Låser skärmen…</string>
@@ -28,6 +29,10 @@
     <string name="notification_action_cancel">Avbryt</string>
     <string name="notification_finished">Låser skärmen nu</string>
     <string name="notification_short_critical">Aktiv</string>
+    <string name="notification_alert_channel_name">Timeraviseringar</string>
+    <string name="notification_alert_channel_description">Engångspåminnelse när 1 minut återstår av låstimern</string>
+    <string name="notification_alert_title">Skärmen låses snart</string>
+    <string name="notification_alert_one_minute">1 minut kvar — skärmen låses strax</string>
 
     <!-- Tillgänglighetstjänst -->
     <string name="accessibility_service_label">Nightjar skärmlås</string>
@@ -67,6 +72,9 @@
     <string name="settings_perm_accessibility_disabled">Inaktiverad — tryck för att aktivera</string>
     <string name="settings_perm_notification">Aviseringar</string>
     <string name="settings_perm_notification_desc">Visa en nedräkning medan timern är aktiv</string>
+    <string name="settings_section_timer_behaviour">Timerbeteende</string>
+    <string name="settings_commitment_mode_title">Åtagandeläge</string>
+    <string name="settings_commitment_mode_desc">När timern väl startat kan den inte stoppas</string>
     <string name="settings_section_about">Om appen</string>
     <string name="settings_about_version">Version %1$s</string>
     <string name="settings_about_license">Öppen källkod-licenser</string>

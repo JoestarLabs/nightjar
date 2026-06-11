@@ -67,6 +67,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
+    val commitmentMode by viewModel.commitmentMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val isRunning  = timerState is TimerState.Running
@@ -201,8 +202,10 @@ fun HomeScreen(
             LockButton(
                 isRunning   = isRunning,
                 isFinishing = isFinished,
+                isLocked    = isRunning && commitmentMode,
                 onClick = {
                     when {
+                        isRunning && commitmentMode -> { /* commitment mode: ignore stop */ }
                         isRunning -> viewModel.stopTimer()
                         !LockAccessibilityService.isEnabled() -> showAccessibilityDialog = true
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&

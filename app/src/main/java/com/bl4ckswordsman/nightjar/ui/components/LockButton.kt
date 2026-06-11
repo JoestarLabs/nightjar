@@ -41,11 +41,14 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
  * - Animated icon transition (lock → stop) via [AnimatedContent]
  * - Spring-eased scale on press for tactile feedback
  * - Subtle scale spring when transitioning between running/idle states
+ * - [isLocked] = true when commitment mode is active: button shows a locked state
+ *   and is visually muted to signal that cancellation is disabled.
  */
 @Composable
 fun LockButton(
     isRunning: Boolean,
     isFinishing: Boolean = false,
+    isLocked: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -58,24 +61,38 @@ fun LockButton(
         label = "lock_btn_scale"
     )
 
+    val containerColor = when {
+        isLocked  -> MaterialTheme.colorScheme.surfaceVariant
+        isRunning -> MaterialTheme.colorScheme.errorContainer
+        else      -> MaterialTheme.colorScheme.primaryContainer
+    }
+    val contentColor = when {
+        isLocked  -> MaterialTheme.colorScheme.onSurfaceVariant
+        isRunning -> MaterialTheme.colorScheme.onErrorContainer
+        else      -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
+
     ExtendedFloatingActionButton(
         onClick = onClick,
-        containerColor = if (isRunning) MaterialTheme.colorScheme.errorContainer
-                         else MaterialTheme.colorScheme.primaryContainer,
-        contentColor   = if (isRunning) MaterialTheme.colorScheme.onErrorContainer
-                         else MaterialTheme.colorScheme.onPrimaryContainer,
+        containerColor = containerColor,
+        contentColor   = contentColor,
         modifier = modifier.scale(scale),
         icon = {
             AnimatedContent(
-                targetState = isRunning,
+                targetState = Triple(isRunning, isLocked, isFinishing),
                 transitionSpec = {
                     (scaleIn(spring(Spring.DampingRatioMediumBouncy)) + fadeIn()) togetherWith
                     (scaleOut(spring(Spring.DampingRatioMediumBouncy)) + fadeOut())
                 },
                 label = "lock_icon_anim"
-            ) { running ->
+            ) { (running, locked, _) ->
+                val icon: ImageVector = when {
+                    locked  -> Icons.Rounded.Lock
+                    running -> Icons.Rounded.Stop
+                    else    -> Icons.Rounded.LockOpen
+                }
                 Icon(
-                    imageVector = if (running) Icons.Rounded.Stop else Icons.Rounded.Lock,
+                    imageVector = icon,
                     contentDescription = stringResource(R.string.cd_lock_icon),
                     modifier = Modifier.size(24.dp)
                 )
@@ -83,16 +100,19 @@ fun LockButton(
         },
         text = {
             AnimatedContent(
-                targetState = isRunning,
+                targetState = Triple(isRunning, isLocked, isFinishing),
                 transitionSpec = {
                     fadeIn() togetherWith fadeOut()
                 },
                 label = "lock_text_anim"
-            ) { running ->
+            ) { (running, locked, _) ->
                 Text(
                     text = stringResource(
-                        if (running) R.string.btn_stop_timer
-                        else         R.string.btn_start_timer
+                        when {
+                            locked  -> R.string.btn_commitment_locked
+                            running -> R.string.btn_stop_timer
+                            else    -> R.string.btn_start_timer
+                        }
                     ),
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -112,3 +132,10 @@ private fun LockButtonIdlePreview() {
 private fun LockButtonRunningPreview() {
     NightjarTheme { LockButton(isRunning = true, onClick = {}) }
 }
+
+@Preview
+@Composable
+private fun LockButtonLockedPreview() {
+    NightjarTheme { LockButton(isRunning = true, isLocked = true, onClick = {}) }
+}
+

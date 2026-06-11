@@ -36,6 +36,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -50,9 +51,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bl4ckswordsman.nightjar.BuildConfig
 import com.bl4ckswordsman.nightjar.R
+import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.service.LockAccessibilityService
+import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 
 data class LanguageOption(val tag: String, val labelRes: Int)
 
@@ -84,9 +89,13 @@ private fun RoundedCardContainer(
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
+    timerViewModel: TimerViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val localeManager = remember { context.getSystemService(LocaleManager::class.java) }
+    val commitmentMode by timerViewModel.commitmentMode.collectAsStateWithLifecycle()
+    val timerState by timerViewModel.timerState.collectAsStateWithLifecycle()
+    val timerIsRunning = timerState is TimerState.Running
 
     // Read current locale from LocaleManager
     var selectedLocaleTag by remember {
@@ -306,6 +315,40 @@ fun SettingsScreen(
                                 }
                             )
                         }
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ── Timer behaviour ───────────────────────────────────────
+            SettingsSectionHeader(stringResource(R.string.settings_section_timer_behaviour))
+
+            RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.settings_commitment_mode_title))
+                    },
+                    supportingContent = {
+                        Text(stringResource(R.string.settings_commitment_mode_desc))
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = commitmentMode,
+                            onCheckedChange = { timerViewModel.setCommitmentMode(it) },
+                            enabled = !timerIsRunning,
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 

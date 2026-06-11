@@ -29,9 +29,20 @@ class NightjarApp : Application() {
             enableLights(false)
             enableVibration(false)
         }.also { nm.createNotificationChannel(it) }
+
+        // ── One-shot alert channel (heads-up, fires once at 1-minute mark) ─
+        NotificationChannel(
+            CHANNEL_ALERT_ID,
+            getString(R.string.notification_alert_channel_name),
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = getString(R.string.notification_alert_channel_description)
+            setShowBadge(false)
+        }.also { nm.createNotificationChannel(it) }
     }
 
     companion object {
         const val CHANNEL_TIMER_ID = "nightjar_timer_v1"
+        const val CHANNEL_ALERT_ID = "nightjar_timer_alert_v1"
     }
 }

@@ -50,6 +50,9 @@ class LockTimerService : Service() {
     private var timerJob: Job? = null
     private val nm by lazy { getSystemService<NotificationManager>()!! }
 
+    /** Whether cancellation is locked for the current timer run. Set from the start intent. */
+    private var commitmentMode = false
+
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -58,9 +61,10 @@ class LockTimerService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 val durationSeconds = intent.getLongExtra(EXTRA_DURATION_SECONDS, 0L)
+                commitmentMode = intent.getBooleanExtra(EXTRA_COMMITMENT_MODE, false)
                 if (durationSeconds > 0) startTimer(durationSeconds)
             }
-            ACTION_STOP -> stopTimer()
+            ACTION_STOP -> if (!commitmentMode) stopTimer()
         }
         return START_NOT_STICKY
     }
@@ -75,6 +79,7 @@ class LockTimerService : Service() {
     private fun startTimer(durationSeconds: Long) {
         timerJob?.cancel()
         val startedAt = System.currentTimeMillis()
+        var alertFired = false
 
         // Persist so BootReceiver can resume if the device restarts
         serviceScope.launch {
@@ -104,6 +109,13 @@ class LockTimerService : Service() {
                     )
                 )
                 nm.notify(NOTIFICATION_ID, buildNotification(durationSeconds, startedAt + durationSeconds * 1_000, remaining))
+
+                // ── 1-minute remaining alert (fires exactly once) ──────────
+                if (remaining == ONE_MINUTE_SECONDS && !alertFired && durationSeconds > ONE_MINUTE_SECONDS) {
+                    alertFired = true
+                    val countdownEndEpochMs = startedAt + durationSeconds * 1_000
+                    postOneMinuteAlert(durationSeconds, countdownEndEpochMs, remaining)
+                }
             }
             if (isActive) onTimerExpired()
         }
@@ -138,6 +150,57 @@ class LockTimerService : Service() {
         }
     }
 
+    // ── 1-minute alert ────────────────────────────────────────────────────────
+
+    /**
+     * Fires the 1-minute remaining alert:
+     *
+     * - On **all API levels**: posts a short-lived heads-up notification on the high-importance
+     *   alert channel (`CHANNEL_ALERT_ID`). This is the most reliable way to visually alert
+     *   the user regardless of OS version.
+     *
+     * - On **Android 16+ (API 36)** additionally: updates the existing Live Update chip with
+     *   an amber segment colour as an in-chip visual cue. The chip's expand/pulse animation
+     *   itself is entirely system-controlled and cannot be triggered programmatically.
+     */
+    private fun postOneMinuteAlert(durationSeconds: Long, countdownEndEpochMs: Long, remainingSeconds: Long) {
+        // ── Heads-up alert (all API levels) ───────────────────────────────────
+        val localizedContext = getLocalizedContext()
+        val tapIntent = PendingIntent.getActivity(
+            this, 2,
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val alert = NotificationCompat.Builder(this, NightjarApp.CHANNEL_ALERT_ID)
+            .setSmallIcon(R.drawable.ic_lock_notification)
+            .setContentTitle(localizedContext.getString(R.string.notification_alert_title))
+            .setContentText(localizedContext.getString(R.string.notification_alert_one_minute))
+            .setContentIntent(tapIntent)
+            .setAutoCancel(true)
+            .build()
+
+        nm.notify(NOTIFICATION_ALERT_ID, alert)
+
+        // Auto-cancel after 5 s so the alert doesn't linger
+        serviceScope.launch {
+            delay(5_000)
+            nm.cancel(NOTIFICATION_ALERT_ID)
+        }
+
+        // ── Live Update chip colour change (Android 16+) ───────────────────
+        // Also update the chip to amber for one tick as an in-chip visual cue.
+        // setOnlyAlertOnce(false) is passed but the chip expand is system-determined.
+        if (Build.VERSION.SDK_INT >= 36) {
+            val urgentNotification = buildNotification(
+                durationSeconds, countdownEndEpochMs, remainingSeconds, alertOnce = false
+            )
+            nm.notify(NOTIFICATION_ID, urgentNotification)
+        }
+    }
+
     // ── Notification builders ──────────────────────────────────────────────────
 
     /**
@@ -155,7 +218,12 @@ class LockTimerService : Service() {
         return createConfigurationContext(config)
     }
 
-    private fun buildNotification(durationSeconds: Long, countdownEndEpochMs: Long, remainingSeconds: Long): Notification {
+    private fun buildNotification(
+        durationSeconds: Long,
+        countdownEndEpochMs: Long,
+        remainingSeconds: Long,
+        alertOnce: Boolean = true,
+    ): Notification {
         val localizedContext = getLocalizedContext()
         val tapIntent = PendingIntent.getActivity(
             this, 0,
@@ -172,39 +240,51 @@ class LockTimerService : Service() {
         )
 
         if (Build.VERSION.SDK_INT >= 36) {
+            val segmentColor = if (alertOnce) {
+                ContextCompat.getColor(this, R.color.bamboo_green_40)
+            } else {
+                // On the alert tick use an urgency colour so the chip visually changes
+                ContextCompat.getColor(this, R.color.notification_alert_color)
+            }
+
             val progressStyle = Notification.ProgressStyle()
                 .setProgress((durationSeconds - remainingSeconds).toInt())
                 .addProgressSegment(
                     Notification.ProgressStyle.Segment(durationSeconds.toInt())
-                        .setColor(ContextCompat.getColor(this, R.color.bamboo_green_40))
+                        .setColor(segmentColor)
                 )
                 .setProgressEndIcon(
                     Icon.createWithResource(this, R.drawable.ic_lock_notification)
                         .setTint(ContextCompat.getColor(this, R.color.notification_icon_tint))
                 )
 
-            val cancelAction = Notification.Action.Builder(
-                Icon.createWithResource(this, R.drawable.ic_cancel),
-                localizedContext.getString(R.string.notification_action_cancel),
-                cancelIntent
-            ).build()
-
-            return Notification.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
+            val builder = Notification.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
                 .setSmallIcon(R.drawable.ic_lock_notification)
                 .setContentTitle(localizedContext.getString(R.string.notification_title))
                 .setWhen(countdownEndEpochMs)
                 .setUsesChronometer(true)
                 .setChronometerCountDown(true)
                 .setOngoing(true)
-                .setOnlyAlertOnce(true)
+                .setOnlyAlertOnce(alertOnce)
                 .setShowWhen(true)
                 .setContentIntent(tapIntent)
                 .setStyle(progressStyle)
-                .addAction(cancelAction)
                 .addExtras(android.os.Bundle().apply {
                     putBoolean("android.requestPromotedOngoing", true)
                 })
-                .build()
+
+            // Only show Cancel action when commitment mode is off
+            if (!commitmentMode) {
+                builder.addAction(
+                    Notification.Action.Builder(
+                        Icon.createWithResource(this, R.drawable.ic_cancel),
+                        localizedContext.getString(R.string.notification_action_cancel),
+                        cancelIntent
+                    ).build()
+                )
+            }
+
+            return builder.build()
         } else {
             val lockDrawable = ContextCompat.getDrawable(localizedContext, R.drawable.ic_lock_notification)
             val lockBitmap = lockDrawable?.toBitmap(
@@ -225,11 +305,14 @@ class LockTimerService : Service() {
                 .setContentIntent(tapIntent)
                 .setProgress(durationSeconds.toInt(), (durationSeconds - remainingSeconds).toInt(), false)
                 .setLargeIcon(lockBitmap)
-                .addAction(
+
+            if (!commitmentMode) {
+                builder.addAction(
                     R.drawable.ic_cancel,
                     localizedContext.getString(R.string.notification_action_cancel),
                     cancelIntent
                 )
+            }
 
             builder.extras.apply {
                 putBoolean("android.requestPromotedOngoing", true)
@@ -253,13 +336,17 @@ class LockTimerService : Service() {
     companion object {
         const val ACTION_START = "com.bl4ckswordsman.nightjar.action.START_TIMER"
         const val ACTION_STOP  = "com.bl4ckswordsman.nightjar.action.STOP_TIMER"
-        const val EXTRA_DURATION_SECONDS = "extra_duration_seconds"
-        private const val NOTIFICATION_ID = 1001
+        const val EXTRA_DURATION_SECONDS  = "extra_duration_seconds"
+        const val EXTRA_COMMITMENT_MODE   = "extra_commitment_mode"
+        private const val NOTIFICATION_ID       = 1001
+        private const val NOTIFICATION_ALERT_ID = 1002
+        private const val ONE_MINUTE_SECONDS    = 60L
 
-        fun startIntent(context: Context, durationSeconds: Long): Intent =
+        fun startIntent(context: Context, durationSeconds: Long, commitmentMode: Boolean = false): Intent =
             Intent(context, LockTimerService::class.java).apply {
                 action = ACTION_START
                 putExtra(EXTRA_DURATION_SECONDS, durationSeconds)
+                putExtra(EXTRA_COMMITMENT_MODE, commitmentMode)
             }
 
         fun stopIntent(context: Context): Intent =

@@ -9,10 +9,10 @@ import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.service.LockTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,8 +37,18 @@ class TimerViewModel @Inject constructor(
     private val _selectedSeconds = mutableStateOf(300L)
     val selectedSeconds: Long get() = _selectedSeconds.value
 
+    private val _commitmentMode = MutableStateFlow(false)
+    /** Whether commitment mode (no-cancel) is currently enabled. */
+    val commitmentMode: StateFlow<Boolean> = _commitmentMode.asStateFlow()
+
     fun setSelectedSeconds(seconds: Long) {
         _selectedSeconds.value = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
+    }
+
+    fun setCommitmentMode(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.preferencesDataSource.saveCommitmentMode(enabled)
+        }
     }
 
     // ── Commands ──────────────────────────────────────────────────────────────
@@ -47,7 +57,7 @@ class TimerViewModel @Inject constructor(
         if (selectedSeconds <= 0) return
         ContextCompat.startForegroundService(
             context,
-            LockTimerService.startIntent(context, selectedSeconds)
+            LockTimerService.startIntent(context, selectedSeconds, _commitmentMode.value)
         )
         viewModelScope.launch {
             repository.preferencesDataSource.saveLastDuration(selectedSeconds)
@@ -55,6 +65,8 @@ class TimerViewModel @Inject constructor(
     }
 
     fun stopTimer() {
+        // No-op when commitment mode is active and the timer is running
+        if (_commitmentMode.value && repository.currentState is TimerState.Running) return
         context.startService(LockTimerService.stopIntent(context))
     }
 
@@ -65,11 +77,13 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    // ── Init: restore last-used duration ─────────────────────────────────────
+    // ── Init: restore last-used duration and commitment mode ──────────────────
 
     init {
         viewModelScope.launch {
             repository.preferencesDataSource.preferences.collect { prefs ->
+                // Restore commitment mode from DataStore
+                _commitmentMode.value = prefs.commitmentMode
                 // Only update selected seconds if timer is not running
                 if (repository.currentState is TimerState.Idle) {
                     setSelectedSeconds(prefs.lastDurationSeconds)

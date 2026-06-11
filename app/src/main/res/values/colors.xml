@@ -9,4 +9,6 @@
     <color name="theme_window_background">@color/washi_surface</color>
     <!-- Notification icon tint: adapts per theme so the icon is visible on the notification card -->
     <color name="notification_icon_tint">@color/ink_surface</color>
+    <!-- Alert segment colour: warm amber used on the 1-min remaining tick -->
+    <color name="notification_alert_color">#FFB03A</color>
 </resources>

@@ -7,6 +7,7 @@
     <string name="timer_idle_hint">Set a timer to lock your screen</string>
     <string name="btn_start_timer">Start timer</string>
     <string name="btn_stop_timer">Stop timer</string>
+    <string name="btn_commitment_locked">Timer locked</string>
     <string name="status_running">Timer running</string>
     <string name="status_idle">Ready</string>
     <string name="status_finished">Locking screen…</string>
@@ -28,6 +29,10 @@
     <string name="notification_action_cancel">Cancel</string>
     <string name="notification_finished">Locking screen now</string>
     <string name="notification_short_critical">Active</string>
+    <string name="notification_alert_channel_name">Timer alerts</string>
+    <string name="notification_alert_channel_description">One-time heads-up when 1 minute remains on the lock timer</string>
+    <string name="notification_alert_title">Screen locking soon</string>
+    <string name="notification_alert_one_minute">1 minute remaining — screen will lock shortly</string>
 
     <!-- Accessibility service -->
     <string name="accessibility_service_label">Nightjar Screen Lock</string>
@@ -67,6 +72,9 @@
     <string name="settings_perm_accessibility_disabled">Disabled — tap to enable</string>
     <string name="settings_perm_notification">Notifications</string>
     <string name="settings_perm_notification_desc">Show a countdown notification while the timer runs</string>
+    <string name="settings_section_timer_behaviour">Timer behaviour</string>
+    <string name="settings_commitment_mode_title">Commitment mode</string>
+    <string name="settings_commitment_mode_desc">Once started, the timer cannot be stopped</string>
     <string name="settings_section_about">About</string>
     <string name="settings_about_version">Version %1$s</string>
     <string name="settings_about_license">Open-source licenses</string>
