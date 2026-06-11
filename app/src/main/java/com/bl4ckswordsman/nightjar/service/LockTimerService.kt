@@ -141,7 +141,8 @@ class LockTimerService : Service() {
      * The OS renders the countdown in the notification without any Gradle-side polling.
      */
     private fun getLocalizedContext(): Context {
-        val localeList = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
+        val localeManager = getSystemService(android.app.LocaleManager::class.java)
+        val localeList = localeManager.applicationLocales
         if (localeList.isEmpty) return this
         val locale = localeList.get(0) ?: return this
         val config = android.content.res.Configuration(resources.configuration)
