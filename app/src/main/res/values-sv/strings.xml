@@ -61,6 +61,7 @@
 
     <!-- Inställningar -->
     <string name="settings_title">Inställningar</string>
+    <string name="settings_subtitle">Appinställningar och behörigheter</string>
     <string name="settings_section_language">Språk</string>
     <string name="settings_language_system">Systemets standard</string>
     <string name="settings_language_en">English</string>

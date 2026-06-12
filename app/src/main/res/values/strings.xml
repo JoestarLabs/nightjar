@@ -61,6 +61,7 @@
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">App preferences &amp; permissions</string>
     <string name="settings_section_language">Language</string>
     <string name="settings_language_system">System default</string>
     <string name="settings_language_en">English</string>
