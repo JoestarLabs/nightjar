@@ -8,16 +8,12 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,8 +21,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -45,6 +39,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +63,7 @@ import com.bl4ckswordsman.nightjar.ui.components.LockButton
 import com.bl4ckswordsman.nightjar.ui.components.NotificationPermissionDialog
 import com.bl4ckswordsman.nightjar.ui.components.PresetChips
 import com.bl4ckswordsman.nightjar.ui.components.StatusChip
+import com.bl4ckswordsman.nightjar.ui.components.AnimatedAppTitle
 import com.bl4ckswordsman.nightjar.ui.components.ZenTimerDial
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
@@ -111,43 +107,7 @@ fun HomeScreen(
         label = "dial_elevation"
     )
 
-    // ── Title stretch/weight animation ─────────────────────────────────────────
-    val titleWidth = remember { Animatable(25f) }
-    val titleWeight = remember { Animatable(300f) }
 
-    LaunchedEffect(Unit) {
-        // Bounce the width (stretch) from 25f up to 150f and settle down at 120f
-        titleWidth.animateTo(
-            targetValue = 120f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness    = Spring.StiffnessLow,
-            )
-        )
-    }
-
-    LaunchedEffect(Unit) {
-        // Animate weight from 300f (Light) to 800f (Extra Bold)
-        titleWeight.animateTo(
-            targetValue = 800f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness    = Spring.StiffnessLow,
-            )
-        )
-    }
-
-    val animatedTitleFontFamily = remember(titleWidth.value, titleWeight.value) {
-        FontFamily(
-            Font(
-                resId = R.font.google_sans_flex,
-                variationSettings = FontVariation.Settings(
-                    FontVariation.width(titleWidth.value),
-                    FontVariation.weight(titleWeight.value.toInt())
-                )
-            )
-        )
-    }
 
     // ── Settings gear spin & shape morphing ────────────────────────────────────
     var gearRotation by remember { mutableStateOf(0f) }
@@ -195,12 +155,7 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontFamily = animatedTitleFontFamily
-                        ),
-                    )
+                    AnimatedAppTitle()
                 },
                 actions = {
                     FilledTonalIconButton(
