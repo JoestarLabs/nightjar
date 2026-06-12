@@ -287,6 +287,7 @@ class LockTimerService : Service() {
             return builder.build()
         } else {
             val lockDrawable = ContextCompat.getDrawable(localizedContext, R.drawable.ic_lock_notification)
+            lockDrawable?.mutate()?.setTint(ContextCompat.getColor(this, R.color.notification_icon_tint))
             val lockBitmap = lockDrawable?.toBitmap(
                 width = 120,
                 height = 120,
