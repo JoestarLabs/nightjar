@@ -104,7 +104,11 @@ fun SettingsScreen(
     val timerIsRunning = timerState is TimerState.Running
     val presetsState by timerViewModel.presets.collectAsStateWithLifecycle()
 
+    val sunsetModeEnabled by timerViewModel.sunsetModeEnabled.collectAsStateWithLifecycle()
+    val sunsetDurationSeconds by timerViewModel.sunsetDurationSeconds.collectAsStateWithLifecycle()
+
     var showPresetsDialog by remember { mutableStateOf(false) }
+    var showOverlayDialog by remember { mutableStateOf(false) }
 
     // Read current locale from LocaleManager
     var selectedLocaleTag by remember {
@@ -327,6 +331,56 @@ fun SettingsScreen(
                             )
                         }
                 )
+
+                // Display over other apps (Overlay)
+                val overlayEnabled = Settings.canDrawOverlays(context)
+
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.settings_perm_overlay))
+                    },
+                    supportingContent = {
+                        Text(
+                            text = if (overlayEnabled)
+                                stringResource(R.string.settings_perm_accessibility_enabled)
+                            else
+                                stringResource(R.string.settings_perm_accessibility_disabled),
+                            color = if (overlayEnabled)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Warning,
+                            contentDescription = null,
+                            tint = if (overlayEnabled) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            imageVector = if (overlayEnabled) Icons.Rounded.CheckCircle
+                            else Icons.Rounded.Warning,
+                            contentDescription = null,
+                            tint = if (overlayEnabled) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val intent = Intent(
+                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                android.net.Uri.parse("package:${context.packageName}")
+                            )
+                            context.startActivity(intent)
+                        }
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -383,6 +437,99 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .clickable { showPresetsDialog = true }
                 )
+
+                // Sunset warning mode toggle
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.settings_sunset_mode_title))
+                    },
+                    supportingContent = {
+                        Text(stringResource(R.string.settings_sunset_mode_desc))
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = sunsetModeEnabled,
+                            onCheckedChange = { isChecked ->
+                                if (isChecked && !Settings.canDrawOverlays(context)) {
+                                    showOverlayDialog = true
+                                }
+                                timerViewModel.setSunsetModeEnabled(isChecked)
+                            },
+                            enabled = !timerIsRunning,
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Sunset duration selector
+                if (sunsetModeEnabled) {
+                    var isDurationMenuExpanded by remember { mutableStateOf(false) }
+
+                    ListItem(
+                        headlineContent = {
+                            Text(stringResource(R.string.settings_sunset_duration_title))
+                        },
+                        supportingContent = {
+                            Text(stringResource(R.string.settings_sunset_duration_format, sunsetDurationSeconds))
+                        },
+                        leadingContent = {
+                            Icon(
+                                Icons.Rounded.Edit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        trailingContent = {
+                            Box {
+                                androidx.compose.material3.Surface(
+                                    onClick = { if (!timerIsRunning) isDurationMenuExpanded = true },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.settings_sunset_duration_format, sunsetDurationSeconds),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                    )
+                                }
+
+                                androidx.compose.material3.DropdownMenu(
+                                    expanded = isDurationMenuExpanded,
+                                    onDismissRequest = { isDurationMenuExpanded = false }
+                                ) {
+                                    listOf(15L, 30L, 45L, 60L).forEach { duration ->
+                                        androidx.compose.material3.DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.settings_sunset_duration_format, duration)) },
+                                            onClick = {
+                                                isDurationMenuExpanded = false
+                                                timerViewModel.setSunsetDurationSeconds(duration)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceBright
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !timerIsRunning) {
+                                isDurationMenuExpanded = true
+                            }
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -523,6 +670,45 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(
                     onClick = { showPresetsDialog = false }
+                ) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
+
+    if (showOverlayDialog) {
+        AlertDialog(
+            onDismissRequest = { showOverlayDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.dialog_overlay_title),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.dialog_overlay_body),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showOverlayDialog = false
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            android.net.Uri.parse("package:${context.packageName}")
+                        )
+                        context.startActivity(intent)
+                    }
+                ) {
+                    Text(stringResource(R.string.dialog_btn_open_settings))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showOverlayDialog = false }
                 ) {
                     Text(stringResource(android.R.string.cancel))
                 }

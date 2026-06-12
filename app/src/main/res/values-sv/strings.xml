@@ -102,4 +102,15 @@
     <string name="cd_lock_icon">Lås</string>
     <string name="cd_settings_icon">Inställningar</string>
     <string name="cd_back">Tillbaka</string>
+
+    <!-- Sunset Mode -->
+    <string name="settings_sunset_mode_title">Solnedgångsvarning</string>
+    <string name="settings_sunset_mode_desc">Täcker gradvis skärmen med en stigande våg innan låsning</string>
+    <string name="settings_sunset_duration_title">Varningstid</string>
+    <string name="settings_sunset_duration_format">%1$d sekunder</string>
+    <string name="settings_perm_overlay">Visa över andra appar</string>
+    <string name="settings_perm_overlay_desc">Krävs för att visa solnedgångsvarningen över andra appar</string>
+    <string name="dialog_overlay_title">Aktivera överlagrad varning</string>
+    <string name="dialog_overlay_body">För att visa varningen med den stigande vågen när timern slutar, behöver Nightjar behörighet att visas över andra appar. Du skickas till Android-inställningar för att aktivera den.</string>
+    <string name="sunset_warning_text">Tiden är nästan slut!</string>
 </resources>

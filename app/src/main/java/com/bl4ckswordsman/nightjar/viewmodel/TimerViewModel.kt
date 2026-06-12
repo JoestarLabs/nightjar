@@ -47,6 +47,16 @@ class TimerViewModel @Inject constructor(
     /** List of custom presets (in seconds). */
     val presets: StateFlow<List<Long>> = _presets.asStateFlow()
 
+    private val _sunsetModeEnabled = MutableStateFlow(true)
+
+    /** Whether sunset mode (overlay warning) is enabled. */
+    val sunsetModeEnabled: StateFlow<Boolean> = _sunsetModeEnabled.asStateFlow()
+
+    private val _sunsetDurationSeconds = MutableStateFlow(30L)
+
+    /** Duration in seconds of the sunset warning overlay. */
+    val sunsetDurationSeconds: StateFlow<Long> = _sunsetDurationSeconds.asStateFlow()
+
     fun setSelectedSeconds(seconds: Long) {
         _selectedSeconds.value = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
     }
@@ -60,6 +70,18 @@ class TimerViewModel @Inject constructor(
     fun saveCustomPresets(presetsMinutes: List<Long>) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveCustomPresets(presetsMinutes)
+        }
+    }
+
+    fun setSunsetModeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.preferencesDataSource.saveSunsetMode(enabled)
+        }
+    }
+
+    fun setSunsetDurationSeconds(seconds: Long) {
+        viewModelScope.launch {
+            repository.preferencesDataSource.saveSunsetDuration(seconds)
         }
     }
 
@@ -98,6 +120,9 @@ class TimerViewModel @Inject constructor(
                 _commitmentMode.value = prefs.commitmentMode
                 // Restore custom presets
                 _presets.value = prefs.customPresets
+                // Restore sunset settings
+                _sunsetModeEnabled.value = prefs.sunsetModeEnabled
+                _sunsetDurationSeconds.value = prefs.sunsetDurationSeconds
                 // Only update selected seconds if timer is not running
                 if (repository.currentState is TimerState.Idle) {
                     setSelectedSeconds(prefs.lastDurationSeconds)

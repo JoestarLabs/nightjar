@@ -7,6 +7,10 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -24,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -54,7 +59,54 @@ class LockTimerService : Service() {
     /** Whether cancellation is locked for the current timer run. Set from the start intent. */
     private var commitmentMode = false
 
+    private var overlayManager: ComposeOverlayManager? = null
+
+    // Sensor-based tilt detection
+    private val sensorManager by lazy { getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+    private var accelerometer: Sensor? = null
+    private var currentTilt = 0f
+
+    private val sensorListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent?) {
+            if (event == null || event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
+            
+            // X-axis value measures left/right tilt.
+            val x = event.values[0]
+
+            // Apply a low-pass filter to smooth the tilt changes:
+            currentTilt = currentTilt * 0.85f + x * 0.15f
+
+            if (overlayManager?.isShowing == true) {
+                // Map accelerometer X to a normalized tilt float (-1f to 1f)
+                val normalizedTilt = (currentTilt / 5.5f).coerceIn(-1f, 1f)
+                overlayManager?.updateTilt(normalizedTilt)
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+    }
+
+    private fun registerSensor() {
+        accelerometer?.let {
+            sensorManager.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_GAME)
+        }
+    }
+
+    private fun unregisterSensor() {
+        sensorManager.unregisterListener(sensorListener)
+    }
+
+    private fun hasOverlayPermission(): Boolean {
+        return android.provider.Settings.canDrawOverlays(this)
+    }
+
     // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    override fun onCreate() {
+        super.onCreate()
+        overlayManager = ComposeOverlayManager(this)
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -73,6 +125,9 @@ class LockTimerService : Service() {
 
     override fun onDestroy() {
         timerJob?.cancel()
+        unregisterSensor()
+        overlayManager?.dismiss()
+        overlayManager = null
         super.onDestroy()
     }
 
@@ -95,6 +150,10 @@ class LockTimerService : Service() {
         )
 
         timerJob = serviceScope.launch {
+            val prefs = timerRepository.preferencesDataSource.preferences.first()
+            val sunsetEnabled = prefs.sunsetModeEnabled
+            val sunsetDuration = prefs.sunsetDurationSeconds
+
             var remaining = durationSeconds
             timerRepository.updateState(
                 TimerState.Running(
@@ -103,6 +162,15 @@ class LockTimerService : Service() {
                     startedAtMillis = startedAt
                 )
             )
+
+            // Trigger overlay immediately if within warning window at start
+            if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
+                launch(Dispatchers.Main) {
+                    registerSensor()
+                    overlayManager?.show(remaining, sunsetDuration, currentTilt)
+                }
+            }
+
             while (remaining > 0 && isActive) {
                 delay(1_000)
                 remaining--
@@ -113,6 +181,18 @@ class LockTimerService : Service() {
                         startedAtMillis = startedAt
                     )
                 )
+
+                if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
+                    launch(Dispatchers.Main) {
+                        if (overlayManager?.isShowing == true) {
+                            overlayManager?.updateRemainingTime(remaining)
+                        } else {
+                            registerSensor()
+                            overlayManager?.show(remaining, sunsetDuration, currentTilt)
+                        }
+                    }
+                }
+
                 nm.notify(
                     NOTIFICATION_ID,
                     buildNotification(
@@ -129,13 +209,21 @@ class LockTimerService : Service() {
                     postOneMinuteAlert(durationSeconds, countdownEndEpochMs, remaining)
                 }
             }
-            if (isActive) onTimerExpired()
+            if (isActive) {
+                launch(Dispatchers.Main) {
+                    unregisterSensor()
+                    overlayManager?.dismiss()
+                }
+                onTimerExpired()
+            }
         }
     }
 
     private fun stopTimer() {
         timerJob?.cancel()
         timerJob = null
+        unregisterSensor()
+        overlayManager?.dismiss()
         serviceScope.launch {
             timerRepository.preferencesDataSource.clearActiveTimer()
         }
@@ -146,6 +234,11 @@ class LockTimerService : Service() {
 
     private fun onTimerExpired() {
         timerRepository.updateState(TimerState.Finished)
+
+        serviceScope.launch(Dispatchers.Main) {
+            unregisterSensor()
+            overlayManager?.dismiss()
+        }
 
         // Update notification to "Locking screen now" briefly
         nm.notify(NOTIFICATION_ID, buildFinishedNotification())

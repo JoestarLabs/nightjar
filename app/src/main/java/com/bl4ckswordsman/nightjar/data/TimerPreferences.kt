@@ -24,6 +24,8 @@ object TimerPreferenceKeys {
     val STARTED_AT_MILLIS = longPreferencesKey("started_at_millis")
     val COMMITMENT_MODE = booleanPreferencesKey("commitment_mode")
     val CUSTOM_PRESETS = stringPreferencesKey("custom_presets_string")
+    val SUNSET_MODE_ENABLED = booleanPreferencesKey("sunset_mode_enabled")
+    val SUNSET_DURATION_SECONDS = longPreferencesKey("sunset_duration_seconds")
 }
 
 /**
@@ -34,7 +36,9 @@ data class TimerPreferences(
     val lastDurationSeconds: Long = 300L,  // default: 5 minutes
     val startedAtMillis: Long = 0L,        // 0 means no active timer was persisted
     val commitmentMode: Boolean = false,   // when true, timer cannot be cancelled once started
-    val customPresets: List<Long> = listOf(300L, 900L, 1800L, 3600L) // custom presets (in seconds)
+    val customPresets: List<Long> = listOf(300L, 900L, 1800L, 3600L), // custom presets (in seconds)
+    val sunsetModeEnabled: Boolean = true,  // default: enabled
+    val sunsetDurationSeconds: Long = 30L   // default: 30 seconds
 )
 
 @Singleton
@@ -53,6 +57,8 @@ class TimerPreferencesDataSource @Inject constructor(
             startedAtMillis = prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] ?: 0L,
             commitmentMode = prefs[TimerPreferenceKeys.COMMITMENT_MODE] ?: false,
             customPresets = presetsList,
+            sunsetModeEnabled = prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] ?: true,
+            sunsetDurationSeconds = prefs[TimerPreferenceKeys.SUNSET_DURATION_SECONDS] ?: 30L,
         )
     }
 
@@ -88,6 +94,20 @@ class TimerPreferencesDataSource @Inject constructor(
     suspend fun saveCustomPresets(presetsMinutes: List<Long>) {
         context.dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.CUSTOM_PRESETS] = presetsMinutes.joinToString(",")
+        }
+    }
+
+    /** Persist the sunset mode enabled setting. */
+    suspend fun saveSunsetMode(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] = enabled
+        }
+    }
+
+    /** Persist the sunset mode warning duration. */
+    suspend fun saveSunsetDuration(seconds: Long) {
+        context.dataStore.edit { prefs ->
+            prefs[TimerPreferenceKeys.SUNSET_DURATION_SECONDS] = seconds
         }
     }
 }

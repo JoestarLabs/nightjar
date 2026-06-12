@@ -102,4 +102,15 @@
     <string name="cd_lock_icon">Lock</string>
     <string name="cd_settings_icon">Settings</string>
     <string name="cd_back">Back</string>
+
+    <!-- Sunset Mode -->
+    <string name="settings_sunset_mode_title">Sunset warning</string>
+    <string name="settings_sunset_mode_desc">Gradually covers the screen with a rising wave before locking</string>
+    <string name="settings_sunset_duration_title">Warning duration</string>
+    <string name="settings_sunset_duration_format">%1$d seconds</string>
+    <string name="settings_perm_overlay">Display over other apps</string>
+    <string name="settings_perm_overlay_desc">Required to show the sunset warning over other apps</string>
+    <string name="dialog_overlay_title">Enable Overlay Warning</string>
+    <string name="dialog_overlay_body">To show the rising wave warning overlay when the timer is ending, Nightjar needs permission to display over other apps. You will be redirected to Android Settings to enable it.</string>
+    <string name="sunset_warning_text">Time is almost up!</string>
 </resources>
