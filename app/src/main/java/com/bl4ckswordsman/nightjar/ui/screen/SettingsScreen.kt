@@ -55,8 +55,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bl4ckswordsman.nightjar.BuildConfig
@@ -110,6 +112,22 @@ fun SettingsScreen(
     var showPresetsDialog by remember { mutableStateOf(false) }
     var showOverlayDialog by remember { mutableStateOf(false) }
 
+    // Trigger state to force recomposition when returning to settings screen (on resume)
+    var refreshTrigger by remember { mutableStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                refreshTrigger++
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     // Read current locale from LocaleManager
     var selectedLocaleTag by remember {
         mutableStateOf(
@@ -117,7 +135,7 @@ fun SettingsScreen(
         )
     }
 
-    val accessibilityEnabled = LockAccessibilityService.isEnabled()
+    val accessibilityEnabled = remember(refreshTrigger) { LockAccessibilityService.isEnabled() }
     var isMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -232,16 +250,26 @@ fun SettingsScreen(
                         Text(stringResource(R.string.settings_perm_accessibility))
                     },
                     supportingContent = {
-                        Text(
-                            text = if (accessibilityEnabled)
-                                stringResource(R.string.settings_perm_accessibility_enabled)
-                            else
-                                stringResource(R.string.settings_perm_accessibility_disabled),
-                            color = if (accessibilityEnabled)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.error,
-                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_perm_accessibility_desc),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (accessibilityEnabled)
+                                    stringResource(R.string.settings_perm_accessibility_enabled)
+                                else
+                                    stringResource(R.string.settings_perm_accessibility_disabled),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (accessibilityEnabled)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     },
                     leadingContent = {
                         Icon(
@@ -275,7 +303,7 @@ fun SettingsScreen(
                 )
 
                 // Notifications
-                val notificationEnabled =
+                val notificationEnabled = remember(refreshTrigger) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         androidx.core.content.ContextCompat.checkSelfPermission(
                             context,
@@ -284,22 +312,33 @@ fun SettingsScreen(
                     } else {
                         true
                     }
+                }
 
                 ListItem(
                     headlineContent = {
                         Text(stringResource(R.string.settings_perm_notification))
                     },
                     supportingContent = {
-                        Text(
-                            text = if (notificationEnabled)
-                                stringResource(R.string.settings_perm_accessibility_enabled)
-                            else
-                                stringResource(R.string.settings_perm_accessibility_disabled),
-                            color = if (notificationEnabled)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.error,
-                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_perm_notification_desc),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (notificationEnabled)
+                                    stringResource(R.string.settings_perm_accessibility_enabled)
+                                else
+                                    stringResource(R.string.settings_perm_accessibility_disabled),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (notificationEnabled)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     },
                     leadingContent = {
                         Icon(
@@ -333,23 +372,33 @@ fun SettingsScreen(
                 )
 
                 // Display over other apps (Overlay)
-                val overlayEnabled = Settings.canDrawOverlays(context)
+                val overlayEnabled = remember(refreshTrigger) { Settings.canDrawOverlays(context) }
 
                 ListItem(
                     headlineContent = {
                         Text(stringResource(R.string.settings_perm_overlay))
                     },
                     supportingContent = {
-                        Text(
-                            text = if (overlayEnabled)
-                                stringResource(R.string.settings_perm_accessibility_enabled)
-                            else
-                                stringResource(R.string.settings_perm_accessibility_disabled),
-                            color = if (overlayEnabled)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.error,
-                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_perm_overlay_desc),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (overlayEnabled)
+                                    stringResource(R.string.settings_perm_accessibility_enabled)
+                                else
+                                    stringResource(R.string.settings_perm_accessibility_disabled),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (overlayEnabled)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     },
                     leadingContent = {
                         Icon(
