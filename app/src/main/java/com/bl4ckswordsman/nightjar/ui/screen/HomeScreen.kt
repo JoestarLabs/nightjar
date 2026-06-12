@@ -75,7 +75,9 @@ fun HomeScreen(
     val isRunning = timerState is TimerState.Running
     val isFinished = timerState is TimerState.Finished
 
-    val runningSeconds = (timerState as? TimerState.Running)?.remainingSeconds
+    val runningState = timerState as? TimerState.Running
+    val runningSeconds = runningState?.remainingSeconds
+    val runningTotalSeconds = runningState?.totalSeconds
 
     // ── Permission dialog state ───────────────────────────────────────────────
     var showNotifDialog by remember { mutableStateOf(false) }
@@ -201,6 +203,7 @@ fun HomeScreen(
             ZenTimerDial(
                 selectedSeconds = viewModel.selectedSeconds,
                 runningSeconds = runningSeconds,
+                runningTotalSeconds = runningTotalSeconds,
                 onSecondsChanged = { viewModel.setSelectedSeconds(it) },
                 contentDesc = stringResource(R.string.cd_timer_dial),
                 modifier = Modifier.padding(vertical = 8.dp),

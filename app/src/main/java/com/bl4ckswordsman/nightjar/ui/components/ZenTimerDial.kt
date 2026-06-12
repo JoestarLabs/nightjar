@@ -66,6 +66,7 @@ fun ZenTimerDial(
     runningSeconds: Long?,          // non-null while timer is running
     onSecondsChanged: (Long) -> Unit,
     maxSeconds: Long = 7_200L,      // 2 hours
+    runningTotalSeconds: Long? = null,
     size: Dp = 280.dp,
     contentDesc: String = "",
     modifier: Modifier = Modifier,
@@ -85,17 +86,36 @@ fun ZenTimerDial(
 
     // Animated sweep angle (degrees, 0..360)
     val displaySeconds = runningSeconds ?: selectedSeconds
-    val targetAngle = (displaySeconds.toFloat() / maxSeconds.toFloat()) * 360f
+    val targetAngle = if (runningSeconds != null) {
+        val total = runningTotalSeconds ?: selectedSeconds.takeIf { it > 0L } ?: maxSeconds
+        if (total == 0L) 0f
+        else (runningSeconds.toFloat() / total.toFloat()) * 360f
+    } else {
+        (selectedSeconds.toFloat() / maxSeconds.toFloat()) * 360f
+    }
     val sweepAnim = remember { Animatable(targetAngle) }
 
     // Keep in sync with external changes (preset chips, running countdown)
-    LaunchedEffect(targetAngle) {
+    var prevRunningSeconds by remember { mutableStateOf<Long?>(null) }
+    var useSpring by remember { mutableStateOf(true) }
+
+    LaunchedEffect(targetAngle, runningSeconds) {
+        val currentlyRunning = runningSeconds != null
+        val startedJustNow = currentlyRunning && prevRunningSeconds == null
+        
+        useSpring = !currentlyRunning || startedJustNow
+        prevRunningSeconds = runningSeconds
+
         sweepAnim.animateTo(
             targetValue = targetAngle,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium,
-            )
+            animationSpec = if (useSpring) {
+                spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium,
+                )
+            } else {
+                tween(durationMillis = 1000, easing = LinearEasing)
+            }
         )
     }
 
