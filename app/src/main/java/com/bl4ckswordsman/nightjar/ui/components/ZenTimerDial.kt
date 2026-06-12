@@ -1,9 +1,15 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -24,6 +30,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -64,6 +71,17 @@ fun ZenTimerDial(
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "dial_wave")
+    val wavePhase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "wave_phase"
+    )
 
     // Animated sweep angle (degrees, 0..360)
     val displaySeconds = runningSeconds ?: selectedSeconds
@@ -166,7 +184,11 @@ fun ZenTimerDial(
         ) {
             val sweep = sweepAnim.value
             drawDialTrack(surfaceVariant, strokeWidth.toPx())
-            drawDialArc(sweep, primary, secondary, strokeWidth.toPx())
+            if (runningSeconds != null) {
+                drawSquigglyDialArc(sweep, primary, secondary, strokeWidth.toPx(), wavePhase)
+            } else {
+                drawDialArc(sweep, primary, secondary, strokeWidth.toPx())
+            }
             drawTickMarks(onSurface)
             drawDragHandle(sweep, primary, onSurface, handleRadius.toPx())
         }
@@ -209,6 +231,61 @@ private fun DrawScope.drawDialArc(sweep: Float, primary: Color, secondary: Color
         style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
         topLeft = Offset(20.dp.toPx(), 20.dp.toPx()),
         size = Size(size.width - 40.dp.toPx(), size.height - 40.dp.toPx()),
+    )
+}
+
+private fun DrawScope.drawSquigglyDialArc(
+    sweep: Float,
+    primary: Color,
+    secondary: Color,
+    strokeWidthPx: Float,
+    wavePhase: Float
+) {
+    if (sweep <= 0f) return
+    val cx = size.width / 2f
+    val cy = size.height / 2f
+    val baseRadius = (size.width - 40.dp.toPx()) / 2f
+
+    // Wave parameters: amplitude of 3dp, 12 waves around the circle
+    val waveAmplitude = 3.dp.toPx()
+    val waveFrequency = 12f
+
+    val path = Path()
+    val stepDeg = 2f
+    val startAngleDeg = -90f
+    val endAngleDeg = -90f + sweep
+
+    var isFirst = true
+    var currentAngleDeg = startAngleDeg
+    while (currentAngleDeg <= endAngleDeg) {
+        val angleRad = Math.toRadians(currentAngleDeg.toDouble())
+        val offset = waveAmplitude * sin(angleRad * waveFrequency - wavePhase).toFloat()
+        val r = baseRadius + offset
+
+        val x = cx + r * cos(angleRad).toFloat()
+        val y = cy + r * sin(angleRad).toFloat()
+
+        if (isFirst) {
+            path.moveTo(x, y)
+            isFirst = false
+        } else {
+            path.lineTo(x, y)
+        }
+
+        if (currentAngleDeg == endAngleDeg) break
+        currentAngleDeg = (currentAngleDeg + stepDeg).coerceAtMost(endAngleDeg)
+    }
+
+    val gradient = Brush.sweepGradient(
+        0f   to secondary.copy(alpha = 0.6f),
+        0.5f to primary,
+        1f   to primary,
+    )
+
+    drawPath(
+        path = path,
+        brush = gradient,
+        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
     )
 }
 

@@ -25,13 +25,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,10 +45,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,6 +81,7 @@ fun HomeScreen(
 ) {
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
     val commitmentMode by viewModel.commitmentMode.collectAsStateWithLifecycle()
+    val presets by viewModel.presets.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val isRunning  = timerState is TimerState.Running
@@ -140,6 +149,22 @@ fun HomeScreen(
         )
     }
 
+    // ── Settings gear spin & shape morphing ────────────────────────────────────
+    var gearRotation by remember { mutableStateOf(0f) }
+    LaunchedEffect(Unit) {
+        // Spin the gear on entry to look playful
+        androidx.compose.animation.core.animate(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness    = Spring.StiffnessVeryLow
+            )
+        ) { value, _ -> gearRotation = value }
+    }
+
+
+
     // ── Dialogs ───────────────────────────────────────────────────────────────
     if (showNotifDialog) {
         NotificationPermissionDialog(
@@ -178,13 +203,29 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    IconButton(
+                    FilledTonalIconButton(
                         onClick = onNavigateToSettings,
                         enabled = !isRunning,
+                        shapes = IconButtonDefaults.shapes(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            pressedShape = RoundedCornerShape(percent = 18)
+                        ),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier
+                            .padding(end = 12.dp)
+                            .size(40.dp)
                     ) {
                         Icon(
-                            Icons.Rounded.Settings,
+                            imageVector = Icons.Rounded.Settings,
                             contentDescription = stringResource(R.string.cd_settings_icon),
+                            modifier = Modifier
+                                .size(22.dp)
+                                .graphicsLayer { rotationZ = gearRotation }
                         )
                     }
                 },
@@ -228,6 +269,7 @@ fun HomeScreen(
                     selectedSeconds  = viewModel.selectedSeconds,
                     onPresetSelected = { viewModel.setSelectedSeconds(it) },
                     enabled          = !isRunning,
+                    presets          = presets,
                 )
             }
 

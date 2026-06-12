@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ object TimerPreferenceKeys {
     val LAST_DURATION_SECONDS = longPreferencesKey("last_duration_seconds")
     val STARTED_AT_MILLIS     = longPreferencesKey("started_at_millis")
     val COMMITMENT_MODE       = booleanPreferencesKey("commitment_mode")
+    val CUSTOM_PRESETS        = stringPreferencesKey("custom_presets_string")
 }
 
 /**
@@ -32,6 +34,7 @@ data class TimerPreferences(
     val lastDurationSeconds: Long = 300L,  // default: 5 minutes
     val startedAtMillis: Long = 0L,        // 0 means no active timer was persisted
     val commitmentMode: Boolean = false,   // when true, timer cannot be cancelled once started
+    val customPresets: List<Long> = listOf(300L, 900L, 1800L, 3600L) // custom presets (in seconds)
 )
 
 @Singleton
@@ -39,10 +42,17 @@ class TimerPreferencesDataSource @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
     val preferences: Flow<TimerPreferences> = context.dataStore.data.map { prefs ->
+        val presetsStr = prefs[TimerPreferenceKeys.CUSTOM_PRESETS] ?: "5,15,30,60"
+        val presetsList = try {
+            presetsStr.split(",").map { it.trim().toLong() * 60L }
+        } catch (e: Exception) {
+            listOf(300L, 900L, 1800L, 3600L)
+        }
         TimerPreferences(
             lastDurationSeconds = prefs[TimerPreferenceKeys.LAST_DURATION_SECONDS] ?: 300L,
             startedAtMillis     = prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] ?: 0L,
             commitmentMode      = prefs[TimerPreferenceKeys.COMMITMENT_MODE] ?: false,
+            customPresets       = presetsList,
         )
     }
 
@@ -71,6 +81,13 @@ class TimerPreferencesDataSource @Inject constructor(
     suspend fun saveCommitmentMode(enabled: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.COMMITMENT_MODE] = enabled
+        }
+    }
+
+    /** Persist custom preset durations (in minutes). */
+    suspend fun saveCustomPresets(presetsMinutes: List<Long>) {
+        context.dataStore.edit { prefs ->
+            prefs[TimerPreferenceKeys.CUSTOM_PRESETS] = presetsMinutes.joinToString(",")
         }
     }
 }

@@ -25,11 +25,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -96,6 +102,9 @@ fun SettingsScreen(
     val commitmentMode by timerViewModel.commitmentMode.collectAsStateWithLifecycle()
     val timerState by timerViewModel.timerState.collectAsStateWithLifecycle()
     val timerIsRunning = timerState is TimerState.Running
+    val presetsState by timerViewModel.presets.collectAsStateWithLifecycle()
+
+    var showPresetsDialog by remember { mutableStateOf(false) }
 
     // Read current locale from LocaleManager
     var selectedLocaleTag by remember {
@@ -350,6 +359,28 @@ fun SettingsScreen(
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.settings_custom_presets_title))
+                    },
+                    supportingContent = {
+                        Text(stringResource(R.string.settings_custom_presets_desc))
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Edit,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showPresetsDialog = true }
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -378,6 +409,118 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    if (showPresetsDialog) {
+        val currentPresets = presetsState
+        var preset1 by remember { mutableStateOf(if (currentPresets.isNotEmpty()) (currentPresets[0] / 60).toString() else "5") }
+        var preset2 by remember { mutableStateOf(if (currentPresets.size > 1) (currentPresets[1] / 60).toString() else "15") }
+        var preset3 by remember { mutableStateOf(if (currentPresets.size > 2) (currentPresets[2] / 60).toString() else "30") }
+        var preset4 by remember { mutableStateOf(if (currentPresets.size > 3) (currentPresets[3] / 60).toString() else "60") }
+
+        var errorMessage by remember { mutableStateOf<String?>(null) }
+
+        AlertDialog(
+            onDismissRequest = { showPresetsDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.dialog_presets_title),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.dialog_presets_help),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    OutlinedTextField(
+                        value = preset1,
+                        onValueChange = {
+                            preset1 = it
+                            errorMessage = null
+                        },
+                        label = { Text("#1") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = preset2,
+                        onValueChange = {
+                            preset2 = it
+                            errorMessage = null
+                        },
+                        label = { Text("#2") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = preset3,
+                        onValueChange = {
+                            preset3 = it
+                            errorMessage = null
+                        },
+                        label = { Text("#3") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = preset4,
+                        onValueChange = {
+                            preset4 = it
+                            errorMessage = null
+                        },
+                        label = { Text("#4") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (errorMessage != null) {
+                        Text(
+                            text = errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val val1 = preset1.trim().toLongOrNull()
+                        val val2 = preset2.trim().toLongOrNull()
+                        val val3 = preset3.trim().toLongOrNull()
+                        val val4 = preset4.trim().toLongOrNull()
+
+                        if (val1 != null && val1 in 1..120 &&
+                            val2 != null && val2 in 1..120 &&
+                            val3 != null && val3 in 1..120 &&
+                            val4 != null && val4 in 1..120
+                        ) {
+                            timerViewModel.saveCustomPresets(listOf(val1, val2, val3, val4))
+                            showPresetsDialog = false
+                        } else {
+                            errorMessage = context.getString(R.string.dialog_invalid_input)
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.dialog_btn_save))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showPresetsDialog = false }
+                ) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
     }
 }
 

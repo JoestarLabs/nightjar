@@ -22,14 +22,28 @@ import androidx.compose.ui.unit.dp
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 
-data class TimerPreset(val labelRes: Int, val seconds: Long)
-
-val DefaultPresets = listOf(
-    TimerPreset(R.string.preset_5m,  5  * 60),
-    TimerPreset(R.string.preset_15m, 15 * 60),
-    TimerPreset(R.string.preset_30m, 30 * 60),
-    TimerPreset(R.string.preset_1h,  60 * 60),
-)
+/**
+ * Formats preset durations in seconds into localized strings dynamically.
+ */
+@Composable
+fun formatPresetDuration(seconds: Long): String {
+    val minutes = seconds / 60L
+    return when {
+        minutes >= 60L && minutes % 60L == 0L -> {
+            val hours = minutes / 60L
+            if (hours == 1L) stringResource(R.string.preset_format_hour_one)
+            else stringResource(R.string.preset_format_hour_many, hours)
+        }
+        minutes >= 60L -> {
+            val hours = minutes / 60L
+            val remainingMins = minutes % 60L
+            stringResource(R.string.preset_format_hour_min, hours, remainingMins)
+        }
+        else -> {
+            stringResource(R.string.preset_format_min, minutes)
+        }
+    }
+}
 
 /**
  * Row of quick-select preset chips.
@@ -41,16 +55,16 @@ fun PresetChips(
     onPresetSelected: (Long) -> Unit,
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
-    presets: List<TimerPreset> = DefaultPresets,
+    presets: List<Long> = listOf(300L, 900L, 1800L, 3600L),
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier,
     ) {
-        val anySelected = presets.any { selectedSeconds == it.seconds }
+        val anySelected = presets.any { selectedSeconds == it }
 
-        presets.forEach { preset ->
-            val isSelected = selectedSeconds == preset.seconds
+        presets.forEach { presetSeconds ->
+            val isSelected = selectedSeconds == presetSeconds
             
             val targetScale = when {
                 isSelected -> 1.12f
@@ -64,7 +78,7 @@ fun PresetChips(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessMedium,
                 ),
-                label = "chip_scale_${preset.seconds}"
+                label = "chip_scale_$presetSeconds"
             )
 
             val yOffset by animateDpAsState(
@@ -73,15 +87,15 @@ fun PresetChips(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness    = Spring.StiffnessMedium,
                 ),
-                label = "chip_y_offset_${preset.seconds}"
+                label = "chip_y_offset_$presetSeconds"
             )
 
             FilterChip(
                 selected = isSelected,
-                onClick = { if (enabled) onPresetSelected(preset.seconds) },
+                onClick = { if (enabled) onPresetSelected(presetSeconds) },
                 label = {
                     Text(
-                        text = stringResource(preset.labelRes),
+                        text = formatPresetDuration(presetSeconds),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 },
@@ -112,3 +126,4 @@ private fun PresetChipsPreview() {
         PresetChips(selectedSeconds = 900L, onPresetSelected = {})
     }
 }
+

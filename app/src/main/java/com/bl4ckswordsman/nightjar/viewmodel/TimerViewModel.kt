@@ -41,6 +41,10 @@ class TimerViewModel @Inject constructor(
     /** Whether commitment mode (no-cancel) is currently enabled. */
     val commitmentMode: StateFlow<Boolean> = _commitmentMode.asStateFlow()
 
+    private val _presets = MutableStateFlow<List<Long>>(listOf(300L, 900L, 1800L, 3600L))
+    /** List of custom presets (in seconds). */
+    val presets: StateFlow<List<Long>> = _presets.asStateFlow()
+
     fun setSelectedSeconds(seconds: Long) {
         _selectedSeconds.value = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
     }
@@ -48,6 +52,12 @@ class TimerViewModel @Inject constructor(
     fun setCommitmentMode(enabled: Boolean) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveCommitmentMode(enabled)
+        }
+    }
+
+    fun saveCustomPresets(presetsMinutes: List<Long>) {
+        viewModelScope.launch {
+            repository.preferencesDataSource.saveCustomPresets(presetsMinutes)
         }
     }
 
@@ -84,6 +94,8 @@ class TimerViewModel @Inject constructor(
             repository.preferencesDataSource.preferences.collect { prefs ->
                 // Restore commitment mode from DataStore
                 _commitmentMode.value = prefs.commitmentMode
+                // Restore custom presets
+                _presets.value = prefs.customPresets
                 // Only update selected seconds if timer is not running
                 if (repository.currentState is TimerState.Idle) {
                     setSelectedSeconds(prefs.lastDurationSeconds)
