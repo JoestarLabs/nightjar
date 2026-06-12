@@ -16,14 +16,14 @@ import javax.inject.Singleton
 
 // ── DataStore singleton extension ─────────────────────────────────────────────
 private val Context.dataStore: DataStore<Preferences>
-    by preferencesDataStore(name = "nightjar_timer_prefs")
+        by preferencesDataStore(name = "nightjar_timer_prefs")
 
 // ── Keys ──────────────────────────────────────────────────────────────────────
 object TimerPreferenceKeys {
     val LAST_DURATION_SECONDS = longPreferencesKey("last_duration_seconds")
-    val STARTED_AT_MILLIS     = longPreferencesKey("started_at_millis")
-    val COMMITMENT_MODE       = booleanPreferencesKey("commitment_mode")
-    val CUSTOM_PRESETS        = stringPreferencesKey("custom_presets_string")
+    val STARTED_AT_MILLIS = longPreferencesKey("started_at_millis")
+    val COMMITMENT_MODE = booleanPreferencesKey("commitment_mode")
+    val CUSTOM_PRESETS = stringPreferencesKey("custom_presets_string")
 }
 
 /**
@@ -50,9 +50,9 @@ class TimerPreferencesDataSource @Inject constructor(
         }
         TimerPreferences(
             lastDurationSeconds = prefs[TimerPreferenceKeys.LAST_DURATION_SECONDS] ?: 300L,
-            startedAtMillis     = prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] ?: 0L,
-            commitmentMode      = prefs[TimerPreferenceKeys.COMMITMENT_MODE] ?: false,
-            customPresets       = presetsList,
+            startedAtMillis = prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] ?: 0L,
+            commitmentMode = prefs[TimerPreferenceKeys.COMMITMENT_MODE] ?: false,
+            customPresets = presetsList,
         )
     }
 
@@ -66,7 +66,7 @@ class TimerPreferencesDataSource @Inject constructor(
     suspend fun saveTimerStarted(durationSeconds: Long, startedAtMillis: Long) {
         context.dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.LAST_DURATION_SECONDS] = durationSeconds
-            prefs[TimerPreferenceKeys.STARTED_AT_MILLIS]     = startedAtMillis
+            prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] = startedAtMillis
         }
     }
 

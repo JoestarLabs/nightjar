@@ -10,11 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
@@ -26,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -58,54 +53,54 @@ fun LockButton(
         targetValue = if (isFinishing) 0.92f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness    = Spring.StiffnessMedium,
+            stiffness = Spring.StiffnessMedium,
         ),
         label = "lock_btn_scale"
     )
 
     val cornerPercent by animateIntAsState(
         targetValue = when {
-            isLocked  -> 8      // Shield shape (8% corner radius)
+            isLocked -> 8      // Shield shape (8% corner radius)
             isRunning -> 18     // Warning squircle (18% corner radius)
-            else      -> 50     // Standard pill (50% corner radius)
+            else -> 50     // Standard pill (50% corner radius)
         },
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness    = Spring.StiffnessLow,
+            stiffness = Spring.StiffnessLow,
         ),
         label = "btn_shape_corners"
     )
 
     val containerColor = when {
-        isLocked  -> MaterialTheme.colorScheme.surfaceVariant
+        isLocked -> MaterialTheme.colorScheme.surfaceVariant
         isRunning -> MaterialTheme.colorScheme.errorContainer
-        else      -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.primaryContainer
     }
     val contentColor = when {
-        isLocked  -> MaterialTheme.colorScheme.onSurfaceVariant
+        isLocked -> MaterialTheme.colorScheme.onSurfaceVariant
         isRunning -> MaterialTheme.colorScheme.onErrorContainer
-        else      -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onPrimaryContainer
     }
 
     ExtendedFloatingActionButton(
         onClick = onClick,
         containerColor = containerColor,
-        contentColor   = contentColor,
-        shape          = RoundedCornerShape(percent = cornerPercent),
+        contentColor = contentColor,
+        shape = RoundedCornerShape(percent = cornerPercent),
         modifier = modifier.scale(scale),
         icon = {
             AnimatedContent(
                 targetState = Triple(isRunning, isLocked, isFinishing),
                 transitionSpec = {
                     (scaleIn(spring(Spring.DampingRatioMediumBouncy)) + fadeIn()) togetherWith
-                    (scaleOut(spring(Spring.DampingRatioMediumBouncy)) + fadeOut())
+                            (scaleOut(spring(Spring.DampingRatioMediumBouncy)) + fadeOut())
                 },
                 label = "lock_icon_anim"
             ) { (running, locked, _) ->
                 val icon: ImageVector = when {
-                    locked  -> Icons.Rounded.Lock
+                    locked -> Icons.Rounded.Lock
                     running -> Icons.Rounded.Stop
-                    else    -> Icons.Rounded.LockOpen
+                    else -> Icons.Rounded.LockOpen
                 }
                 Icon(
                     imageVector = icon,
@@ -125,9 +120,9 @@ fun LockButton(
                 Text(
                     text = stringResource(
                         when {
-                            locked  -> R.string.btn_commitment_locked
+                            locked -> R.string.btn_commitment_locked
                             running -> R.string.btn_stop_timer
-                            else    -> R.string.btn_start_timer
+                            else -> R.string.btn_start_timer
                         }
                     ),
                     style = MaterialTheme.typography.labelLarge,

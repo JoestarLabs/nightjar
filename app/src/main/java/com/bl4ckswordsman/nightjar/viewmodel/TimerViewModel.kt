@@ -1,6 +1,7 @@
 package com.bl4ckswordsman.nightjar.viewmodel
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +10,6 @@ import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.service.LockTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,10 +38,12 @@ class TimerViewModel @Inject constructor(
     val selectedSeconds: Long get() = _selectedSeconds.value
 
     private val _commitmentMode = MutableStateFlow(false)
+
     /** Whether commitment mode (no-cancel) is currently enabled. */
     val commitmentMode: StateFlow<Boolean> = _commitmentMode.asStateFlow()
 
     private val _presets = MutableStateFlow<List<Long>>(listOf(300L, 900L, 1800L, 3600L))
+
     /** List of custom presets (in seconds). */
     val presets: StateFlow<List<Long>> = _presets.asStateFlow()
 
@@ -83,7 +85,7 @@ class TimerViewModel @Inject constructor(
     fun toggleTimer() {
         when (repository.currentState) {
             is TimerState.Running -> stopTimer()
-            else                  -> startTimer()
+            else -> startTimer()
         }
     }
 

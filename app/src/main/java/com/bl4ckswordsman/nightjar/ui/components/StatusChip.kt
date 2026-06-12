@@ -42,15 +42,15 @@ fun StatusChip(
 ) {
     val label = when {
         isFinishing -> stringResource(R.string.status_finished)
-        isRunning   -> stringResource(R.string.status_running)
-        else        -> stringResource(R.string.status_idle)
+        isRunning -> stringResource(R.string.status_running)
+        else -> stringResource(R.string.status_idle)
     }
 
     // Pulse and breathing transitions
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue  = 0.3f,
+        targetValue = 0.3f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 900),
             repeatMode = RepeatMode.Reverse
@@ -60,7 +60,7 @@ fun StatusChip(
 
     val breatheScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue  = 1.05f,
+        targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -73,17 +73,17 @@ fun StatusChip(
     val chipColors = AssistChipDefaults.assistChipColors(
         containerColor = when {
             isFinishing -> MaterialTheme.colorScheme.errorContainer
-            isRunning   -> MaterialTheme.colorScheme.primaryContainer
-            else        -> MaterialTheme.colorScheme.surfaceVariant
+            isRunning -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceVariant
         },
         labelColor = when {
             isFinishing -> MaterialTheme.colorScheme.onErrorContainer
-            isRunning   -> MaterialTheme.colorScheme.onPrimaryContainer
-            else        -> MaterialTheme.colorScheme.onSurfaceVariant
+            isRunning -> MaterialTheme.colorScheme.onPrimaryContainer
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         },
         leadingIconContentColor = when {
             isRunning -> MaterialTheme.colorScheme.primary
-            else      -> MaterialTheme.colorScheme.onSurfaceVariant
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
     )
 
@@ -93,7 +93,7 @@ fun StatusChip(
         leadingIcon = {
             Icon(
                 imageVector = if (isRunning) Icons.Rounded.Circle
-                              else Icons.Rounded.RadioButtonUnchecked,
+                else Icons.Rounded.RadioButtonUnchecked,
                 contentDescription = null,
                 modifier = Modifier
                     .size(10.dp)

@@ -1,4 +1,5 @@
 @file:OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
+
 package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.Manifest
@@ -15,7 +16,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,49 +23,41 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.service.LockAccessibilityService
 import com.bl4ckswordsman.nightjar.ui.components.AccessibilityPermissionDialog
+import com.bl4ckswordsman.nightjar.ui.components.AnimatedAppTitle
 import com.bl4ckswordsman.nightjar.ui.components.LockButton
 import com.bl4ckswordsman.nightjar.ui.components.NotificationPermissionDialog
 import com.bl4ckswordsman.nightjar.ui.components.PresetChips
 import com.bl4ckswordsman.nightjar.ui.components.StatusChip
-import com.bl4ckswordsman.nightjar.ui.components.AnimatedAppTitle
 import com.bl4ckswordsman.nightjar.ui.components.ZenTimerDial
-import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,13 +72,13 @@ fun HomeScreen(
     val presets by viewModel.presets.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    val isRunning  = timerState is TimerState.Running
+    val isRunning = timerState is TimerState.Running
     val isFinished = timerState is TimerState.Finished
 
     val runningSeconds = (timerState as? TimerState.Running)?.remainingSeconds
 
     // ── Permission dialog state ───────────────────────────────────────────────
-    var showNotifDialog        by remember { mutableStateOf(false) }
+    var showNotifDialog by remember { mutableStateOf(false) }
     var showAccessibilityDialog by remember { mutableStateOf(false) }
 
     val notifLauncher = rememberLauncherForActivityResult(
@@ -102,11 +94,10 @@ fun HomeScreen(
         targetValue = if (isRunning) 16.dp else 0.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness    = Spring.StiffnessMedium,
+            stiffness = Spring.StiffnessMedium,
         ),
         label = "dial_elevation"
     )
-
 
 
     // ── Settings gear spin & shape morphing ────────────────────────────────────
@@ -118,11 +109,10 @@ fun HomeScreen(
             targetValue = 360f,
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioLowBouncy,
-                stiffness    = Spring.StiffnessVeryLow
+                stiffness = Spring.StiffnessVeryLow
             )
         ) { value, _ -> gearRotation = value }
     }
-
 
 
     // ── Dialogs ───────────────────────────────────────────────────────────────
@@ -168,8 +158,12 @@ fun HomeScreen(
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                alpha = 0.5f
+                            ),
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.5f
+                            )
                         ),
                         modifier = Modifier
                             .padding(end = 12.dp)
@@ -206,7 +200,7 @@ fun HomeScreen(
             // ── Zen timer dial ────────────────────────────────────────────────
             ZenTimerDial(
                 selectedSeconds = viewModel.selectedSeconds,
-                runningSeconds  = runningSeconds,
+                runningSeconds = runningSeconds,
                 onSecondsChanged = { viewModel.setSelectedSeconds(it) },
                 contentDesc = stringResource(R.string.cd_timer_dial),
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -218,13 +212,13 @@ fun HomeScreen(
             AnimatedVisibility(
                 visible = !isRunning && !isFinished,
                 enter = fadeIn() + slideInVertically { it / 2 },
-                exit  = fadeOut(),
+                exit = fadeOut(),
             ) {
                 PresetChips(
-                    selectedSeconds  = viewModel.selectedSeconds,
+                    selectedSeconds = viewModel.selectedSeconds,
                     onPresetSelected = { viewModel.setSelectedSeconds(it) },
-                    enabled          = !isRunning,
-                    presets          = presets,
+                    enabled = !isRunning,
+                    presets = presets,
                 )
             }
 
@@ -232,7 +226,7 @@ fun HomeScreen(
 
             // ── Status chip ───────────────────────────────────────────────────
             StatusChip(
-                isRunning  = isRunning,
+                isRunning = isRunning,
                 isFinishing = isFinished,
             )
 
@@ -240,16 +234,19 @@ fun HomeScreen(
 
             // ── Start / Stop button ───────────────────────────────────────────
             LockButton(
-                isRunning   = isRunning,
+                isRunning = isRunning,
                 isFinishing = isFinished,
-                isLocked    = isRunning && commitmentMode,
+                isLocked = isRunning && commitmentMode,
                 onClick = {
                     when {
-                        isRunning && commitmentMode -> { /* commitment mode: ignore stop */ }
+                        isRunning && commitmentMode -> { /* commitment mode: ignore stop */
+                        }
+
                         isRunning -> viewModel.stopTimer()
                         !LockAccessibilityService.isEnabled() -> showAccessibilityDialog = true
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                                 !hasNotificationPermission(context) -> showNotifDialog = true
+
                         else -> viewModel.startTimer()
                     }
                 },

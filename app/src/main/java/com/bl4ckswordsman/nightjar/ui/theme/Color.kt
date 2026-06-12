@@ -61,7 +61,7 @@ val NeutralVariant99 = Color(0xFFF6FFF6)
 
 // Neutral surface tones — warm off-white / warm ink
 val SurfaceWarm = Color(0xFFF8F5EF)   // light background
-val SurfaceInk  = Color(0xFF111210)   // dark background
+val SurfaceInk = Color(0xFF111210)   // dark background
 
 // Error
 val ErrorRed = Color(0xFFBA1A1A)

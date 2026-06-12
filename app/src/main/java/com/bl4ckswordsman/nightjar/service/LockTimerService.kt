@@ -10,8 +10,8 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import androidx.core.content.getSystemService
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.core.graphics.drawable.toBitmap
 import com.bl4ckswordsman.nightjar.MainActivity
 import com.bl4ckswordsman.nightjar.NightjarApp
@@ -44,7 +44,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class LockTimerService : Service() {
 
-    @Inject lateinit var timerRepository: TimerRepository
+    @Inject
+    lateinit var timerRepository: TimerRepository
 
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var timerJob: Job? = null
@@ -64,6 +65,7 @@ class LockTimerService : Service() {
                 commitmentMode = intent.getBooleanExtra(EXTRA_COMMITMENT_MODE, false)
                 if (durationSeconds > 0) startTimer(durationSeconds)
             }
+
             ACTION_STOP -> if (!commitmentMode) stopTimer()
         }
         return START_NOT_STICKY
@@ -87,7 +89,10 @@ class LockTimerService : Service() {
         }
 
         // Post initial foreground notification so the service is promoted immediately
-        startForeground(NOTIFICATION_ID, buildNotification(durationSeconds, startedAt + durationSeconds * 1_000, durationSeconds))
+        startForeground(
+            NOTIFICATION_ID,
+            buildNotification(durationSeconds, startedAt + durationSeconds * 1_000, durationSeconds)
+        )
 
         timerJob = serviceScope.launch {
             var remaining = durationSeconds
@@ -108,7 +113,14 @@ class LockTimerService : Service() {
                         startedAtMillis = startedAt
                     )
                 )
-                nm.notify(NOTIFICATION_ID, buildNotification(durationSeconds, startedAt + durationSeconds * 1_000, remaining))
+                nm.notify(
+                    NOTIFICATION_ID,
+                    buildNotification(
+                        durationSeconds,
+                        startedAt + durationSeconds * 1_000,
+                        remaining
+                    )
+                )
 
                 // ── 1-minute remaining alert (fires exactly once) ──────────
                 if (remaining == ONE_MINUTE_SECONDS && !alertFired && durationSeconds > ONE_MINUTE_SECONDS) {
@@ -163,7 +175,11 @@ class LockTimerService : Service() {
      *   an amber segment colour as an in-chip visual cue. The chip's expand/pulse animation
      *   itself is entirely system-controlled and cannot be triggered programmatically.
      */
-    private fun postOneMinuteAlert(durationSeconds: Long, countdownEndEpochMs: Long, remainingSeconds: Long) {
+    private fun postOneMinuteAlert(
+        durationSeconds: Long,
+        countdownEndEpochMs: Long,
+        remainingSeconds: Long
+    ) {
         // ── Heads-up alert (all API levels) ───────────────────────────────────
         val localizedContext = getLocalizedContext()
         val tapIntent = PendingIntent.getActivity(
@@ -286,8 +302,10 @@ class LockTimerService : Service() {
 
             return builder.build()
         } else {
-            val lockDrawable = ContextCompat.getDrawable(localizedContext, R.drawable.ic_lock_notification)
-            lockDrawable?.mutate()?.setTint(ContextCompat.getColor(this, R.color.notification_icon_tint))
+            val lockDrawable =
+                ContextCompat.getDrawable(localizedContext, R.drawable.ic_lock_notification)
+            lockDrawable?.mutate()
+                ?.setTint(ContextCompat.getColor(this, R.color.notification_icon_tint))
             val lockBitmap = lockDrawable?.toBitmap(
                 width = 120,
                 height = 120,
@@ -304,7 +322,11 @@ class LockTimerService : Service() {
                 .setOnlyAlertOnce(true)
                 .setShowWhen(true)
                 .setContentIntent(tapIntent)
-                .setProgress(durationSeconds.toInt(), (durationSeconds - remainingSeconds).toInt(), false)
+                .setProgress(
+                    durationSeconds.toInt(),
+                    (durationSeconds - remainingSeconds).toInt(),
+                    false
+                )
                 .setLargeIcon(lockBitmap)
 
             if (!commitmentMode) {
@@ -336,14 +358,18 @@ class LockTimerService : Service() {
 
     companion object {
         const val ACTION_START = "com.bl4ckswordsman.nightjar.action.START_TIMER"
-        const val ACTION_STOP  = "com.bl4ckswordsman.nightjar.action.STOP_TIMER"
-        const val EXTRA_DURATION_SECONDS  = "extra_duration_seconds"
-        const val EXTRA_COMMITMENT_MODE   = "extra_commitment_mode"
-        private const val NOTIFICATION_ID       = 1001
+        const val ACTION_STOP = "com.bl4ckswordsman.nightjar.action.STOP_TIMER"
+        const val EXTRA_DURATION_SECONDS = "extra_duration_seconds"
+        const val EXTRA_COMMITMENT_MODE = "extra_commitment_mode"
+        private const val NOTIFICATION_ID = 1001
         private const val NOTIFICATION_ALERT_ID = 1002
-        private const val ONE_MINUTE_SECONDS    = 60L
+        private const val ONE_MINUTE_SECONDS = 60L
 
-        fun startIntent(context: Context, durationSeconds: Long, commitmentMode: Boolean = false): Intent =
+        fun startIntent(
+            context: Context,
+            durationSeconds: Long,
+            commitmentMode: Boolean = false
+        ): Intent =
             Intent(context, LockTimerService::class.java).apply {
                 action = ACTION_START
                 putExtra(EXTRA_DURATION_SECONDS, durationSeconds)

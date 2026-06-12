@@ -3,6 +3,7 @@ package com.bl4ckswordsman.nightjar.service
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
+import com.bl4ckswordsman.nightjar.service.LockAccessibilityService.Companion.isEnabled
 import java.lang.ref.WeakReference
 
 /**
@@ -34,7 +35,8 @@ class LockAccessibilityService : AccessibilityService() {
 
     companion object {
         /** Weak reference — cleared automatically when the service is unbound. */
-        @Volatile private var instance: WeakReference<LockAccessibilityService>? = null
+        @Volatile
+        private var instance: WeakReference<LockAccessibilityService>? = null
 
         /** @return true if the service is currently connected and ready. */
         fun isEnabled(): Boolean = instance?.get() != null

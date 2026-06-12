@@ -1,4 +1,5 @@
 @file:OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
+
 package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Animatable
@@ -32,7 +33,7 @@ fun TimerText(
     val m = (seconds % 3600) / 60
     val s = seconds % 60
     val text = if (h > 0) "%02d:%02d:%02d".format(h, m, s)
-               else       "%02d:%02d".format(m, s)
+    else "%02d:%02d".format(m, s)
 
     // ── Width axis tick bounce ────────────────────────────────────────────────
     val tickWidth = remember { Animatable(100f) }
@@ -43,7 +44,7 @@ fun TimerText(
                 targetValue = 100f,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness    = Spring.StiffnessLow
+                    stiffness = Spring.StiffnessLow
                 )
             )
         } else {
@@ -59,6 +60,7 @@ fun TimerText(
             val progress = (60L - seconds).toFloat() / 60f
             400f + (900f - 400f) * progress
         }
+
         else -> 400f        // Normal font weight equivalent
     }
 
@@ -66,7 +68,7 @@ fun TimerText(
         targetValue = targetWeight,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness    = Spring.StiffnessLow
+            stiffness = Spring.StiffnessLow
         ),
         label = "timer_text_weight"
     )
@@ -89,7 +91,7 @@ fun TimerText(
         style = MaterialTheme.typography.displaySmall.copy(
             fontFamily = timerFontFamily,
             color = if (isRunning) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface,
+            else MaterialTheme.colorScheme.onSurface,
         ),
         textAlign = TextAlign.Center,
         modifier = modifier,

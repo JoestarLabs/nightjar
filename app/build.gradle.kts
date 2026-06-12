@@ -17,7 +17,7 @@ android {
         versionName = "0.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        
+
         // Expose version name to BuildConfig
         buildConfigField("String", "VERSION_NAME", "\"${versionName}\"")
     }

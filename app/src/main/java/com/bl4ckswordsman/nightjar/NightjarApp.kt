@@ -3,7 +3,6 @@ package com.bl4ckswordsman.nightjar
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import androidx.core.content.getSystemService
 import dagger.hilt.android.HiltAndroidApp
 

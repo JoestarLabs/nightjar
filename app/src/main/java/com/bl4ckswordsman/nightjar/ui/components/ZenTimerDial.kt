@@ -99,7 +99,7 @@ fun ZenTimerDial(
         )
     }
 
-    val primary   = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
     val secondary = MaterialTheme.colorScheme.secondary
     val onSurface = MaterialTheme.colorScheme.onSurface
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
@@ -113,7 +113,7 @@ fun ZenTimerDial(
         targetValue = if (isDragging) 26.dp else 20.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness    = Spring.StiffnessMedium,
+            stiffness = Spring.StiffnessMedium,
         ),
         label = "dial_stroke_width"
     )
@@ -122,7 +122,7 @@ fun ZenTimerDial(
         targetValue = if (isDragging) 18.dp else 12.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness    = Spring.StiffnessMedium,
+            stiffness = Spring.StiffnessMedium,
         ),
         label = "handle_radius"
     )
@@ -151,7 +151,8 @@ fun ZenTimerDial(
                             val dx = change.position.x - center
                             val dy = change.position.y - center
                             // atan2 gives angle from positive-x axis; shift so 0 = top
-                            var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat() + 90f
+                            var angle =
+                                Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat() + 90f
                             if (angle < 0f) angle += 360f
 
                             val newSeconds = ((angle / 360f) * maxSeconds).toLong()
@@ -216,12 +217,17 @@ private fun DrawScope.drawDialTrack(color: Color, strokeWidthPx: Float) {
     )
 }
 
-private fun DrawScope.drawDialArc(sweep: Float, primary: Color, secondary: Color, strokeWidthPx: Float) {
+private fun DrawScope.drawDialArc(
+    sweep: Float,
+    primary: Color,
+    secondary: Color,
+    strokeWidthPx: Float
+) {
     if (sweep <= 0f) return
     val gradient = Brush.sweepGradient(
-        0f   to secondary.copy(alpha = 0.6f),
+        0f to secondary.copy(alpha = 0.6f),
         0.5f to primary,
-        1f   to primary,
+        1f to primary,
     )
     drawArc(
         brush = gradient,
@@ -277,9 +283,9 @@ private fun DrawScope.drawSquigglyDialArc(
     }
 
     val gradient = Brush.sweepGradient(
-        0f   to secondary.copy(alpha = 0.6f),
+        0f to secondary.copy(alpha = 0.6f),
         0.5f to primary,
-        1f   to primary,
+        1f to primary,
     )
 
     drawPath(
@@ -304,14 +310,19 @@ private fun DrawScope.drawTickMarks(color: Color) {
         drawLine(
             color = color.copy(alpha = 0.25f),
             start = Offset(innerX, innerY),
-            end   = Offset(outerX, outerY),
+            end = Offset(outerX, outerY),
             strokeWidth = 2.dp.toPx(),
             cap = StrokeCap.Round,
         )
     }
 }
 
-private fun DrawScope.drawDragHandle(sweep: Float, primary: Color, onSurface: Color, handleRadiusPx: Float) {
+private fun DrawScope.drawDragHandle(
+    sweep: Float,
+    primary: Color,
+    onSurface: Color,
+    handleRadiusPx: Float
+) {
     val cx = size.width / 2f
     val cy = size.height / 2f
     val radius = size.width / 2f - 20.dp.toPx()

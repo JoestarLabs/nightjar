@@ -1,4 +1,5 @@
 @file:OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
+
 package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Animatable
@@ -47,7 +48,7 @@ fun AnimatedAppTitle(
                     targetValue = 120f,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness    = Spring.StiffnessLow,
+                        stiffness = Spring.StiffnessLow,
                     )
                 )
             }
@@ -56,7 +57,7 @@ fun AnimatedAppTitle(
                     targetValue = 800f,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness    = Spring.StiffnessLow,
+                        stiffness = Spring.StiffnessLow,
                     )
                 )
             }
@@ -101,7 +102,7 @@ fun AnimatedAppTitle(
                         targetValue = 120f,
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness    = Spring.StiffnessMedium,
+                            stiffness = Spring.StiffnessMedium,
                         )
                     )
                 }

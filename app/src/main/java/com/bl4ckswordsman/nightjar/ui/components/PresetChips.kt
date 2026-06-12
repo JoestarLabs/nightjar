@@ -34,11 +34,13 @@ fun formatPresetDuration(seconds: Long): String {
             if (hours == 1L) stringResource(R.string.preset_format_hour_one)
             else stringResource(R.string.preset_format_hour_many, hours)
         }
+
         minutes >= 60L -> {
             val hours = minutes / 60L
             val remainingMins = minutes % 60L
             stringResource(R.string.preset_format_hour_min, hours, remainingMins)
         }
+
         else -> {
             stringResource(R.string.preset_format_min, minutes)
         }
@@ -65,7 +67,7 @@ fun PresetChips(
 
         presets.forEach { presetSeconds ->
             val isSelected = selectedSeconds == presetSeconds
-            
+
             val targetScale = when {
                 isSelected -> 1.12f
                 anySelected -> 0.94f
@@ -85,7 +87,7 @@ fun PresetChips(
                 targetValue = if (isSelected) (-4).dp else 0.dp,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness    = Spring.StiffnessMedium,
+                    stiffness = Spring.StiffnessMedium,
                 ),
                 label = "chip_y_offset_$presetSeconds"
             )
@@ -102,7 +104,7 @@ fun PresetChips(
                 enabled = enabled,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor     = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = enabled,

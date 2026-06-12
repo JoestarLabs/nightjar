@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -32,18 +33,16 @@ import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -56,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -68,7 +68,7 @@ import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 data class LanguageOption(val tag: String, val labelRes: Int)
 
 private val LANGUAGE_OPTIONS = listOf(
-    LanguageOption("",   R.string.settings_language_system),
+    LanguageOption("", R.string.settings_language_system),
     LanguageOption("en", R.string.settings_language_en),
     LanguageOption("sv", R.string.settings_language_sv),
 )
@@ -205,7 +205,8 @@ fun SettingsScreen(
                                 onClick = {
                                     isMenuExpanded = false
                                     selectedLocaleTag = option.tag
-                                    localeManager.applicationLocales = LocaleList.forLanguageTags(option.tag)
+                                    localeManager.applicationLocales =
+                                        LocaleList.forLanguageTags(option.tag)
                                     // Recreate activity to force language rebinding immediately
                                     (context as? android.app.Activity)?.recreate()
                                 }
@@ -243,16 +244,16 @@ fun SettingsScreen(
                             Icons.Rounded.Lock,
                             contentDescription = null,
                             tint = if (accessibilityEnabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.error,
+                            else MaterialTheme.colorScheme.error,
                         )
                     },
                     trailingContent = {
                         Icon(
                             imageVector = if (accessibilityEnabled) Icons.Rounded.CheckCircle
-                                          else Icons.Rounded.Warning,
+                            else Icons.Rounded.Warning,
                             contentDescription = null,
                             tint = if (accessibilityEnabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.error,
+                            else MaterialTheme.colorScheme.error,
                         )
                     },
                     colors = ListItemDefaults.colors(
@@ -270,14 +271,15 @@ fun SettingsScreen(
                 )
 
                 // Notifications
-                val notificationEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    androidx.core.content.ContextCompat.checkSelfPermission(
-                        context,
-                        android.Manifest.permission.POST_NOTIFICATIONS
-                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                } else {
-                    true
-                }
+                val notificationEnabled =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.POST_NOTIFICATIONS
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    } else {
+                        true
+                    }
 
                 ListItem(
                     headlineContent = {
@@ -300,16 +302,16 @@ fun SettingsScreen(
                             Icons.Rounded.Notifications,
                             contentDescription = null,
                             tint = if (notificationEnabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.error,
+                            else MaterialTheme.colorScheme.error,
                         )
                     },
                     trailingContent = {
                         Icon(
                             imageVector = if (notificationEnabled) Icons.Rounded.CheckCircle
-                                          else Icons.Rounded.Warning,
+                            else Icons.Rounded.Warning,
                             contentDescription = null,
                             tint = if (notificationEnabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.error,
+                            else MaterialTheme.colorScheme.error,
                         )
                     },
                     colors = ListItemDefaults.colors(
@@ -391,7 +393,12 @@ fun SettingsScreen(
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
                 ListItem(
                     headlineContent = {
-                        Text(stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME))
+                        Text(
+                            stringResource(
+                                R.string.settings_about_version,
+                                BuildConfig.VERSION_NAME
+                            )
+                        )
                     },
                     leadingContent = {
                         Icon(

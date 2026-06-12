@@ -18,71 +18,71 @@ import androidx.core.view.WindowCompat
 // Used on devices without Dynamic Color support (Android < 12).
 
 private val ZenLightColorScheme = lightColorScheme(
-    primary          = BambooGreen40,
-    onPrimary        = Color.White,
+    primary = BambooGreen40,
+    onPrimary = Color.White,
     primaryContainer = BambooGreen90,
     onPrimaryContainer = BambooGreen10,
 
-    secondary          = WashiClay40,
-    onSecondary        = Color.White,
+    secondary = WashiClay40,
+    onSecondary = Color.White,
     secondaryContainer = WashiClay90,
     onSecondaryContainer = WashiClay10,
 
-    tertiary          = ToriiRed40,
-    onTertiary        = Color.White,
+    tertiary = ToriiRed40,
+    onTertiary = Color.White,
     tertiaryContainer = ToriiRed90,
     onTertiaryContainer = ToriiRed10,
 
-    error          = ErrorRed,
+    error = ErrorRed,
     errorContainer = ErrorRedContainer,
-    onError        = Color.White,
+    onError = Color.White,
     onErrorContainer = OnErrorRedContainer,
 
     background = SurfaceWarm,
     onBackground = NeutralVariant10,
 
-    surface        = SurfaceWarm,
-    onSurface      = NeutralVariant10,
+    surface = SurfaceWarm,
+    onSurface = NeutralVariant10,
     surfaceVariant = NeutralVariant90,
     onSurfaceVariant = NeutralVariant30,
 
-    outline       = NeutralVariant50,
+    outline = NeutralVariant50,
     outlineVariant = NeutralVariant80,
-    scrim          = InkBlack,
+    scrim = InkBlack,
 )
 
 private val ZenDarkColorScheme = darkColorScheme(
-    primary          = BambooGreen80,
-    onPrimary        = BambooGreen20,
+    primary = BambooGreen80,
+    onPrimary = BambooGreen20,
     primaryContainer = BambooGreen30,
     onPrimaryContainer = BambooGreen90,
 
-    secondary          = WashiClay80,
-    onSecondary        = WashiClay20,
+    secondary = WashiClay80,
+    onSecondary = WashiClay20,
     secondaryContainer = WashiClay30,
     onSecondaryContainer = WashiClay90,
 
-    tertiary          = ToriiRed80,
-    onTertiary        = ToriiRed20,
+    tertiary = ToriiRed80,
+    onTertiary = ToriiRed20,
     tertiaryContainer = ToriiRed30,
     onTertiaryContainer = ToriiRed90,
 
-    error          = Color(0xFFFFB4AB),
+    error = Color(0xFFFFB4AB),
     errorContainer = Color(0xFF93000A),
-    onError        = Color(0xFF690005),
+    onError = Color(0xFF690005),
     onErrorContainer = Color(0xFFFFDAD6),
 
     background = SurfaceInk,
     onBackground = NeutralVariant90,
 
-    surface        = SurfaceInk,
-    onSurface      = NeutralVariant90,
+    surface = SurfaceInk,
+    onSurface = NeutralVariant90,
     surfaceVariant = NeutralVariant20,
     onSurfaceVariant = NeutralVariant80,
 
-    outline       = NeutralVariant60,
+    outline = NeutralVariant60,
     outlineVariant = NeutralVariant30,
-    scrim          = InkBlack,
+    scrim = InkBlack,
 )
 
 // ── NightjarTheme ─────────────────────────────────────────────────────────────
@@ -100,8 +100,9 @@ fun NightjarTheme(
             if (darkTheme) dynamicDarkColorScheme(context)
             else dynamicLightColorScheme(context)
         }
+
         darkTheme -> ZenDarkColorScheme
-        else      -> ZenLightColorScheme
+        else -> ZenLightColorScheme
     }
 
     // Sync status bar / nav bar icon colours with the theme
@@ -118,8 +119,8 @@ fun NightjarTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography  = NightjarTypography,
-        shapes      = NightjarShapes,
-        content     = content
+        typography = NightjarTypography,
+        shapes = NightjarShapes,
+        content = content
     )
 }

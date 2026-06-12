@@ -26,7 +26,7 @@ sealed class TimerState {
     ) : TimerState() {
         val progressFraction: Float
             get() = if (totalSeconds == 0L) 0f
-                    else 1f - (remainingSeconds.toFloat() / totalSeconds.toFloat())
+            else 1f - (remainingSeconds.toFloat() / totalSeconds.toFloat())
     }
 
     /** Timer reached zero; the lock action is being triggered. */

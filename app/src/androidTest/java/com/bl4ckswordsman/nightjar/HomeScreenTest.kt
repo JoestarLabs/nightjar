@@ -2,13 +2,10 @@ package com.bl4ckswordsman.nightjar
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import com.bl4ckswordsman.nightjar.data.TimerPreferences
 import com.bl4ckswordsman.nightjar.data.TimerPreferencesDataSource
 import com.bl4ckswordsman.nightjar.data.TimerRepository
-import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.ui.screen.HomeScreen
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
@@ -118,7 +115,7 @@ class HomeScreenTest {
         composeTestRule.setContent {
             NightjarTheme {
                 com.bl4ckswordsman.nightjar.ui.components.PresetChips(
-                    selectedSeconds  = 300L,
+                    selectedSeconds = 300L,
                     onPresetSelected = {},
                 )
             }

@@ -50,7 +50,7 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 val prefs = preferencesDataSource.preferences.first()
                 val startedAt = prefs.startedAtMillis
-                val duration  = prefs.lastDurationSeconds
+                val duration = prefs.lastDurationSeconds
 
                 if (startedAt > 0L && duration > 0L) {
                     val elapsedSeconds = (System.currentTimeMillis() - startedAt) / 1_000
