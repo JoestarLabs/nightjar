@@ -37,6 +37,15 @@ jobs:
           distribution: "temurin"
           cache: gradle
 
+      - name: Update Android version
+        run: |
+          VERSION="${{ needs.release-please.outputs.version }}"
+          VERSION_CODE=$(date +%s)
+
+          # Update versionName and versionCode in build.gradle.kts
+          sed -i "s/versionName = \".*\"/versionName = \"$VERSION\"/" app/build.gradle.kts
+          sed -i "s/versionCode = [0-9]*/versionCode = $VERSION_CODE/" app/build.gradle.kts
+
       - name: Build unsigned Release APK
         run: ./gradlew assembleRelease
 

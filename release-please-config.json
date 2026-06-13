@@ -1,7 +1,7 @@
 {
   "packages": {
     "app": {
-      "release-type": "android",
+      "release-type": "simple",
       "package-name": "nightjar"
     }
   }
