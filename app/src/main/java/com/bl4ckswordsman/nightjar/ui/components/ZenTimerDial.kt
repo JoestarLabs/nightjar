@@ -11,7 +11,9 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -67,6 +69,7 @@ fun ZenTimerDial(
     onSecondsChanged: (Long) -> Unit,
     maxSeconds: Long = 7_200L,      // 2 hours
     runningTotalSeconds: Long? = null,
+    onDialClicked: (() -> Unit)? = null,
     size: Dp = 280.dp,
     contentDesc: String = "",
     modifier: Modifier = Modifier,
@@ -214,11 +217,20 @@ fun ZenTimerDial(
             drawDragHandle(sweep, primary, onSurface, handleRadius.toPx())
         }
 
+        val dialClickableModifier = if (runningSeconds == null && onDialClicked != null) {
+            Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                onDialClicked()
+            }
+        } else Modifier
+
         // Centre text: HH:MM:SS
         TimerText(
             seconds = displaySeconds,
             isRunning = runningSeconds != null,
-            modifier = Modifier,
+            modifier = dialClickableModifier,
         )
     }
 }

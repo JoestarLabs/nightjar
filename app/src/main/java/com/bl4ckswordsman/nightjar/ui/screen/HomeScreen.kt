@@ -56,6 +56,7 @@ import com.bl4ckswordsman.nightjar.ui.components.AnimatedAppTitle
 import com.bl4ckswordsman.nightjar.ui.components.LockButton
 import com.bl4ckswordsman.nightjar.ui.components.NotificationPermissionDialog
 import com.bl4ckswordsman.nightjar.ui.components.PresetChips
+import com.bl4ckswordsman.nightjar.ui.components.DurationPickerSheet
 import com.bl4ckswordsman.nightjar.ui.components.StatusChip
 import com.bl4ckswordsman.nightjar.ui.components.ZenTimerDial
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
@@ -82,6 +83,7 @@ fun HomeScreen(
     // ── Permission dialog state ───────────────────────────────────────────────
     var showNotifDialog by remember { mutableStateOf(false) }
     var showAccessibilityDialog by remember { mutableStateOf(false) }
+    var showDurationSheet by remember { mutableStateOf(false) }
 
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -140,6 +142,16 @@ fun HomeScreen(
                 })
             },
             onDismiss = { showAccessibilityDialog = false }
+        )
+    }
+    if (showDurationSheet) {
+        DurationPickerSheet(
+            initialSeconds = viewModel.selectedSeconds,
+            onDismissRequest = { showDurationSheet = false },
+            onConfirm = { totalSeconds ->
+                showDurationSheet = false
+                viewModel.setSelectedSeconds(totalSeconds)
+            }
         )
     }
 
@@ -204,6 +216,7 @@ fun HomeScreen(
                 selectedSeconds = viewModel.selectedSeconds,
                 runningSeconds = runningSeconds,
                 runningTotalSeconds = runningTotalSeconds,
+                onDialClicked = { showDurationSheet = true },
                 onSecondsChanged = { viewModel.setSelectedSeconds(it) },
                 contentDesc = stringResource(R.string.cd_timer_dial),
                 modifier = Modifier.padding(vertical = 8.dp),
