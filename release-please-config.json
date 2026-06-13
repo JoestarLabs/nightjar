@@ -1,0 +1,8 @@
+{
+  "packages": {
+    "app": {
+      "release-type": "android",
+      "package-name": "nightjar"
+    }
+  }
+}
