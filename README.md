@@ -1,4 +1,5 @@
-# Nightjar
+
+# ![Nightjar Banner](.github/assets/banner.png)
 
 Nightjar is a Material 3 Expressive lock timer application for Android designed to help parents manage device screen time with playful, intuitive controls.
 
