@@ -1,1 +1,1 @@
-A Material 3 screen lock timer with a playful rising wave warning overlay.
+A Material 3 Expressive screen lock timer with a playful rising wave warning overlay.

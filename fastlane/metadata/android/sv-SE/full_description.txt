@@ -1,4 +1,4 @@
-Nightjar är en skärmlåstimer-app i Material 3 för Android som hjälper till att hantera skärmtid med enkla kontroller och skonsamma varningar.
+Nightjar är en skärmlåstimer-app i Material 3 Expressive för Android som hjälper till att hantera skärmtid med enkla kontroller och skonsamma varningar.
 
 Funktioner:
 - Interaktiv timerurtavla: En ren, cirkulär urtavla för att enkelt ställa in och följa aktiva nedräkningar.

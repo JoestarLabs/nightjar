@@ -1,4 +1,4 @@
-Nightjar is a Material 3 lock timer application for Android designed to help manage device screen time with intuitive controls and gentle warnings.
+Nightjar is a Material 3 Expressive lock timer application for Android designed to help manage device screen time with intuitive controls and gentle warnings.
 
 Features:
 - Expressive Zen Timer Dial: A clean, interactive circular dial to easily adjust and track active countdowns.
