@@ -18,7 +18,6 @@ mockitoKotlin = "5.4.0"
 mockitoCore = "5.14.2"
 robolectric = "4.14.1"
 appcompat = "1.7.1"
-googleFonts = "1.8.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,8 +55,6 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mo
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 # AppCompat (per-app locale support)
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-# Google Fonts for Compose
-compose-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "googleFonts" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

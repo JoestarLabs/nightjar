@@ -104,8 +104,6 @@ dependencies {
 
     // AppCompat for per-app language support (AppCompatDelegate)
     implementation(libs.appcompat)
-    // Google Fonts for Compose (Noto Serif JP, Inter)
-    implementation(libs.compose.ui.text.google.fonts)
 
     // Unit tests
     testImplementation(libs.junit)
