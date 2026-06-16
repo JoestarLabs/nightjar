@@ -22,6 +22,7 @@ import com.bl4ckswordsman.nightjar.NightjarApp
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerRepository
 import com.bl4ckswordsman.nightjar.data.TimerState
+import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,14 +63,14 @@ class LockTimerService : Service() {
     private var overlayManager: ComposeOverlayManager? = null
 
     // Sensor-based tilt detection
-    private val sensorManager by lazy { getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+    private val sensorManager by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
     private var accelerometer: Sensor? = null
     private var currentTilt = 0f
 
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null || event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-            
+
             // X-axis value measures left/right tilt.
             val x = event.values[0]
 
@@ -243,7 +244,7 @@ class LockTimerService : Service() {
         // Update notification to "Locking screen now" briefly
         nm.notify(NOTIFICATION_ID, buildFinishedNotification())
 
-        val locked = LockAccessibilityService.requestLock()
+        val locked = LockDeviceAdminReceiver.requestLock(this)
 
         serviceScope.launch {
             timerRepository.preferencesDataSource.clearActiveTimer()

@@ -34,13 +34,12 @@
     <string name="notification_alert_title">Screen locking soon</string>
     <string name="notification_alert_one_minute">1 minute remaining — screen will lock shortly</string>
 
-    <!-- Accessibility service -->
-    <string name="accessibility_service_label">Nightjar Screen Lock</string>
-    <string name="accessibility_service_description">
-        Nightjar uses this permission only to lock your screen when the timer expires.
-        It does not read, record, or transmit any screen content or personal data.
-        Your fingerprint and face unlock remain fully functional after locking.
+    <!-- Device Administrator -->
+    <string name="device_admin_label">Nightjar Screen Lock</string>
+    <string name="device_admin_description">
+        Required to lock the screen when the timer ends. Note that this method will require your PIN/password to unlock on the first attempt after locking.
     </string>
+    <string name="device_admin_explanation">Allows Nightjar to lock the screen when the timer ends.</string>
 
     <!-- Permission dialogs -->
     <string name="dialog_notification_title">Allow notifications</string>
@@ -48,12 +47,9 @@
         Nightjar needs to show a persistent notification while the timer is running,
         so it can count down reliably in the background.
     </string>
-    <string name="dialog_accessibility_title">Enable screen-lock access</string>
-    <string name="dialog_accessibility_body">
-        To lock your screen when the timer ends, Nightjar needs one special permission:
-        the Accessibility Service. This lets the app trigger the lock screen — and nothing else.
-        It cannot read your screen or access your data.
-        You will be taken to Android Settings to enable it.
+    <string name="dialog_admin_title">Enable device administrator</string>
+    <string name="dialog_admin_body">
+        To lock your screen when the timer ends, Nightjar needs to be activated as a Device Administrator. Note that unlocking the screen after a locked timer will require your PIN, pattern, or password instead of biometrics.
     </string>
     <string name="dialog_btn_allow">Allow</string>
     <string name="dialog_btn_open_settings">Open Settings</string>
@@ -67,12 +63,14 @@
     <string name="settings_language_en">English</string>
     <string name="settings_language_sv">Svenska</string>
     <string name="settings_section_permissions">Permissions</string>
-    <string name="settings_perm_accessibility">Accessibility service</string>
-    <string name="settings_perm_accessibility_desc">Required to lock the screen when the timer ends</string>
-    <string name="settings_perm_accessibility_enabled">Enabled</string>
-    <string name="settings_perm_accessibility_disabled">Disabled — tap to enable</string>
+    <string name="settings_perm_admin">Device administrator</string>
+    <string name="settings_perm_admin_desc">Required to lock the screen when the timer ends (PIN/password unlock required)</string>
+    <string name="settings_perm_admin_enabled">Active</string>
+    <string name="settings_perm_admin_disabled">Inactive — tap to activate</string>
     <string name="settings_perm_notification">Notifications</string>
     <string name="settings_perm_notification_desc">Show a countdown notification while the timer runs</string>
+    <string name="settings_perm_enabled">Enabled</string>
+    <string name="settings_perm_disabled">Disabled — tap to enable</string>
     <string name="settings_section_timer_behaviour">Timer behaviour</string>
     <string name="settings_commitment_mode_title">Commitment mode</string>
     <string name="settings_commitment_mode_desc">Once started, the timer cannot be stopped</string>

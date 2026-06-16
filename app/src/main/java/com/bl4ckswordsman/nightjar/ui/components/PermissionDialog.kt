@@ -53,7 +53,7 @@ fun NotificationPermissionDialog(
 }
 
 @Composable
-fun AccessibilityPermissionDialog(
+fun DeviceAdminPermissionDialog(
     onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -61,13 +61,13 @@ fun AccessibilityPermissionDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = stringResource(R.string.dialog_accessibility_title),
+                text = stringResource(R.string.dialog_admin_title),
                 style = MaterialTheme.typography.headlineSmall,
             )
         },
         text = {
             Text(
-                text = stringResource(R.string.dialog_accessibility_body),
+                text = stringResource(R.string.dialog_admin_body),
                 style = MaterialTheme.typography.bodyMedium,
             )
         },
@@ -94,8 +94,8 @@ private fun NotificationDialogPreview() {
 
 @Preview
 @Composable
-private fun AccessibilityDialogPreview() {
+private fun DeviceAdminDialogPreview() {
     NightjarTheme {
-        AccessibilityPermissionDialog(onOpenSettings = {}, onDismiss = {})
+        DeviceAdminPermissionDialog(onOpenSettings = {}, onDismiss = {})
     }
 }

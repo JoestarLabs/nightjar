@@ -105,7 +105,7 @@ fun ZenTimerDial(
     LaunchedEffect(targetAngle, runningSeconds) {
         val currentlyRunning = runningSeconds != null
         val startedJustNow = currentlyRunning && prevRunningSeconds == null
-        
+
         useSpring = !currentlyRunning || startedJustNow
         prevRunningSeconds = runningSeconds
 

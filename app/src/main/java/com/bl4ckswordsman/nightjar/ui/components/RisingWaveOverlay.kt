@@ -99,11 +99,17 @@ fun RisingWaveOverlay(
     LaunchedEffect(remainingSeconds) {
         textScale.animateTo(
             targetValue = 1.2f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh)
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessHigh
+            )
         )
         textScale.animateTo(
             targetValue = 1.0f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
         )
     }
 
@@ -142,7 +148,8 @@ fun RisingWaveOverlay(
                 while (x <= width) {
                     val currentLineY = baseLineY + (1f - 2f * x / width) * tiltOffset
                     val angle = x * waveFrequency + backWavePhase
-                    val y = currentLineY + kotlin.math.sin(angle.toDouble()).toFloat() * (waveAmplitude * 0.8f)
+                    val y = currentLineY + kotlin.math.sin(angle.toDouble())
+                        .toFloat() * (waveAmplitude * 0.8f)
                     lineTo(x, y)
                     x += step
                 }
@@ -173,7 +180,8 @@ fun RisingWaveOverlay(
                 while (x <= width) {
                     val currentLineY = baseLineY + (1f - 2f * x / width) * tiltOffset
                     val angle = x * waveFrequency + wavePhase
-                    val y = currentLineY + kotlin.math.cos(angle.toDouble()).toFloat() * waveAmplitude
+                    val y =
+                        currentLineY + kotlin.math.cos(angle.toDouble()).toFloat() * waveAmplitude
                     lineTo(x, y)
                     x += step
                 }

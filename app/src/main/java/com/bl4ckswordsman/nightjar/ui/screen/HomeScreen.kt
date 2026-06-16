@@ -3,9 +3,7 @@
 package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.Manifest
-import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -50,13 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerState
-import com.bl4ckswordsman.nightjar.service.LockAccessibilityService
-import com.bl4ckswordsman.nightjar.ui.components.AccessibilityPermissionDialog
+import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
 import com.bl4ckswordsman.nightjar.ui.components.AnimatedAppTitle
+import com.bl4ckswordsman.nightjar.ui.components.DeviceAdminPermissionDialog
+import com.bl4ckswordsman.nightjar.ui.components.DurationPickerSheet
 import com.bl4ckswordsman.nightjar.ui.components.LockButton
 import com.bl4ckswordsman.nightjar.ui.components.NotificationPermissionDialog
 import com.bl4ckswordsman.nightjar.ui.components.PresetChips
-import com.bl4ckswordsman.nightjar.ui.components.DurationPickerSheet
 import com.bl4ckswordsman.nightjar.ui.components.StatusChip
 import com.bl4ckswordsman.nightjar.ui.components.ZenTimerDial
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
@@ -82,14 +80,14 @@ fun HomeScreen(
 
     // ── Permission dialog state ───────────────────────────────────────────────
     var showNotifDialog by remember { mutableStateOf(false) }
-    var showAccessibilityDialog by remember { mutableStateOf(false) }
+    var showAdminDialog by remember { mutableStateOf(false) }
     var showDurationSheet by remember { mutableStateOf(false) }
 
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted && !LockAccessibilityService.isEnabled()) {
-            showAccessibilityDialog = true
+        if (granted && !LockDeviceAdminReceiver.isEnabled(context)) {
+            showAdminDialog = true
         }
     }
 
@@ -127,21 +125,19 @@ fun HomeScreen(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 } else {
-                    if (!LockAccessibilityService.isEnabled()) showAccessibilityDialog = true
+                    if (!LockDeviceAdminReceiver.isEnabled(context)) showAdminDialog = true
                 }
             },
             onDismiss = { showNotifDialog = false }
         )
     }
-    if (showAccessibilityDialog) {
-        AccessibilityPermissionDialog(
+    if (showAdminDialog) {
+        DeviceAdminPermissionDialog(
             onOpenSettings = {
-                showAccessibilityDialog = false
-                context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                })
+                showAdminDialog = false
+                context.startActivity(LockDeviceAdminReceiver.getRegisterIntent(context))
             },
-            onDismiss = { showAccessibilityDialog = false }
+            onDismiss = { showAdminDialog = false }
         )
     }
     if (showDurationSheet) {
@@ -259,7 +255,7 @@ fun HomeScreen(
                         }
 
                         isRunning -> viewModel.stopTimer()
-                        !LockAccessibilityService.isEnabled() -> showAccessibilityDialog = true
+                        !LockDeviceAdminReceiver.isEnabled(context) -> showAdminDialog = true
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                                 !hasNotificationPermission(context) -> showNotifDialog = true
 

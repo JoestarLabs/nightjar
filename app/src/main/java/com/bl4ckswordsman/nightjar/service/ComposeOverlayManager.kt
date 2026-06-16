@@ -70,7 +70,7 @@ class ComposeOverlayManager(private val context: Context) {
         val view = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             fitsSystemWindows = false
-            
+
             // Set Tree Owners for Compose to work outside Activity
             setViewTreeLifecycleOwner(lifecycleOwner)
             setViewTreeSavedStateRegistryOwner(lifecycleOwner)
@@ -101,7 +101,8 @@ class ComposeOverlayManager(private val context: Context) {
         ).apply {
             // Support drawing behind cuts and status bars for a true fullscreen wave
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
 

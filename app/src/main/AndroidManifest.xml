@@ -64,26 +64,20 @@
                 android:value="Countdown timer that locks the device screen when it expires" />
         </service>
 
-        <!-- ── Accessibility Service (lock screen trigger) ─────────────── -->
-        <!--
-            This service has NO event subscriptions and does NOT read any
-            screen content. Its sole capability is calling
-            performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN) when the timer
-            expires, which preserves biometric (fingerprint / face) unlock.
-            The user must explicitly enable it in Android Settings.
-        -->
-        <service
-            android:name=".service.LockAccessibilityService"
+        <!-- ── Device Admin Receiver (lock screen trigger) ─────────────── -->
+        <receiver
+            android:name=".receiver.LockDeviceAdminReceiver"
+            android:description="@string/device_admin_description"
             android:exported="true"
-            android:label="@string/accessibility_service_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
+            android:label="@string/device_admin_label"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
             <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
-        </service>
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_config" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
 
         <!-- ── Boot Receiver (resume pending timers after reboot) ──────── -->
         <receiver

@@ -34,13 +34,12 @@
     <string name="notification_alert_title">Skärmen låses snart</string>
     <string name="notification_alert_one_minute">1 minut kvar — skärmen låses strax</string>
 
-    <!-- Tillgänglighetstjänst -->
-    <string name="accessibility_service_label">Nightjar skärmlås</string>
-    <string name="accessibility_service_description">
-        Nightjar använder den här behörigheten enbart för att låsa skärmen när timern är slut.
-        Appen läser, spelar inte in eller skickar ingen skärminnehåll eller personuppgifter.
-        Fingeravtryck och ansigtsigenkänning fungerar fortfarande efter låsning.
+    <!-- Enhetsadministratör -->
+    <string name="device_admin_label">Nightjar skärmlås</string>
+    <string name="device_admin_description">
+        Krävs för att låsa skärmen när timern är slut. Observera att denna metod kräver din PIN/lösenord för att låsa upp första gången efter låsning.
     </string>
+    <string name="device_admin_explanation">Krävs för att låsa skärmen när timern är slut.</string>
 
     <!-- Behörighetsdialoger -->
     <string name="dialog_notification_title">Tillåt aviseringar</string>
@@ -48,12 +47,9 @@
         Nightjar behöver visa en beständig avisering medan timern är aktiv
         för att kunna räkna ned tillförlitligt i bakgrunden.
     </string>
-    <string name="dialog_accessibility_title">Aktivera skärmlåsåtkomst</string>
-    <string name="dialog_accessibility_body">
-        För att låsa skärmen när timern slutar behöver Nightjar en speciell behörighet:
-        tillgänglighetstjänsten. Den används enbart för att utlösa skärmlåset – inget annat.
-        Appen kan inte läsa din skärm eller komma åt dina uppgifter.
-        Du skickas till Android-inställningar för att aktivera den.
+    <string name="dialog_admin_title">Aktivera enhetsadministratör</string>
+    <string name="dialog_admin_body">
+        För att låsa skärmen när timern slutar måste Nightjar aktiveras som enhetsadministratör. Observera att upplåsning av skärmen efter att timern låst den kommer kräva din PIN, mönster eller lösenord istället för biometri.
     </string>
     <string name="dialog_btn_allow">Tillåt</string>
     <string name="dialog_btn_open_settings">Öppna inställningar</string>
@@ -67,12 +63,14 @@
     <string name="settings_language_en">English</string>
     <string name="settings_language_sv">Svenska</string>
     <string name="settings_section_permissions">Behörigheter</string>
-    <string name="settings_perm_accessibility">Tillgänglighetstjänst</string>
-    <string name="settings_perm_accessibility_desc">Krävs för att låsa skärmen när timern slutar</string>
-    <string name="settings_perm_accessibility_enabled">Aktiverad</string>
-    <string name="settings_perm_accessibility_disabled">Inaktiverad — tryck för att aktivera</string>
+    <string name="settings_perm_admin">Enhetsadministratör</string>
+    <string name="settings_perm_admin_desc">Krävs för att låsa skärmen när timern slutar (PIN-upplåsning krävs)</string>
+    <string name="settings_perm_admin_enabled">Aktiv</string>
+    <string name="settings_perm_admin_disabled">Inaktiv — tryck för att aktivera</string>
     <string name="settings_perm_notification">Aviseringar</string>
     <string name="settings_perm_notification_desc">Visa en nedräkning medan timern är aktiv</string>
+    <string name="settings_perm_enabled">Aktiverad</string>
+    <string name="settings_perm_disabled">Inaktiverad — tryck för att aktivera</string>
     <string name="settings_section_timer_behaviour">Timerbeteende</string>
     <string name="settings_commitment_mode_title">Åtagandeläge</string>
     <string name="settings_commitment_mode_desc">När timern väl startat kan den inte stoppas</string>
