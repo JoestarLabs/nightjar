@@ -9,7 +9,20 @@ Nightjar is a Material 3 Expressive lock timer application for Android designed 
 - **Sunset warning (Rising Wave)**: A fullscreen, gyroscope-responsive liquid wave overlay that rises from the bottom to gently alert children when their time is almost up.
 - **Collapsing Settings App Bar**: Collapses dynamically on scroll.
 
-## Getting Started
+## Download
+
+### Install via Obtainium
+
+[![Get it on Obtainium](.github/assets/badge_obtainium.png)](http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/JoestarLabs/nightjar/releases)
+
+### GitHub Release
+
+Download a GitHub actions build (scanned by 🛡VirusTotal) here:
+<p>
+  <a href="https://github.com/JoestarLabs/nightjar/releases/latest"><img src="https://img.shields.io/github/v/release/JoestarLabs/nightjar" alt="GitHub release (latest by date)"></a>
+</p>
+
+## Building from Source
 ### Build Requirements
 - Android SDK (API level 33+)
 - JDK 17
