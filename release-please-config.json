@@ -2,8 +2,7 @@
   "packages": {
     "app": {
       "release-type": "simple",
-      "package-name": "nightjar",
-      "release-as": "0.0.2"
+      "package-name": "nightjar"
     }
   }
 }
