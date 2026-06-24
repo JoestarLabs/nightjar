@@ -63,9 +63,21 @@ fun getPresetDurationFormat(seconds: Long): PresetDurationFormat {
 fun formatPresetDuration(seconds: Long): String {
     return when (val format = getPresetDurationFormat(seconds)) {
         is PresetDurationFormat.HourOne -> stringResource(R.string.preset_format_hour_one)
-        is PresetDurationFormat.HourMany -> stringResource(R.string.preset_format_hour_many, format.hours)
-        is PresetDurationFormat.HourMin -> stringResource(R.string.preset_format_hour_min, format.hours, format.minutes)
-        is PresetDurationFormat.Minutes -> stringResource(R.string.preset_format_min, format.minutes)
+        is PresetDurationFormat.HourMany -> stringResource(
+            R.string.preset_format_hour_many,
+            format.hours
+        )
+
+        is PresetDurationFormat.HourMin -> stringResource(
+            R.string.preset_format_hour_min,
+            format.hours,
+            format.minutes
+        )
+
+        is PresetDurationFormat.Minutes -> stringResource(
+            R.string.preset_format_min,
+            format.minutes
+        )
     }
 }
 

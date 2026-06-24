@@ -31,11 +31,20 @@ class PresetDurationFormatTest {
     @Test
     fun testHoursAndMinutes() {
         // 1 hour and some minutes
-        assertEquals(PresetDurationFormat.HourMin(1L, 30L), getPresetDurationFormat(5400L)) // 90 min
+        assertEquals(
+            PresetDurationFormat.HourMin(1L, 30L),
+            getPresetDurationFormat(5400L)
+        ) // 90 min
         assertEquals(PresetDurationFormat.HourMin(1L, 1L), getPresetDurationFormat(3660L)) // 61 min
 
         // Multiple hours and some minutes
-        assertEquals(PresetDurationFormat.HourMin(2L, 5L), getPresetDurationFormat(7500L)) // 125 min
-        assertEquals(PresetDurationFormat.HourMin(3L, 45L), getPresetDurationFormat(13500L)) // 225 min
+        assertEquals(
+            PresetDurationFormat.HourMin(2L, 5L),
+            getPresetDurationFormat(7500L)
+        ) // 125 min
+        assertEquals(
+            PresetDurationFormat.HourMin(3L, 45L),
+            getPresetDurationFormat(13500L)
+        ) // 225 min
     }
 }

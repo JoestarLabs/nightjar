@@ -6,5 +6,7 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
-    <include domain="file" path="datastore/nightjar_timer_prefs.preferences_pb" />
+    <include
+        domain="file"
+        path="datastore/nightjar_timer_prefs.preferences_pb" />
 </full-backup-content>

@@ -1,6 +1,7 @@
 # Keystore Setup for Nightjar
 
-This directory is intentionally empty in the repository. Keystore files are **never** committed to git.
+This directory is intentionally empty in the repository. Keystore files are **never** committed to
+git.
 
 ## Generating Your Release Keystore (one-time setup)
 
@@ -30,7 +31,7 @@ Losing it means you can never publish updates to the same Play Store / IzzyOnDro
 2. **Add the following secrets to your GitHub repository** (`Settings → Secrets → Actions`):
 
    | Secret name                 | Value                                    |
-   |-----------------------------|------------------------------------------|
+      |-----------------------------|------------------------------------------|
    | `SIGNING_KEYSTORE`          | Contents of `nightjar-release.keystore.b64` |
    | `SIGNING_KEYSTORE_PASSWORD` | The keystore password you chose above    |
    | `SIGNING_KEY_ALIAS`         | `nightjar` (or whatever alias you used)  |
@@ -61,6 +62,7 @@ The APK will be at: `app/build/outputs/apk/release/app-release.apk`
 ## How It Works in CI
 
 The `release-build.yml` workflow:
+
 1. Decodes `SIGNING_KEYSTORE` (base64) → `/tmp/nightjar.keystore`
 2. Sets `SIGNING_KEYSTORE_PATH` env var so Gradle reads it in `signingConfigs`
 3. Runs `./gradlew assembleRelease` (Gradle signs during build)
