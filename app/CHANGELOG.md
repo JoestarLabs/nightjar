@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.3](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.2...nightjar-v0.0.3) (2026-06-24)
+
+
+### Features
+
+* add more interactive touch animations and input constraints to AnimatedAppTitle ([a7734ff](https://github.com/JoestarLabs/nightjar/commit/a7734ffd5a12c4e3c8f9989f8d146ae6d1f05c5a))
+
+
+### Performance Improvements
+
+* cache notification lock icon bitmap and hoist tick mark angles list ([b93d0b4](https://github.com/JoestarLabs/nightjar/commit/b93d0b4f2c56695fe7d38e0e15ed782ebf633133))
+
+
+### Miscellaneous Chores
+
+* refactor code and XML formatting for improved readability ([ed9655f](https://github.com/JoestarLabs/nightjar/commit/ed9655f7db80207147f37fb7a18b33f6116fd04c))
+
 ## [0.0.2](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.1...nightjar-v0.0.2) (2026-06-13)
 
 ### Features
