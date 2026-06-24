@@ -6,9 +6,7 @@
       "extra-files": [
         {
           "type": "generic",
-          "path": "app/build.gradle.kts",
-          "search-for": "versionName = \"",
-          "replace-with": "versionName = \""
+          "path": "app/build.gradle.kts"
         }
       ]
     }
