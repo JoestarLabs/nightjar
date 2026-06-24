@@ -42,10 +42,15 @@ data class TimerPreferences(
 )
 
 @Singleton
-class TimerPreferencesDataSource @Inject constructor(
-    @param:ApplicationContext private val context: Context
+class TimerPreferencesDataSource(
+    private val dataStore: DataStore<Preferences>
 ) {
-    val preferences: Flow<TimerPreferences> = context.dataStore.data.map { prefs ->
+    @Inject
+    constructor(
+        @ApplicationContext context: Context
+    ) : this(context.dataStore)
+
+    val preferences: Flow<TimerPreferences> = dataStore.data.map { prefs ->
         val presetsStr = prefs[TimerPreferenceKeys.CUSTOM_PRESETS] ?: "5,15,30,60"
         val presetsList = try {
             presetsStr.split(",").map { it.trim().toLong() * 60L }
@@ -63,14 +68,14 @@ class TimerPreferencesDataSource @Inject constructor(
     }
 
     suspend fun saveLastDuration(durationSeconds: Long) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.LAST_DURATION_SECONDS] = durationSeconds
         }
     }
 
     /** Persist that a timer started at [startedAtMillis] with [durationSeconds] duration. */
     suspend fun saveTimerStarted(durationSeconds: Long, startedAtMillis: Long) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.LAST_DURATION_SECONDS] = durationSeconds
             prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] = startedAtMillis
         }
@@ -78,35 +83,35 @@ class TimerPreferencesDataSource @Inject constructor(
 
     /** Clear the persisted active timer (called when timer finishes or is cancelled). */
     suspend fun clearActiveTimer() {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] = 0L
         }
     }
 
     /** Persist the commitment mode setting. */
     suspend fun saveCommitmentMode(enabled: Boolean) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.COMMITMENT_MODE] = enabled
         }
     }
 
     /** Persist custom preset durations (in minutes). */
     suspend fun saveCustomPresets(presetsMinutes: List<Long>) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.CUSTOM_PRESETS] = presetsMinutes.joinToString(",")
         }
     }
 
     /** Persist the sunset mode enabled setting. */
     suspend fun saveSunsetMode(enabled: Boolean) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] = enabled
         }
     }
 
     /** Persist the sunset mode warning duration. */
     suspend fun saveSunsetDuration(seconds: Long) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.SUNSET_DURATION_SECONDS] = seconds
         }
     }

@@ -23,27 +23,49 @@ import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 
 /**
- * Formats preset durations in seconds into localized strings dynamically.
+ * Representation of formatted preset duration variations.
  */
-@Composable
-fun formatPresetDuration(seconds: Long): String {
+sealed interface PresetDurationFormat {
+    data class Minutes(val minutes: Long) : PresetDurationFormat
+    object HourOne : PresetDurationFormat
+    data class HourMany(val hours: Long) : PresetDurationFormat
+    data class HourMin(val hours: Long, val minutes: Long) : PresetDurationFormat
+}
+
+/**
+ * Pure helper function to compute the format type and parameters for a duration in seconds.
+ */
+fun getPresetDurationFormat(seconds: Long): PresetDurationFormat {
     val minutes = seconds / 60L
     return when {
         minutes >= 60L && minutes % 60L == 0L -> {
             val hours = minutes / 60L
-            if (hours == 1L) stringResource(R.string.preset_format_hour_one)
-            else stringResource(R.string.preset_format_hour_many, hours)
+            if (hours == 1L) PresetDurationFormat.HourOne
+            else PresetDurationFormat.HourMany(hours)
         }
 
         minutes >= 60L -> {
             val hours = minutes / 60L
             val remainingMins = minutes % 60L
-            stringResource(R.string.preset_format_hour_min, hours, remainingMins)
+            PresetDurationFormat.HourMin(hours, remainingMins)
         }
 
         else -> {
-            stringResource(R.string.preset_format_min, minutes)
+            PresetDurationFormat.Minutes(minutes)
         }
+    }
+}
+
+/**
+ * Formats preset durations in seconds into localized strings dynamically.
+ */
+@Composable
+fun formatPresetDuration(seconds: Long): String {
+    return when (val format = getPresetDurationFormat(seconds)) {
+        is PresetDurationFormat.HourOne -> stringResource(R.string.preset_format_hour_one)
+        is PresetDurationFormat.HourMany -> stringResource(R.string.preset_format_hour_many, format.hours)
+        is PresetDurationFormat.HourMin -> stringResource(R.string.preset_format_hour_min, format.hours, format.minutes)
+        is PresetDurationFormat.Minutes -> stringResource(R.string.preset_format_min, format.minutes)
     }
 }
 
