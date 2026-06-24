@@ -61,6 +61,8 @@ class LockTimerService : Service() {
     private var commitmentMode = false
 
     private var overlayManager: ComposeOverlayManager? = null
+    private var cachedLockBitmap: android.graphics.Bitmap? = null
+
 
     // Sensor-based tilt detection
     private val sensorManager by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
@@ -405,15 +407,7 @@ class LockTimerService : Service() {
 
             return builder.build()
         } else {
-            val lockDrawable =
-                ContextCompat.getDrawable(localizedContext, R.drawable.ic_lock_notification)
-            lockDrawable?.mutate()
-                ?.setTint(ContextCompat.getColor(this, R.color.notification_icon_tint))
-            val lockBitmap = lockDrawable?.toBitmap(
-                width = 120,
-                height = 120,
-                config = android.graphics.Bitmap.Config.ARGB_8888
-            )
+            val lockBitmap = getLockBitmap(localizedContext)
 
             val builder = NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
                 .setSmallIcon(R.drawable.ic_lock_notification)
@@ -446,6 +440,22 @@ class LockTimerService : Service() {
 
             return builder.build()
         }
+    }
+
+    private fun getLockBitmap(context: Context): android.graphics.Bitmap? {
+        var bitmap = cachedLockBitmap
+        if (bitmap == null) {
+            val lockDrawable = ContextCompat.getDrawable(context, R.drawable.ic_lock_notification)
+            lockDrawable?.mutate()
+                ?.setTint(ContextCompat.getColor(this, R.color.notification_icon_tint))
+            bitmap = lockDrawable?.toBitmap(
+                width = 120,
+                height = 120,
+                config = android.graphics.Bitmap.Config.ARGB_8888
+            )
+            cachedLockBitmap = bitmap
+        }
+        return bitmap
     }
 
     private fun buildFinishedNotification(): Notification {

@@ -49,6 +49,9 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
+private val TICK_ANGLES = listOf(0f, 90f, 180f, 270f)
+
+
 /**
  * Circular timer dial with spring-physics drag interaction.
  *
@@ -331,9 +334,8 @@ private fun DrawScope.drawTickMarks(color: Color) {
     val cx = size.width / 2f
     val cy = size.height / 2f
     val radius = size.width / 2f - 20.dp.toPx()
-    val tickAngles = listOf(0f, 90f, 180f, 270f)  // 12, 3, 6, 9 o'clock
 
-    tickAngles.forEach { angleDeg ->
+    TICK_ANGLES.forEach { angleDeg ->
         val rad = Math.toRadians((angleDeg - 90.0))
         val outerX = cx + radius * cos(rad).toFloat()
         val outerY = cy + radius * sin(rad).toFloat()
