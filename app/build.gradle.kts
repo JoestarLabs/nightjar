@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.aboutlibraries)
 }
 
 android {
@@ -14,7 +15,7 @@ android {
         minSdk = 33
         targetSdk = 36
         versionCode = 1
-        versionName = "0.0.1"
+        versionName = "0.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -104,6 +105,11 @@ dependencies {
 
     // AppCompat for per-app language support (AppCompatDelegate)
     implementation(libs.appcompat)
+
+    // Dependencies Listing
+    implementation(libs.aboutlibraries.compose)
+    implementation(libs.aboutlibraries.core)
+
 
     // Unit tests
     testImplementation(libs.junit)

@@ -112,4 +112,9 @@
     <string name="dialog_overlay_title">Aktivera överlagrad varning</string>
     <string name="dialog_overlay_body">För att visa varningen med den stigande vågen när timern slutar, behöver Nightjar behörighet att visas över andra appar. Du skickas till Android-inställningar för att aktivera den.</string>
     <string name="sunset_warning_text">Tiden är nästan slut!</string>
+    <string name="settings_about_version_desc">Klicka för att visa utvecklarprofil &amp; andra appar</string>
+    <string name="settings_about_dependencies">Bibliotek</string>
+    <string name="settings_about_dependencies_desc">Öppen källkod-bibliotek som används i appen</string>
+    <string name="dependencies_title">Bibliotek</string>
+    <string name="dependencies_subtitle">Öppen källkod-bibliotek som används i Nightjar</string>
 </resources>

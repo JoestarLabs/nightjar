@@ -24,13 +24,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Extension
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Warning
+
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -64,6 +68,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bl4ckswordsman.nightjar.BuildConfig
+import com.bl4ckswordsman.nightjar.DependenciesActivity
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
@@ -611,6 +616,7 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_section_about))
 
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
+                // Version Item
                 ListItem(
                     headlineContent = {
                         Text(
@@ -620,19 +626,80 @@ fun SettingsScreen(
                             )
                         )
                     },
+                    supportingContent = {
+                        Text(stringResource(R.string.settings_about_version_desc))
+                    },
                     leadingContent = {
                         Icon(
-                            Icons.Rounded.Check,
+                            Icons.Rounded.Info,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.OpenInNew,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceBright
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            try {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    android.net.Uri.parse("https://github.com/JoestarLabs")
+                                )
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                // Fallback if browser is missing
+                            }
+                        }
+                )
+
+                // Dependencies Item
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.settings_about_dependencies))
+                    },
+                    supportingContent = {
+                        Text(stringResource(R.string.settings_about_dependencies_desc))
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Extension,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.OpenInNew,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            try {
+                                context.startActivity(
+                                    Intent(context, DependenciesActivity::class.java)
+                                )
+                            } catch (e: Exception) {
+                                // Fail-safe
+                            }
+                        }
                 )
             }
+
 
             Spacer(Modifier.height(24.dp))
         }

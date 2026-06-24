@@ -41,12 +41,19 @@
             </intent-filter>
         </activity>
 
-        <!-- ── Settings Activity ───────────────────────────────────────── -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:label="@string/settings_title"
             android:theme="@style/Theme.Nightjar"></activity>
+
+        <!-- ── Dependencies Activity ───────────────────────────────────── -->
+        <activity
+            android:name=".DependenciesActivity"
+            android:exported="false"
+            android:label="@string/dependencies_title"
+            android:theme="@style/Theme.Nightjar"></activity>
+
 
         <!-- ── Lock Timer Foreground Service ───────────────────────────── -->
         <!--

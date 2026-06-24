@@ -2,7 +2,15 @@
   "packages": {
     "app": {
       "release-type": "simple",
-      "package-name": "nightjar"
+      "package-name": "nightjar",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "app/build.gradle.kts",
+          "search-for": "versionName = \"",
+          "replace-with": "versionName = \""
+        }
+      ]
     }
   }
 }

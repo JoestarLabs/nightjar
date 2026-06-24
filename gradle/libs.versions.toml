@@ -18,6 +18,8 @@ mockitoKotlin = "5.4.0"
 mockitoCore = "5.14.2"
 robolectric = "4.14.1"
 appcompat = "1.7.1"
+aboutLibraries = "14.0.0-b03"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -55,6 +57,9 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mo
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 # AppCompat (per-app locale support)
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+aboutlibraries-compose = { group = "com.mikepenz", name = "aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
+aboutlibraries-core = { group = "com.mikepenz", name = "aboutlibraries-core", version.ref = "aboutLibraries" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -62,3 +67,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutLibraries" }
+
