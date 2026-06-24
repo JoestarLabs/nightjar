@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.3...nightjar-v0.0.4) (2026-06-24)
+
+
+### Features
+
+* integrate AboutLibraries for license management and add a dedicated dependencies screen to settings ([922c6f6](https://github.com/JoestarLabs/nightjar/commit/922c6f6beb440a63e2c90711c24c7367a4b72adc))
+
 ## [0.0.3](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.2...nightjar-v0.0.3) (2026-06-24)
 
 
