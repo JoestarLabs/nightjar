@@ -68,3 +68,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ needs.release-please.outputs.tag_name }} nightjar-${{ needs.release-please.outputs.version }}.apk
+
+      - name: VirusTotal Scan
+        id: vt
+        uses: crazy-max/ghaction-virustotal@v5
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: |
+            nightjar-${{ needs.release-please.outputs.version }}.apk
+
+      - name: Update Release Body with Scan Results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.release-please.outputs.tag_name }}"
+          CURRENT_BODY=$(gh release view "$TAG" --json body --jq .body)
+          VT_LINK="${{ steps.vt.outputs.analysis }}"
+          VT_URL=$(echo "$VT_LINK" | cut -d'=' -f2-)
+          NEW_BODY=$(printf "%s\n\n## Security Scan\n* [VirusTotal Analysis](%s)\n" "$CURRENT_BODY" "$VT_URL")
+          gh release edit "$TAG" --notes "$NEW_BODY"
