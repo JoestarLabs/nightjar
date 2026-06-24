@@ -67,7 +67,15 @@ class ComposeOverlayManager(private val context: Context) {
         val lifecycleOwner = ServiceLifecycleOwner().also { this.lifecycleOwner = it }
         lifecycleOwner.start()
 
-        val view = ComposeView(context).apply {
+        val view = createComposeView(lifecycleOwner)
+        val params = createLayoutParams()
+
+        windowManager.addView(view, params)
+        this.composeView = view
+    }
+
+    private fun createComposeView(lifecycleOwner: ServiceLifecycleOwner): ComposeView {
+        return ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             fitsSystemWindows = false
 
@@ -86,8 +94,10 @@ class ComposeOverlayManager(private val context: Context) {
                 }
             }
         }
+    }
 
-        val params = WindowManager.LayoutParams(
+    private fun createLayoutParams(): WindowManager.LayoutParams {
+        return WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -105,9 +115,6 @@ class ComposeOverlayManager(private val context: Context) {
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
-
-        windowManager.addView(view, params)
-        this.composeView = view
     }
 
     fun updateRemainingTime(remainingSeconds: Long) {

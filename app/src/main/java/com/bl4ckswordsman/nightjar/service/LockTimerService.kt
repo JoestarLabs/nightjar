@@ -137,12 +137,8 @@ class LockTimerService : Service() {
     private fun startTimer(durationSeconds: Long) {
         timerJob?.cancel()
         val startedAt = System.currentTimeMillis()
-        var alertFired = false
 
-        // Persist so BootReceiver can resume if the device restarts
-        serviceScope.launch {
-            timerRepository.preferencesDataSource.saveTimerStarted(durationSeconds, startedAt)
-        }
+        persistTimerStart(durationSeconds, startedAt)
 
         // Post initial foreground notification so the service is promoted immediately
         startForeground(
@@ -151,11 +147,44 @@ class LockTimerService : Service() {
         )
 
         timerJob = serviceScope.launch {
-            val prefs = timerRepository.preferencesDataSource.preferences.first()
-            val sunsetEnabled = prefs.sunsetModeEnabled
-            val sunsetDuration = prefs.sunsetDurationSeconds
+            runCountdown(durationSeconds, startedAt)
+        }
+    }
 
-            var remaining = durationSeconds
+    private fun persistTimerStart(durationSeconds: Long, startedAt: Long) {
+        // Persist so BootReceiver can resume if the device restarts
+        serviceScope.launch {
+            timerRepository.preferencesDataSource.saveTimerStarted(durationSeconds, startedAt)
+        }
+    }
+
+    private suspend fun CoroutineScope.runCountdown(durationSeconds: Long, startedAt: Long) {
+        val prefs = timerRepository.preferencesDataSource.preferences.first()
+        val sunsetEnabled = prefs.sunsetModeEnabled
+        val sunsetDuration = prefs.sunsetDurationSeconds
+
+        var remaining = durationSeconds
+        var alertFired = false
+
+        timerRepository.updateState(
+            TimerState.Running(
+                totalSeconds = durationSeconds,
+                remainingSeconds = remaining,
+                startedAtMillis = startedAt
+            )
+        )
+
+        // Trigger overlay immediately if within warning window at start
+        if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
+            launch(Dispatchers.Main) {
+                registerSensor()
+                overlayManager?.show(remaining, sunsetDuration, currentTilt)
+            }
+        }
+
+        while (remaining > 0 && isActive) {
+            delay(1_000)
+            remaining--
             timerRepository.updateState(
                 TimerState.Running(
                     totalSeconds = durationSeconds,
@@ -164,59 +193,39 @@ class LockTimerService : Service() {
                 )
             )
 
-            // Trigger overlay immediately if within warning window at start
             if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
                 launch(Dispatchers.Main) {
-                    registerSensor()
-                    overlayManager?.show(remaining, sunsetDuration, currentTilt)
-                }
-            }
-
-            while (remaining > 0 && isActive) {
-                delay(1_000)
-                remaining--
-                timerRepository.updateState(
-                    TimerState.Running(
-                        totalSeconds = durationSeconds,
-                        remainingSeconds = remaining,
-                        startedAtMillis = startedAt
-                    )
-                )
-
-                if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
-                    launch(Dispatchers.Main) {
-                        if (overlayManager?.isShowing == true) {
-                            overlayManager?.updateRemainingTime(remaining)
-                        } else {
-                            registerSensor()
-                            overlayManager?.show(remaining, sunsetDuration, currentTilt)
-                        }
+                    if (overlayManager?.isShowing == true) {
+                        overlayManager?.updateRemainingTime(remaining)
+                    } else {
+                        registerSensor()
+                        overlayManager?.show(remaining, sunsetDuration, currentTilt)
                     }
                 }
+            }
 
-                nm.notify(
-                    NOTIFICATION_ID,
-                    buildNotification(
-                        durationSeconds,
-                        startedAt + durationSeconds * 1_000,
-                        remaining
-                    )
+            nm.notify(
+                NOTIFICATION_ID,
+                buildNotification(
+                    durationSeconds,
+                    startedAt + durationSeconds * 1_000,
+                    remaining
                 )
+            )
 
-                // ── 1-minute remaining alert (fires exactly once) ──────────
-                if (remaining == ONE_MINUTE_SECONDS && !alertFired && durationSeconds > ONE_MINUTE_SECONDS) {
-                    alertFired = true
-                    val countdownEndEpochMs = startedAt + durationSeconds * 1_000
-                    postOneMinuteAlert(durationSeconds, countdownEndEpochMs, remaining)
-                }
+            // ── 1-minute remaining alert (fires exactly once) ──────────
+            if (remaining == ONE_MINUTE_SECONDS && !alertFired && durationSeconds > ONE_MINUTE_SECONDS) {
+                alertFired = true
+                val countdownEndEpochMs = startedAt + durationSeconds * 1_000
+                postOneMinuteAlert(durationSeconds, countdownEndEpochMs, remaining)
             }
-            if (isActive) {
-                launch(Dispatchers.Main) {
-                    unregisterSensor()
-                    overlayManager?.dismiss()
-                }
-                onTimerExpired()
+        }
+        if (isActive) {
+            launch(Dispatchers.Main) {
+                unregisterSensor()
+                overlayManager?.dismiss()
             }
+            onTimerExpired()
         }
     }
 
