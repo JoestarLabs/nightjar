@@ -13,7 +13,7 @@ Nightjar is a Material 3 Expressive lock timer application for Android designed 
 
 ### Install via Obtainium
 
-<a href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/JoestarLabs/nightjar/releases">
+<a href="https://apps.obtainium.page/redirect?r=obtainium://add/https://github.com/JoestarLabs/nightjar/releases">
   <img src=".github/assets/badge_obtainium.png" alt="Get it on Obtainium" height="100" />
 </a>
 
