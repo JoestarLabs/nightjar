@@ -2,6 +2,7 @@ package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.app.LocaleManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.LocaleList
 import android.provider.Settings
@@ -74,14 +75,6 @@ import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 
-data class LanguageOption(val tag: String, val labelRes: Int)
-
-private val LANGUAGE_OPTIONS = listOf(
-    LanguageOption("", R.string.settings_language_system),
-    LanguageOption("en", R.string.settings_language_en),
-    LanguageOption("sv", R.string.settings_language_sv),
-)
-
 @Composable
 private fun RoundedCardContainer(
     modifier: Modifier = Modifier,
@@ -136,14 +129,11 @@ fun SettingsScreen(
     }
 
     // Read current locale from LocaleManager
-    var selectedLocaleTag by remember {
-        mutableStateOf(
-            localeManager.applicationLocales.toLanguageTags().takeIf { it.isNotEmpty() } ?: ""
-        )
+    val selectedLocaleTag = remember(refreshTrigger) {
+        localeManager.applicationLocales.toLanguageTags().takeIf { it.isNotEmpty() } ?: ""
     }
 
     val adminEnabled = remember(refreshTrigger) { LockDeviceAdminReceiver.isEnabled(context) }
-    var isMenuExpanded by remember { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -188,65 +178,42 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_section_language))
 
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
-                Box {
-                    val currentLanguageLabel = when {
-                        selectedLocaleTag.startsWith("en") -> stringResource(R.string.settings_language_en)
-                        selectedLocaleTag.startsWith("sv") -> stringResource(R.string.settings_language_sv)
-                        else -> stringResource(R.string.settings_language_system)
-                    }
-
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.settings_section_language)) },
-                        supportingContent = { Text(currentLanguageLabel) },
-                        leadingContent = {
-                            Icon(
-                                Icons.Rounded.Language,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        trailingContent = {
-                            androidx.compose.material3.Surface(
-                                onClick = { isMenuExpanded = true },
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            ) {
-                                Text(
-                                    text = currentLanguageLabel,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                                )
-                            }
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceBright
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { isMenuExpanded = true }
-                    )
-
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = isMenuExpanded,
-                        onDismissRequest = { isMenuExpanded = false }
-                    ) {
-                        LANGUAGE_OPTIONS.forEach { option ->
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(stringResource(option.labelRes)) },
-                                onClick = {
-                                    isMenuExpanded = false
-                                    selectedLocaleTag = option.tag
-                                    localeManager.applicationLocales =
-                                        LocaleList.forLanguageTags(option.tag)
-                                    // Recreate activity to force language rebinding immediately
-                                    (context as? android.app.Activity)?.recreate()
-                                }
-                            )
-                        }
-                    }
+                val currentLanguageLabel = when {
+                    selectedLocaleTag.startsWith("en") -> stringResource(R.string.settings_language_en)
+                    selectedLocaleTag.startsWith("sv") -> stringResource(R.string.settings_language_sv)
+                    else -> stringResource(R.string.settings_language_system)
                 }
+
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_section_language)) },
+                    supportingContent = { Text(currentLanguageLabel) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Language,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.OpenInNew,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                            context.startActivity(intent)
+                        }
+                )
             }
 
             Spacer(Modifier.height(16.dp))
