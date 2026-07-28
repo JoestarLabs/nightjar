@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +49,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 private val TICK_ANGLES = listOf(0f, 90f, 180f, 270f)
+private val TICK_RADIANS = TICK_ANGLES.map { Math.toRadians((it - 90.0)) }
 
 
 /**
@@ -335,12 +335,13 @@ private fun DrawScope.drawTickMarks(color: Color) {
     val cy = size.height / 2f
     val radius = size.width / 2f - 20.dp.toPx()
 
-    TICK_ANGLES.forEach { angleDeg ->
-        val rad = Math.toRadians((angleDeg - 90.0))
-        val outerX = cx + radius * cos(rad).toFloat()
-        val outerY = cy + radius * sin(rad).toFloat()
-        val innerX = cx + (radius - 12.dp.toPx()) * cos(rad).toFloat()
-        val innerY = cy + (radius - 12.dp.toPx()) * sin(rad).toFloat()
+    TICK_RADIANS.forEach { rad ->
+        val cosRad = cos(rad).toFloat()
+        val sinRad = sin(rad).toFloat()
+        val outerX = cx + radius * cosRad
+        val outerY = cy + radius * sinRad
+        val innerX = cx + (radius - 12.dp.toPx()) * cosRad
+        val innerY = cy + (radius - 12.dp.toPx()) * sinRad
         drawLine(
             color = color.copy(alpha = 0.25f),
             start = Offset(innerX, innerY),
