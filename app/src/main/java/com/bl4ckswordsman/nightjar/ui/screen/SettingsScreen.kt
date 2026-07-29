@@ -713,6 +713,7 @@ fun SettingsScreen(
         var preset4 by remember { mutableStateOf(if (currentPresets.size > 3) (currentPresets[3] / 60).toString() else "60") }
 
         var errorMessage by remember { mutableStateOf<String?>(null) }
+        val invalidInputStr = stringResource(R.string.dialog_invalid_input)
 
         AlertDialog(
             onDismissRequest = { showPresetsDialog = false },
@@ -800,7 +801,7 @@ fun SettingsScreen(
                             timerViewModel.saveCustomPresets(listOf(val1, val2, val3, val4))
                             showPresetsDialog = false
                         } else {
-                            errorMessage = context.getString(R.string.dialog_invalid_input)
+                            errorMessage = invalidInputStr
                         }
                     }
                 ) {
