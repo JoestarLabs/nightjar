@@ -22,7 +22,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -42,6 +45,9 @@ fun RisingWaveOverlay(
     remainingSeconds: Long,
     totalSeconds: Long,
     tilt: Float,
+    /** Epoch-ms when the timer started. When non-null, progress is computed from the
+     *  wall clock every frame so the wave height is always perfectly in sync. */
+    startedAtMillis: Long? = null,
     modifier: Modifier = Modifier
 ) {
     // Phase for wave ripple animation
@@ -67,22 +73,45 @@ fun RisingWaveOverlay(
         label = "back_wave_phase"
     )
 
-    // Progress goes from 0f (empty) to 1f (full screen cover)
-    val targetProgress = if (totalSeconds > 0) {
-        (totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()
-    } else {
-        1f
+    // ── Wall-clock progress (updated every display frame) ────────────────────
+    // When startedAtMillis is available we compute progress directly from the wall
+    // clock at vsync rate. This eliminates the 0.5–1 s lag that a spring/tween
+    // chasing 1-second ticks would introduce. Fall back to a simple calculation
+    // if the caller doesn't provide the start time.
+    val continuousProgress = remember { mutableFloatStateOf(
+        if (totalSeconds > 0L && startedAtMillis != null) {
+            val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1_000f
+            (elapsed / totalSeconds).coerceIn(0f, 1f)
+        } else if (totalSeconds > 0L) {
+            (totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()
+        } else 1f
+    ) }
+    val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
+
+    LaunchedEffect(startedAtMillis, totalSeconds) {
+        if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
+        while (true) {
+            // withFrameMillis fires each vsync frame but its timestamp is from
+            // System.nanoTime() — a monotonic clock with an arbitrary epoch that CANNOT
+            // be subtracted from the wall-clock startedAtMillis. Use it only as a
+            // vsync synchronisation point and read System.currentTimeMillis() instead.
+            withFrameMillis {
+                val elapsed = (System.currentTimeMillis() - startedAtMillis).coerceAtLeast(0L)
+                continuousProgress.floatValue =
+                    (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
+                // displayRemaining must use the SAME formula as the Chronometer:
+                // floor((endTimeMs - now) / 1000) = floor((totalSeconds*1000 - elapsed) / 1000).
+                // Using totalSeconds - elapsed/1000 is NOT equivalent: floor(A-B) ≠ A - floor(B).
+                displayRemaining.longValue = ((totalSeconds * 1_000L - elapsed) / 1_000L).coerceAtLeast(0L)
+            }
+            if (continuousProgress.floatValue >= 1f) break
+        }
     }
 
-    // Smoothly animate height changes
-    val animatedProgress by animateFloatAsState(
-        targetValue = targetProgress.coerceIn(0f, 1f),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessVeryLow
-        ),
-        label = "wave_height_progress"
-    )
+    val animatedProgress = continuousProgress.floatValue
+    // Wall-clock remaining to display — matches the notification Chronometer exactly.
+    // Falls back to the service-pushed remainingSeconds if startedAtMillis isn't available.
+    val shownRemaining = if (startedAtMillis != null) displayRemaining.longValue else remainingSeconds
 
     // Smoothly animate tilt changes
     val animatedTilt by animateFloatAsState(
@@ -94,9 +123,10 @@ fun RisingWaveOverlay(
         label = "wave_tilt"
     )
 
-    // Pulse animation for the countdown text
+    // Pulse animation for the countdown text — keyed on shownRemaining so it fires at the
+    // exact wall-clock second boundary, matching the notification Chronometer.
     val textScale = remember { Animatable(1f) }
-    LaunchedEffect(remainingSeconds) {
+    LaunchedEffect(shownRemaining) {
         textScale.animateTo(
             targetValue = 1.2f,
             animationSpec = spring(
@@ -211,7 +241,7 @@ fun RisingWaveOverlay(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 OutlinedText(
-                    text = remainingSeconds.toString(),
+                    text = shownRemaining.toString(),
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 120.sp,

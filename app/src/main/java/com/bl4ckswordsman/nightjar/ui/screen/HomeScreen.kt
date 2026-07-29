@@ -79,6 +79,7 @@ fun HomeScreen(
     val runningState = timerState as? TimerState.Running
     val runningSeconds = runningState?.remainingSeconds
     val runningTotalSeconds = runningState?.totalSeconds
+    val runningStartedAt = runningState?.startedAtMillis
 
     // ── Permission dialog state ───────────────────────────────────────────────
     var showNotifDialog by remember { mutableStateOf(false) }
@@ -215,6 +216,7 @@ fun HomeScreen(
                 selectedSeconds = viewModel.selectedSeconds,
                 runningSeconds = runningSeconds,
                 runningTotalSeconds = runningTotalSeconds,
+                startedAtMillis = runningStartedAt,
                 onDialClicked = { showDurationSheet = true },
                 onSecondsChanged = { viewModel.setSelectedSeconds(it) },
                 contentDesc = stringResource(R.string.cd_timer_dial),

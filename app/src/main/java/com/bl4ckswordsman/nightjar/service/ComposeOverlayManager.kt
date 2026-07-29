@@ -54,13 +54,15 @@ class ComposeOverlayManager(private val context: Context) {
     private val remainingSecondsState = mutableLongStateOf(0L)
     private val totalSecondsState = mutableLongStateOf(0L)
     private val tiltState = mutableFloatStateOf(0f)
+    private val startedAtMillisState = mutableLongStateOf(0L)
 
     val isShowing: Boolean get() = composeView != null
 
-    fun show(remainingSeconds: Long, totalSeconds: Long, tilt: Float = 0f) {
+    fun show(remainingSeconds: Long, totalSeconds: Long, tilt: Float = 0f, startedAtMillis: Long? = null) {
         remainingSecondsState.longValue = remainingSeconds
         totalSecondsState.longValue = totalSeconds
         tiltState.floatValue = tilt
+        startedAtMillisState.longValue = startedAtMillis ?: 0L
 
         if (composeView != null) return
 
@@ -89,7 +91,8 @@ class ComposeOverlayManager(private val context: Context) {
                     RisingWaveOverlay(
                         remainingSeconds = remainingSecondsState.longValue,
                         totalSeconds = totalSecondsState.longValue,
-                        tilt = tiltState.floatValue
+                        tilt = tiltState.floatValue,
+                        startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
                     )
                 }
             }

@@ -165,7 +165,14 @@ class LockTimerService : Service() {
         val sunsetEnabled = prefs.sunsetModeEnabled
         val sunsetDuration = prefs.sunsetDurationSeconds
 
-        var remaining = durationSeconds
+        // Wall-clock end time — the single source of truth for all remaining-time calculations.
+        val endTimeMs = startedAt + durationSeconds * 1_000L
+
+        /** Remaining seconds derived directly from the wall clock — never drifts. */
+        fun wallRemaining(): Long =
+            ((endTimeMs - System.currentTimeMillis()) / 1_000L).coerceAtLeast(0L)
+
+        var remaining = wallRemaining()
         var alertFired = false
 
         timerRepository.updateState(
@@ -180,13 +187,28 @@ class LockTimerService : Service() {
         if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
             launch(Dispatchers.Main) {
                 registerSensor()
-                overlayManager?.show(remaining, sunsetDuration, currentTilt)
+                // sunsetWindowStartMs: the wall-clock moment when progress = 0 for the overlay
+                // (i.e. when remaining == sunsetDuration). Using this keeps the wave filling
+                // correctly from 0→1 over exactly sunsetDuration seconds.
+                val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
+                overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
             }
         }
 
         while (remaining > 0 && isActive) {
-            delay(1_000)
+            // Sleep until the exact wall-clock moment the next second boundary crosses.
+            // Each nextTickMs is an absolute wall-clock target — no drift accumulates.
+            val nextTickMs = endTimeMs - (remaining - 1) * 1_000L
+            val sleepMs = (nextTickMs - System.currentTimeMillis()).coerceAtLeast(0L)
+            delay(sleepMs)
+
+            // Decrement directly to avoid integer-division off-by-one: waking up even 1 ms
+            // past nextTickMs would cause wallRemaining() to return (remaining - 2) and skip
+            // a number. The wall-clock sync below catches any rare multi-second OS overshoots.
             remaining--
+            val wallRem = wallRemaining()
+            if (wallRem < remaining - 1) remaining = wallRem  // drift guard: >1 s behind
+
             timerRepository.updateState(
                 TimerState.Running(
                     totalSeconds = durationSeconds,
@@ -201,7 +223,8 @@ class LockTimerService : Service() {
                         overlayManager?.updateRemainingTime(remaining)
                     } else {
                         registerSensor()
-                        overlayManager?.show(remaining, sunsetDuration, currentTilt)
+                        val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
+                        overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
                     }
                 }
             }
@@ -210,16 +233,17 @@ class LockTimerService : Service() {
                 NOTIFICATION_ID,
                 buildNotification(
                     durationSeconds,
-                    startedAt + durationSeconds * 1_000,
+                    endTimeMs,
                     remaining
                 )
             )
 
             // ── 1-minute remaining alert (fires exactly once) ──────────
-            if (remaining == ONE_MINUTE_SECONDS && !alertFired && durationSeconds > ONE_MINUTE_SECONDS) {
+            // Use <= instead of == so the alert is never skipped if a tick lands
+            // slightly past the 60-second boundary (e.g. remaining jumps 62→59).
+            if (remaining <= ONE_MINUTE_SECONDS && !alertFired && durationSeconds > ONE_MINUTE_SECONDS) {
                 alertFired = true
-                val countdownEndEpochMs = startedAt + durationSeconds * 1_000
-                postOneMinuteAlert(durationSeconds, countdownEndEpochMs, remaining)
+                postOneMinuteAlert(durationSeconds, endTimeMs, remaining)
             }
         }
         if (isActive) {

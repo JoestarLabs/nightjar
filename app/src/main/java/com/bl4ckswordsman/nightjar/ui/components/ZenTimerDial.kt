@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,6 +43,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.withFrameMillis
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -73,6 +75,8 @@ fun ZenTimerDial(
     onSecondsChanged: (Long) -> Unit,
     maxSeconds: Long = 7_200L,      // 2 hours
     runningTotalSeconds: Long? = null,
+    /** Epoch-ms when the timer started. Enables wall-clock-accurate sweep animation. */
+    startedAtMillis: Long? = null,
     onDialClicked: (() -> Unit)? = null,
     size: Dp = 280.dp,
     contentDesc: String = "",
@@ -91,10 +95,21 @@ fun ZenTimerDial(
         label = "wave_phase"
     )
 
-    // Animated sweep angle (degrees, 0..360)
-    val displaySeconds = runningSeconds ?: selectedSeconds
+    // Wall-clock remaining seconds for the centre text — same floor((end-now)/1000) formula
+    // as the Chronometer, so all three displays tick in unison.
+    val displaySecondsState = remember { mutableLongStateOf(runningSeconds ?: selectedSeconds) }
+
+    // Use wall-clock seconds when running (matches Chronometer); fall back to service state when idle.
+    val total = runningTotalSeconds ?: selectedSeconds.takeIf { it > 0L } ?: maxSeconds
+    val displaySeconds = if (runningSeconds != null && startedAtMillis != null) {
+        displaySecondsState.longValue
+    } else {
+        runningSeconds ?: selectedSeconds
+    }
+
+    // Target angle from the last integer-second tick (used for non-running state and
+    // as the spring target when the timer first starts)
     val targetAngle = if (runningSeconds != null) {
-        val total = runningTotalSeconds ?: selectedSeconds.takeIf { it > 0L } ?: maxSeconds
         if (total == 0L) 0f
         else (runningSeconds.toFloat() / total.toFloat()) * 360f
     } else {
@@ -102,28 +117,47 @@ fun ZenTimerDial(
     }
     val sweepAnim = remember { Animatable(targetAngle) }
 
-    // Keep in sync with external changes (preset chips, running countdown)
+    // Wall-clock-accurate sweep: updated every vsync frame while the timer runs.
+    // This eliminates the up-to-1-second lag of chasing integer ticks with tween(1000).
+    val continuousSweep = remember { mutableFloatStateOf(targetAngle) }
+
+    LaunchedEffect(startedAtMillis, total, runningSeconds) {
+        if (startedAtMillis == null || runningSeconds == null || total <= 0L) return@LaunchedEffect
+        while (true) {
+            // withFrameMillis is from System.nanoTime() — cannot be subtracted from wall-clock
+            // startedAtMillis. Use it only as a vsync sync point; read currentTimeMillis() instead.
+            withFrameMillis {
+                val elapsed = (System.currentTimeMillis() - startedAtMillis).coerceAtLeast(0L)
+                val fraction = (elapsed.toFloat() / (total * 1_000f)).coerceIn(0f, 1f)
+                // Dial shows *remaining* time: fraction elapsed = (1 - remaining/total)
+                val remaining = 1f - fraction
+                continuousSweep.floatValue = remaining * 360f
+                // Same Chronometer formula: floor((endTimeMs - now) / 1000)
+                displaySecondsState.longValue = ((total * 1_000L - elapsed) / 1_000L).coerceAtLeast(0L)
+            }
+            if (continuousSweep.floatValue <= 0f) break
+        }
+    }
+
+    // For the Animatable (used during drag and spring-on-start), keep in sync
+    // with external non-running changes
     var prevRunningSeconds by remember { mutableStateOf<Long?>(null) }
-    var useSpring by remember { mutableStateOf(true) }
 
     LaunchedEffect(targetAngle, runningSeconds) {
-        val currentlyRunning = runningSeconds != null
-        val startedJustNow = currentlyRunning && prevRunningSeconds == null
-
-        useSpring = !currentlyRunning || startedJustNow
+        val startedJustNow = runningSeconds != null && prevRunningSeconds == null
         prevRunningSeconds = runningSeconds
 
-        sweepAnim.animateTo(
-            targetValue = targetAngle,
-            animationSpec = if (useSpring) {
-                spring(
+        // Only spring-animate on idle<->running transition or preset change.
+        // During countdown we use continuousSweep (wall-clock) instead of sweepAnim.
+        if (runningSeconds == null || startedJustNow) {
+            sweepAnim.animateTo(
+                targetValue = targetAngle,
+                animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessMedium,
                 )
-            } else {
-                tween(durationMillis = 1000, easing = LinearEasing)
-            }
-        )
+            )
+        }
     }
 
     val primary = MaterialTheme.colorScheme.primary
@@ -212,7 +246,13 @@ fun ZenTimerDial(
                     )
                 }
         ) {
-            val sweep = sweepAnim.value
+            // Use wall-clock-accurate sweep while running; fall back to sweepAnim for
+            // drag interaction and the idle/transition states.
+            val sweep = if (runningSeconds != null && startedAtMillis != null) {
+                continuousSweep.floatValue
+            } else {
+                sweepAnim.value
+            }
             drawDialTrack(surfaceVariant, strokeWidth.toPx())
             if (runningSeconds != null) {
                 drawSquigglyDialArc(sweep, primary, secondary, strokeWidth.toPx(), wavePhase, squigglyPath)
