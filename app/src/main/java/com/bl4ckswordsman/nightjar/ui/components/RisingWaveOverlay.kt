@@ -117,6 +117,9 @@ fun RisingWaveOverlay(
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
 
+    val backPath = remember { Path() }
+    val frontPath = remember { Path() }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -127,67 +130,63 @@ fun RisingWaveOverlay(
             val height = size.height
 
             // Calculate base Y position of the liquid wave
-            val baseLineY = height - (animatedProgress * height)
+                    val baseLineY = height - (animatedProgress * height)
 
-            // Tilt calculations (negate animatedTilt to reverse tilt direction)
-            val maxTiltOffset = 120.dp.toPx()
-            val tiltOffset = -animatedTilt * maxTiltOffset
-            val bottomExtension = height + maxTiltOffset
+                    // Tilt calculations (negate animatedTilt to reverse tilt direction)
+                    val maxTiltOffset = 120.dp.toPx()
+                    val tiltOffset = -animatedTilt * maxTiltOffset
+                    val bottomExtension = height + maxTiltOffset
 
-            // Wave specs
-            val waveAmplitude = 16.dp.toPx()
-            val waveFrequency = 0.006f // controlling width/frequency of waves
+                    // Wave specs
+                    val waveAmplitude = 16.dp.toPx()
+                    val waveFrequency = 0.006f // controlling width/frequency of waves
 
-            // ─── 1. Back Wave (Slightly darker, offset) ───
-            val backPath = Path().apply {
-                moveTo(0f, bottomExtension)
-                lineTo(0f, baseLineY + tiltOffset)
+                    // ─── 1. Back Wave (Slightly darker, offset) ───
+                    backPath.reset()
+                    backPath.moveTo(0f, bottomExtension)
+                    backPath.lineTo(0f, baseLineY + tiltOffset)
 
-                val step = 10f
-                var x = 0f
-                while (x <= width) {
-                    val currentLineY = baseLineY + (1f - 2f * x / width) * tiltOffset
-                    val angle = x * waveFrequency + backWavePhase
-                    val y = currentLineY + kotlin.math.sin(angle.toDouble())
-                        .toFloat() * (waveAmplitude * 0.8f)
-                    lineTo(x, y)
-                    x += step
-                }
-                lineTo(width, bottomExtension)
-                close()
-            }
+                    val step = 10f
+                    var x = 0f
+                    while (x <= width) {
+                        val currentLineY = baseLineY + (1f - 2f * x / width) * tiltOffset
+                        val angle = x * waveFrequency + backWavePhase
+                        val y = currentLineY + kotlin.math.sin(angle) * (waveAmplitude * 0.8f)
+                        backPath.lineTo(x, y)
+                        x += step
+                    }
+                    backPath.lineTo(width, bottomExtension)
+                    backPath.close()
 
-            drawPath(
-                path = backPath,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        tertiaryColor.copy(alpha = 0.65f),
-                        secondaryColor.copy(alpha = 0.80f),
-                        Color.Black.copy(alpha = 0.90f)
-                    ),
-                    startY = baseLineY - waveAmplitude - kotlin.math.abs(tiltOffset),
-                    endY = height
-                )
-            )
+                    drawPath(
+                        path = backPath,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                tertiaryColor.copy(alpha = 0.65f),
+                                secondaryColor.copy(alpha = 0.80f),
+                                Color.Black.copy(alpha = 0.90f)
+                            ),
+                            startY = baseLineY - waveAmplitude - kotlin.math.abs(tiltOffset),
+                            endY = height
+                        )
+                    )
 
             // ─── 2. Front Wave (Primary) ───
-            val frontPath = Path().apply {
-                moveTo(0f, bottomExtension)
-                lineTo(0f, baseLineY + tiltOffset)
+            frontPath.reset()
+            frontPath.moveTo(0f, bottomExtension)
+            frontPath.lineTo(0f, baseLineY + tiltOffset)
 
-                val step = 10f
-                var x = 0f
-                while (x <= width) {
-                    val currentLineY = baseLineY + (1f - 2f * x / width) * tiltOffset
-                    val angle = x * waveFrequency + wavePhase
-                    val y =
-                        currentLineY + kotlin.math.cos(angle.toDouble()).toFloat() * waveAmplitude
-                    lineTo(x, y)
-                    x += step
-                }
-                lineTo(width, bottomExtension)
-                close()
+            x = 0f
+            while (x <= width) {
+                val currentLineY = baseLineY + (1f - 2f * x / width) * tiltOffset
+                val angle = x * waveFrequency + wavePhase
+                val y =
+                    currentLineY + kotlin.math.cos(angle) * waveAmplitude
+                frontPath.lineTo(x, y)
+                x += step
             }
+            frontPath.lineTo(width, bottomExtension)
+            frontPath.close()
 
             drawPath(
                 path = frontPath,
