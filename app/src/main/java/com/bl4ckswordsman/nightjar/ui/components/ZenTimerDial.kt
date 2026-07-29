@@ -50,6 +50,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 private val TICK_ANGLES = listOf(0f, 90f, 180f, 270f)
+private val TICK_RADIANS = TICK_ANGLES.map { Math.toRadians((it - 90.0)) }
 
 
 /**
@@ -338,12 +339,13 @@ private fun DrawScope.drawTickMarks(color: Color) {
     val cy = size.height / 2f
     val radius = size.width / 2f - 20.dp.toPx()
 
-    TICK_ANGLES.forEach { angleDeg ->
-        val rad = ((angleDeg - 90.0) * (Math.PI / 180.0)).toFloat()
-        val outerX = cx + radius * cos(rad)
-        val outerY = cy + radius * sin(rad)
-        val innerX = cx + (radius - 12.dp.toPx()) * cos(rad)
-        val innerY = cy + (radius - 12.dp.toPx()) * sin(rad)
+    TICK_RADIANS.forEach { rad ->
+        val cosRad = cos(rad).toFloat()
+        val sinRad = sin(rad).toFloat()
+        val outerX = cx + radius * cosRad
+        val outerY = cy + radius * sinRad
+        val innerX = cx + (radius - 12.dp.toPx()) * cosRad
+        val innerY = cy + (radius - 12.dp.toPx()) * sinRad
         drawLine(
             color = color.copy(alpha = 0.25f),
             start = Offset(innerX, innerY),
