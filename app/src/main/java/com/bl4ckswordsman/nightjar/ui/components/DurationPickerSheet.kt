@@ -43,6 +43,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
@@ -50,6 +53,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
@@ -189,27 +193,24 @@ fun DurationPickerSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(bottom = 28.dp)
             ) {
                 PlayfulShortcutButton(
                     text = "+1m",
-                    onClick = { addSeconds(60L) },
-                    modifier = Modifier.weight(1f)
+                    onClick = { addSeconds(60L) }
                 )
                 PlayfulShortcutButton(
                     text = "+5m",
-                    onClick = { addSeconds(300L) },
-                    modifier = Modifier.weight(1f)
+                    onClick = { addSeconds(300L) }
                 )
                 PlayfulShortcutButton(
                     text = "+15m",
-                    onClick = { addSeconds(900L) },
-                    modifier = Modifier.weight(1f)
+                    onClick = { addSeconds(900L) }
                 )
                 PlayfulShortcutButton(
                     text = "+30m",
-                    onClick = { addSeconds(1800L) },
-                    modifier = Modifier.weight(1f)
+                    onClick = { addSeconds(1800L) }
                 )
                 PlayfulShortcutButton(
                     text = "Clear",
@@ -217,8 +218,7 @@ fun DurationPickerSheet(
                         hours = 0
                         minutes = 0
                         seconds = 0
-                    },
-                    modifier = Modifier.weight(1.2f)
+                    }
                 )
             }
 
@@ -269,7 +269,7 @@ private fun UnitColumn(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(80.dp)
+        modifier = Modifier.width(76.dp)
     ) {
         IconButton(
             onClick = { onValueChange((value + 1).coerceAtMost(max)) },
@@ -303,26 +303,18 @@ private fun UnitColumn(
             ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
+            maxLines = 1,
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             decorationBox = { innerTextField ->
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Force the inner text field to fill the width of the decoration box,
-                    // allowing it to align the text using TextAlign.Center instead of
-                    // wrapping it, which avoids layout alignment and horizontal scrolling issues.
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        propagateMinConstraints = true
-                    ) {
-                        innerTextField()
-                    }
+                    innerTextField()
                 }
             },
             modifier = Modifier
-                .height(64.dp)
-                .fillMaxWidth()
+                .size(width = 76.dp, height = 56.dp)
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
                     if (!focusState.isFocused) {
@@ -345,6 +337,9 @@ private fun UnitColumn(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 4.dp)
         )
 
@@ -393,13 +388,16 @@ private fun PlayfulShortcutButton(
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 10.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.SemiBold
-                )
+                ),
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

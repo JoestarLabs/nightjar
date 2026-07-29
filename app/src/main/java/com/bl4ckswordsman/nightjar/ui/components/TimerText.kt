@@ -13,10 +13,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import com.bl4ckswordsman.nightjar.R
 
 /**
@@ -86,14 +89,26 @@ fun TimerText(
         )
     }
 
+    val currentFontScale = LocalDensity.current.fontScale
+    val baseStyle = MaterialTheme.typography.displaySmall
+    val scaledFontSize = if (currentFontScale > 1.2f) {
+        (baseStyle.fontSize.value * 1.2f).sp
+    } else {
+        baseStyle.fontSize
+    }
+
     Text(
         text = text,
-        style = MaterialTheme.typography.displaySmall.copy(
+        style = baseStyle.copy(
+            fontSize = scaledFontSize,
             fontFamily = timerFontFamily,
             color = if (isRunning) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface,
         ),
         textAlign = TextAlign.Center,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Clip,
         modifier = modifier,
     )
 }
