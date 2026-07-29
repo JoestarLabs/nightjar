@@ -153,6 +153,8 @@ fun ZenTimerDial(
         label = "handle_radius"
     )
 
+    val squigglyPath = remember { Path() }
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -178,7 +180,7 @@ fun ZenTimerDial(
                             val dy = change.position.y - center
                             // atan2 gives angle from positive-x axis; shift so 0 = top
                             var angle =
-                                Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat() + 90f
+                                (atan2(dy, dx) * (180f / Math.PI.toFloat())) + 90f
                             if (angle < 0f) angle += 360f
 
                             val newSeconds = ((angle / 360f) * maxSeconds).toLong()
@@ -212,7 +214,7 @@ fun ZenTimerDial(
             val sweep = sweepAnim.value
             drawDialTrack(surfaceVariant, strokeWidth.toPx())
             if (runningSeconds != null) {
-                drawSquigglyDialArc(sweep, primary, secondary, strokeWidth.toPx(), wavePhase)
+                drawSquigglyDialArc(sweep, primary, secondary, strokeWidth.toPx(), wavePhase, squigglyPath)
             } else {
                 drawDialArc(sweep, primary, secondary, strokeWidth.toPx())
             }
@@ -280,7 +282,8 @@ private fun DrawScope.drawSquigglyDialArc(
     primary: Color,
     secondary: Color,
     strokeWidthPx: Float,
-    wavePhase: Float
+    wavePhase: Float,
+    path: Path
 ) {
     if (sweep <= 0f) return
     val cx = size.width / 2f
@@ -291,7 +294,7 @@ private fun DrawScope.drawSquigglyDialArc(
     val waveAmplitude = 3.dp.toPx()
     val waveFrequency = 12f
 
-    val path = Path()
+    path.reset()
     val stepDeg = 2f
     val startAngleDeg = -90f
     val endAngleDeg = -90f + sweep
@@ -299,12 +302,12 @@ private fun DrawScope.drawSquigglyDialArc(
     var isFirst = true
     var currentAngleDeg = startAngleDeg
     while (currentAngleDeg <= endAngleDeg) {
-        val angleRad = Math.toRadians(currentAngleDeg.toDouble())
-        val offset = waveAmplitude * sin(angleRad * waveFrequency - wavePhase).toFloat()
+        val angleRad = (currentAngleDeg * (Math.PI / 180.0)).toFloat()
+        val offset = waveAmplitude * sin(angleRad * waveFrequency - wavePhase)
         val r = baseRadius + offset
 
-        val x = cx + r * cos(angleRad).toFloat()
-        val y = cy + r * sin(angleRad).toFloat()
+        val x = cx + r * cos(angleRad)
+        val y = cy + r * sin(angleRad)
 
         if (isFirst) {
             path.moveTo(x, y)
@@ -336,11 +339,11 @@ private fun DrawScope.drawTickMarks(color: Color) {
     val radius = size.width / 2f - 20.dp.toPx()
 
     TICK_ANGLES.forEach { angleDeg ->
-        val rad = Math.toRadians((angleDeg - 90.0))
-        val outerX = cx + radius * cos(rad).toFloat()
-        val outerY = cy + radius * sin(rad).toFloat()
-        val innerX = cx + (radius - 12.dp.toPx()) * cos(rad).toFloat()
-        val innerY = cy + (radius - 12.dp.toPx()) * sin(rad).toFloat()
+        val rad = ((angleDeg - 90.0) * (Math.PI / 180.0)).toFloat()
+        val outerX = cx + radius * cos(rad)
+        val outerY = cy + radius * sin(rad)
+        val innerX = cx + (radius - 12.dp.toPx()) * cos(rad)
+        val innerY = cy + (radius - 12.dp.toPx()) * sin(rad)
         drawLine(
             color = color.copy(alpha = 0.25f),
             start = Offset(innerX, innerY),
@@ -360,9 +363,9 @@ private fun DrawScope.drawDragHandle(
     val cx = size.width / 2f
     val cy = size.height / 2f
     val radius = size.width / 2f - 20.dp.toPx()
-    val rad = Math.toRadians((sweep - 90.0))
-    val hx = cx + radius * cos(rad).toFloat()
-    val hy = cy + radius * sin(rad).toFloat()
+    val rad = ((sweep - 90.0) * (Math.PI / 180.0)).toFloat()
+    val hx = cx + radius * cos(rad)
+    val hy = cy + radius * sin(rad)
 
     // Shadow
     drawCircle(
