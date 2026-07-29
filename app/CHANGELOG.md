@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.0.4](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.3...nightjar-v0.0.4) (2026-07-29)
+
+
+### Features
+
+* integrate AboutLibraries for license management and add a dedicated dependencies screen to settings ([922c6f6](https://github.com/JoestarLabs/nightjar/commit/922c6f6beb440a63e2c90711c24c7367a4b72adc))
+* **settings:** open system per-app language settings on Android 13+ ([e82133a](https://github.com/JoestarLabs/nightjar/commit/e82133adc0a7ac1decf0c4399f0124bce4d24978))
+
+
+### Bug Fixes
+
+* **timer:** synchronize timer displays and fix countdown drift ([d4fb001](https://github.com/JoestarLabs/nightjar/commit/d4fb001300c40b2da2425827e71adbaf1b402332))
+* **ui:** improve text and UI scaling for accessibility ([a3a54bd](https://github.com/JoestarLabs/nightjar/commit/a3a54bd841c0bd7bd50403da5ee5661f609bfa22))
+* **ui:** restore getValue imports required by Kotlin property delegates ([0b1e8cd](https://github.com/JoestarLabs/nightjar/commit/0b1e8cd32dafb79121c3f2a2404fdd78b57e9a1b))
+
+
+### Performance Improvements
+
+* **ui:** precompute tick mark radians in ZenTimerDial and clean up unused imports ([10f3817](https://github.com/JoestarLabs/nightjar/commit/10f3817307d0707df98e01e1bcebc0e0494b8fad))
+
 ## [0.0.3](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.2...nightjar-v0.0.3) (2026-06-24)
 
 
