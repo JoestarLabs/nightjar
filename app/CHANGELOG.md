@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.0](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.4...nightjar-v0.1.0) (2026-08-08)
+
+
+### Features
+
+* add GitHub repository link to settings screen and update about section strings ([d24d4fa](https://github.com/JoestarLabs/nightjar/commit/d24d4fa79be01304984eea55bd5b79699111499d))
+* implement emergency unlock slider to allow overriding commitment mode ([f80e64b](https://github.com/JoestarLabs/nightjar/commit/f80e64be38a8afb9a232405d3c7bcb21864cd168))
+
 ## [0.0.4](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.3...nightjar-v0.0.4) (2026-07-29)
 
 
