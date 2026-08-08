@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Info
@@ -624,6 +625,27 @@ fun SettingsScreen(
                     leadingContent = {
                         Icon(
                             Icons.Rounded.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // GitHub Organization Item
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.settings_about_github))
+                    },
+                    supportingContent = {
+                        Text(stringResource(R.string.settings_about_github_desc))
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Code,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
                         )

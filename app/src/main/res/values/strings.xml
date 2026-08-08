@@ -112,7 +112,9 @@
     <string name="dialog_overlay_title">Enable Overlay Warning</string>
     <string name="dialog_overlay_body">To show the rising wave warning overlay when the timer is ending, Nightjar needs permission to display over other apps. You will be redirected to Android Settings to enable it.</string>
     <string name="sunset_warning_text">Time is almost up!</string>
-    <string name="settings_about_version_desc">Tap to view developer profile &amp; other apps</string>
+    <string name="settings_about_version_desc">Nightjar for Android</string>
+    <string name="settings_about_github">GitHub (JoestarLabs)</string>
+    <string name="settings_about_github_desc">Explore open-source projects on GitHub</string>
     <string name="settings_about_dependencies">Dependencies</string>
     <string name="settings_about_dependencies_desc">Open-source libraries used in the app</string>
     <string name="dependencies_title">Dependencies</string>
