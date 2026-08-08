@@ -98,10 +98,10 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    fun stopTimer() {
-        // No-op when commitment mode is active and the timer is running
-        if (_commitmentMode.value && repository.currentState is TimerState.Running) return
-        context.startService(LockTimerService.stopIntent(context))
+    fun stopTimer(force: Boolean = false) {
+        // No-op when commitment mode is active and the timer is running, unless force is true
+        if (!force && _commitmentMode.value && repository.currentState is TimerState.Running) return
+        context.startService(LockTimerService.stopIntent(context, force = force))
     }
 
     fun toggleTimer() {

@@ -10,6 +10,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.size
@@ -25,15 +28,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Primary action button for starting / stopping the lock timer.
@@ -41,8 +49,7 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
  * Uses M3 [ExtendedFloatingActionButton] with:
  * - Animated icon transition (lock → stop) via [AnimatedContent]
  * - Spring-eased scale and squircle shape morphing on press for tactile feedback
- * - [isLocked] = true when commitment mode is active: button shows a locked state
- *   and is visually muted to signal that cancellation is disabled.
+ * - 5-second hold gesture in commitment mode to reveal emergency unlock sheet.
  */
 @Composable
 fun LockButton(
@@ -50,8 +57,11 @@ fun LockButton(
     isFinishing: Boolean = false,
     isLocked: Boolean = false,
     onClick: () -> Unit,
+    onRevealSlider: (() -> Unit)? = null,
+    onLockedShortTap: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
@@ -89,13 +99,45 @@ fun LockButton(
         else -> MaterialTheme.colorScheme.onPrimaryContainer
     }
 
+    val pointerModifier = if (isLocked && onRevealSlider != null) {
+        Modifier.pointerInput(isLocked) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                down.consume()
+                val startTime = System.currentTimeMillis()
+                val totalDurationMs = 5000L
+                var revealed = false
+
+                val job = scope.launch {
+                    delay(totalDurationMs)
+                    if (isActive) {
+                        revealed = true
+                        onRevealSlider()
+                    }
+                }
+
+                val up = waitForUpOrCancellation()
+                val elapsed = System.currentTimeMillis() - startTime
+                job.cancel()
+
+                if (!revealed && up != null && elapsed < 500L) {
+                    onLockedShortTap?.invoke()
+                }
+            }
+        }
+    } else Modifier
+
     ExtendedFloatingActionButton(
-        onClick = onClick,
+        onClick = {
+            if (!isLocked) onClick()
+        },
         interactionSource = interactionSource,
         containerColor = containerColor,
         contentColor = contentColor,
         shape = RoundedCornerShape(percent = cornerPercent),
-        modifier = modifier.scale(scale),
+        modifier = modifier
+            .then(pointerModifier)
+            .scale(scale),
         icon = {
             AnimatedContent(
                 targetState = Triple(isRunning, isLocked, isFinishing),
@@ -160,4 +202,9 @@ private fun LockButtonRunningPreview() {
 private fun LockButtonLockedPreview() {
     NightjarTheme { LockButton(isRunning = true, isLocked = true, onClick = {}) }
 }
+
+
+
+
+
 

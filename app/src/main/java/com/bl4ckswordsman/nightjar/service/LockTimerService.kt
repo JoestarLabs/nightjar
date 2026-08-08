@@ -121,7 +121,10 @@ class LockTimerService : Service() {
                 if (durationSeconds > 0) startTimer(durationSeconds)
             }
 
-            ACTION_STOP -> if (!commitmentMode) stopTimer()
+            ACTION_STOP -> {
+                val force = intent.getBooleanExtra(EXTRA_FORCE_STOP, false)
+                if (!commitmentMode || force) stopTimer()
+            }
         }
         return START_NOT_STICKY
     }
@@ -498,6 +501,7 @@ class LockTimerService : Service() {
         const val ACTION_STOP = "com.bl4ckswordsman.nightjar.action.STOP_TIMER"
         const val EXTRA_DURATION_SECONDS = "extra_duration_seconds"
         const val EXTRA_COMMITMENT_MODE = "extra_commitment_mode"
+        const val EXTRA_FORCE_STOP = "extra_force_stop"
         private const val NOTIFICATION_ID = 1001
         private const val NOTIFICATION_ALERT_ID = 1002
         private const val ONE_MINUTE_SECONDS = 60L
@@ -513,9 +517,10 @@ class LockTimerService : Service() {
                 putExtra(EXTRA_COMMITMENT_MODE, commitmentMode)
             }
 
-        fun stopIntent(context: Context): Intent =
+        fun stopIntent(context: Context, force: Boolean = false): Intent =
             Intent(context, LockTimerService::class.java).apply {
                 action = ACTION_STOP
+                putExtra(EXTRA_FORCE_STOP, force)
             }
     }
 }

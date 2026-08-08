@@ -7,6 +7,9 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -19,6 +22,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -32,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -46,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bl4ckswordsman.nightjar.R
@@ -85,6 +91,13 @@ fun HomeScreen(
     var showNotifDialog by remember { mutableStateOf(false) }
     var showAdminDialog by remember { mutableStateOf(false) }
     var showDurationSheet by remember { mutableStateOf(false) }
+    var showEmergencySheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRunning) {
+        if (!isRunning) {
+            showEmergencySheet = false
+        }
+    }
 
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -249,6 +262,8 @@ fun HomeScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            val lockedHintMsg = stringResource(R.string.hint_commitment_hold_to_stop)
+
             // ── Start / Stop button ───────────────────────────────────────────
             LockButton(
                 isRunning = isRunning,
@@ -256,9 +271,6 @@ fun HomeScreen(
                 isLocked = isRunning && commitmentMode,
                 onClick = {
                     when {
-                        isRunning && commitmentMode -> { /* commitment mode: ignore stop */
-                        }
-
                         isRunning -> viewModel.stopTimer()
                         !LockDeviceAdminReceiver.isEnabled(context) -> showAdminDialog = true
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -267,8 +279,60 @@ fun HomeScreen(
                         else -> viewModel.startTimer()
                     }
                 },
+                onRevealSlider = {
+                    showEmergencySheet = true
+                },
+                onLockedShortTap = {
+                    android.widget.Toast.makeText(context, lockedHintMsg, android.widget.Toast.LENGTH_SHORT).show()
+                },
                 modifier = Modifier.padding(bottom = 16.dp),
             )
+        }
+    }
+
+    if (showEmergencySheet) {
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = { showEmergencySheet = false },
+            sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .navigationBarsPadding(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(R.string.sheet_emergency_unlock_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.sheet_emergency_unlock_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                com.bl4ckswordsman.nightjar.ui.components.EmergencyUnlockSlider(
+                    onConfirmUnlock = {
+                        viewModel.stopTimer(force = true)
+                        showEmergencySheet = false
+                    },
+                    onCancel = {
+                        showEmergencySheet = false
+                    }
+                )
+
+                Spacer(Modifier.height(16.dp))
+            }
         }
     }
 }

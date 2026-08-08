@@ -73,7 +73,7 @@
     <string name="settings_perm_disabled">Disabled — tap to enable</string>
     <string name="settings_section_timer_behaviour">Timer behaviour</string>
     <string name="settings_commitment_mode_title">Commitment mode</string>
-    <string name="settings_commitment_mode_desc">Once started, the timer cannot be stopped</string>
+    <string name="settings_commitment_mode_desc">Prevent accidental cancellation. Press &amp; hold the locked timer button for 5 seconds to reveal the emergency unlock slider.</string>
     <string name="settings_custom_presets_title">Timer presets</string>
     <string name="settings_custom_presets_desc">Configure the four quick-select durations</string>
     <string name="settings_section_about">About</string>
@@ -119,4 +119,10 @@
     <string name="settings_about_dependencies_desc">Open-source libraries used in the app</string>
     <string name="dependencies_title">Dependencies</string>
     <string name="dependencies_subtitle">Open-source libraries used in Nightjar</string>
+    <string name="btn_commitment_hold_to_stop">Hold for 5s to reveal slider (%1$ds)</string>
+    <string name="hint_commitment_hold_to_stop">Press &amp; hold for 5 seconds to reveal emergency unlock slider</string>
+    <string name="slider_slide_to_stop">Slide to emergency stop →</string>
+    <string name="slider_release_to_cancel">Release to cancel</string>
+    <string name="sheet_emergency_unlock_title">Emergency Stop Timer</string>
+    <string name="sheet_emergency_unlock_desc">Commitment mode is active. Slide the track to override and stop the timer.</string>
 </resources>

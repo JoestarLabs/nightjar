@@ -87,6 +87,22 @@ class HomeScreenTest {
     }
 
     @Test
+    fun homeScreen_lockedState_showsTimerLocked() {
+        composeTestRule.setContent {
+            NightjarTheme {
+                com.bl4ckswordsman.nightjar.ui.components.LockButton(
+                    isRunning = true,
+                    isLocked = true,
+                    onClick = {}
+                )
+            }
+        }
+        composeTestRule
+            .onNodeWithText("Timer locked")
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun statusChip_idleState_showsReadyLabel() {
         composeTestRule.setContent {
             NightjarTheme {

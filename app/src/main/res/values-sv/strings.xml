@@ -73,7 +73,7 @@
     <string name="settings_perm_disabled">Inaktiverad — tryck för att aktivera</string>
     <string name="settings_section_timer_behaviour">Timerbeteende</string>
     <string name="settings_commitment_mode_title">Åtagandeläge</string>
-    <string name="settings_commitment_mode_desc">När timern väl startat kan den inte stoppas</string>
+    <string name="settings_commitment_mode_desc">Förhindra oavsiktlig avbrytning. Tryck och håll den låsta knappen i 5 sekunder för att visa slidern för nödstopp.</string>
     <string name="settings_custom_presets_title">Snabba val</string>
     <string name="settings_custom_presets_desc">Ställ in de fyra knappvalen</string>
     <string name="settings_section_about">Om appen</string>
@@ -119,4 +119,10 @@
     <string name="settings_about_dependencies_desc">Öppen källkod-bibliotek som används i appen</string>
     <string name="dependencies_title">Bibliotek</string>
     <string name="dependencies_subtitle">Öppen källkod-bibliotek som används i Nightjar</string>
+    <string name="btn_commitment_hold_to_stop">Håll i 5s för att visa slider (%1$ds)</string>
+    <string name="hint_commitment_hold_to_stop">Tryck och håll i 5 sekunder för att visa slidern för nödstopp</string>
+    <string name="slider_slide_to_stop">Dra för nödstopp →</string>
+    <string name="slider_release_to_cancel">Släpp för att avbryta</string>
+    <string name="sheet_emergency_unlock_title">Nödstoppa timern</string>
+    <string name="sheet_emergency_unlock_desc">Åtagandeläget är aktivt. Dra reglaget för att avbryta och stoppa timern.</string>
 </resources>
