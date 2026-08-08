@@ -22,16 +22,14 @@ class TimerPreferencesDataSourceTest {
     val temporaryFolder = TemporaryFolder()
 
     private val testDispatcher = UnconfinedTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
-
     private lateinit var dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>
     private lateinit var dataSource: TimerPreferencesDataSource
 
     @Before
     fun setup() {
         dataStore = PreferenceDataStoreFactory.create(
-            scope = testScope,
-            produceFile = { temporaryFolder.newFile("test_timer_prefs.preferences_pb") }
+            scope = TestScope(testDispatcher + kotlinx.coroutines.Job()),
+            produceFile = { temporaryFolder.newFile("test_${System.nanoTime()}.preferences_pb") }
         )
         dataSource = TimerPreferencesDataSource(dataStore)
     }

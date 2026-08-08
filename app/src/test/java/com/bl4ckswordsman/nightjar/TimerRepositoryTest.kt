@@ -1,11 +1,13 @@
 package com.bl4ckswordsman.nightjar
 
+import com.bl4ckswordsman.nightjar.data.TimerPreferences
 import com.bl4ckswordsman.nightjar.data.TimerPreferencesDataSource
 import com.bl4ckswordsman.nightjar.data.TimerRepository
 import com.bl4ckswordsman.nightjar.data.TimerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -17,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerRepositoryTest {
@@ -28,6 +31,7 @@ class TimerRepositoryTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         val mockDataSource = mock<TimerPreferencesDataSource>()
+        whenever(mockDataSource.preferences).thenReturn(flowOf(TimerPreferences()))
         repository = TimerRepository(mockDataSource)
     }
 

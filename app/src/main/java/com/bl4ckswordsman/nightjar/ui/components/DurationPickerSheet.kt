@@ -4,6 +4,7 @@ package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,9 +28,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -229,6 +233,10 @@ fun DurationPickerSheet(
             ) {
                 TextButton(
                     onClick = onDismissRequest,
+                    shapes = ButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = RoundedCornerShape(percent = 18)
+                    ),
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(text = "Cancel", style = MaterialTheme.typography.titleMedium)
@@ -239,7 +247,10 @@ fun DurationPickerSheet(
                         val totalSeconds = hours * 3600L + minutes * 60L + seconds
                         onConfirm(totalSeconds.coerceIn(0L, maxSeconds))
                     },
-                    shape = RoundedCornerShape(16.dp),
+                    shapes = ButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = RoundedCornerShape(percent = 18)
+                    ),
                     modifier = Modifier.weight(1.5f)
                 ) {
                     Text(text = "Set Timer", style = MaterialTheme.typography.titleMedium)
@@ -273,6 +284,10 @@ private fun UnitColumn(
     ) {
         IconButton(
             onClick = { onValueChange((value + 1).coerceAtMost(max)) },
+            shapes = IconButtonDefaults.shapes(
+                shape = CircleShape,
+                pressedShape = RoundedCornerShape(percent = 18)
+            ),
             modifier = Modifier.size(36.dp)
         ) {
             Icon(
@@ -345,6 +360,10 @@ private fun UnitColumn(
 
         IconButton(
             onClick = { onValueChange((value - 1).coerceAtLeast(0)) },
+            shapes = IconButtonDefaults.shapes(
+                shape = CircleShape,
+                pressedShape = RoundedCornerShape(percent = 18)
+            ),
             modifier = Modifier.size(36.dp)
         ) {
             Icon(
@@ -365,6 +384,7 @@ private fun PlayfulShortcutButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.85f else 1.0f,
         animationSpec = spring(
@@ -374,10 +394,19 @@ private fun PlayfulShortcutButton(
         label = "btn_scale"
     )
 
+    val cornerPercent by animateIntAsState(
+        targetValue = if (isPressed) 18 else 50,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "btn_shortcut_corners"
+    )
+
     Surface(
         onClick = onClick,
         interactionSource = interactionSource,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(percent = cornerPercent),
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         modifier = modifier

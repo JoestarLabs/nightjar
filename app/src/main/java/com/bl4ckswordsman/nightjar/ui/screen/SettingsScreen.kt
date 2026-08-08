@@ -36,11 +36,19 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Warning
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -152,7 +160,13 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        shapes = IconButtonDefaults.shapes(
+                            shape = CircleShape,
+                            pressedShape = RoundedCornerShape(percent = 18)
+                        )
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back),
@@ -499,6 +513,16 @@ fun SettingsScreen(
                 // Sunset duration selector
                 if (sunsetModeEnabled) {
                     var isDurationMenuExpanded by remember { mutableStateOf(false) }
+                    val sunsetDurationInteractionSource = remember { MutableInteractionSource() }
+                    val isSunsetDurationPressed by sunsetDurationInteractionSource.collectIsPressedAsState()
+                    val sunsetDurationCornerPercent by animateIntAsState(
+                        targetValue = if (isSunsetDurationPressed) 18 else 50,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium,
+                        ),
+                        label = "sunset_duration_corners"
+                    )
 
                     ListItem(
                         headlineContent = {
@@ -525,7 +549,8 @@ fun SettingsScreen(
                                     onClick = {
                                         if (!timerIsRunning) isDurationMenuExpanded = true
                                     },
-                                    shape = RoundedCornerShape(12.dp),
+                                    interactionSource = sunsetDurationInteractionSource,
+                                    shape = RoundedCornerShape(percent = sunsetDurationCornerPercent),
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                                 ) {
@@ -770,14 +795,22 @@ fun SettingsScreen(
                         } else {
                             errorMessage = invalidInputStr
                         }
-                    }
+                    },
+                    shapes = ButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = RoundedCornerShape(percent = 18)
+                    )
                 ) {
                     Text(stringResource(R.string.dialog_btn_save))
                 }
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showPresetsDialog = false }
+                    onClick = { showPresetsDialog = false },
+                    shapes = ButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = RoundedCornerShape(percent = 18)
+                    )
                 ) {
                     Text(stringResource(android.R.string.cancel))
                 }
@@ -809,14 +842,22 @@ fun SettingsScreen(
                             android.net.Uri.parse("package:${context.packageName}")
                         )
                         context.startActivity(intent)
-                    }
+                    },
+                    shapes = ButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = RoundedCornerShape(percent = 18)
+                    )
                 ) {
                     Text(stringResource(R.string.dialog_btn_open_settings))
                 }
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showOverlayDialog = false }
+                    onClick = { showOverlayDialog = false },
+                    shapes = ButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = RoundedCornerShape(percent = 18)
+                    )
                 ) {
                     Text(stringResource(android.R.string.cancel))
                 }

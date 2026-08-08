@@ -10,6 +10,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,8 +40,7 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
  *
  * Uses M3 [ExtendedFloatingActionButton] with:
  * - Animated icon transition (lock → stop) via [AnimatedContent]
- * - Spring-eased scale on press for tactile feedback
- * - Subtle scale spring when transitioning between running/idle states
+ * - Spring-eased scale and squircle shape morphing on press for tactile feedback
  * - [isLocked] = true when commitment mode is active: button shows a locked state
  *   and is visually muted to signal that cancellation is disabled.
  */
@@ -50,6 +52,9 @@ fun LockButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
     val scale by animateFloatAsState(
         targetValue = if (isFinishing) 0.92f else 1f,
         animationSpec = spring(
@@ -61,13 +66,14 @@ fun LockButton(
 
     val cornerPercent by animateIntAsState(
         targetValue = when {
-            isLocked -> 8      // Shield shape (8% corner radius)
-            isRunning -> 18     // Warning squircle (18% corner radius)
-            else -> 50     // Standard pill (50% corner radius)
+            isPressed -> 18     // Morph to squircle on press (matches settings button)
+            isLocked -> 24      // M3 Expressive shield squircle (24% corner radius)
+            isRunning -> 32     // M3 Expressive warning squircle (32% corner radius)
+            else -> 50          // M3 Expressive pill (50% corner radius)
         },
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
+            stiffness = Spring.StiffnessMedium,
         ),
         label = "btn_shape_corners"
     )
@@ -85,6 +91,7 @@ fun LockButton(
 
     ExtendedFloatingActionButton(
         onClick = onClick,
+        interactionSource = interactionSource,
         containerColor = containerColor,
         contentColor = contentColor,
         shape = RoundedCornerShape(percent = cornerPercent),

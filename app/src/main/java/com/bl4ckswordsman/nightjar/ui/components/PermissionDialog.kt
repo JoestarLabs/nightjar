@@ -1,6 +1,9 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,12 +43,24 @@ fun NotificationPermissionDialog(
             )
         },
         confirmButton = {
-            TextButton(onClick = onAllow) {
+            TextButton(
+                onClick = onAllow,
+                shapes = ButtonDefaults.shapes(
+                    shape = CircleShape,
+                    pressedShape = RoundedCornerShape(percent = 18)
+                )
+            ) {
                 Text(stringResource(R.string.dialog_btn_allow))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                shapes = ButtonDefaults.shapes(
+                    shape = CircleShape,
+                    pressedShape = RoundedCornerShape(percent = 18)
+                )
+            ) {
                 Text(stringResource(R.string.dialog_btn_not_now))
             }
         }
@@ -72,12 +87,24 @@ fun DeviceAdminPermissionDialog(
             )
         },
         confirmButton = {
-            TextButton(onClick = onOpenSettings) {
+            TextButton(
+                onClick = onOpenSettings,
+                shapes = ButtonDefaults.shapes(
+                    shape = CircleShape,
+                    pressedShape = RoundedCornerShape(percent = 18)
+                )
+            ) {
                 Text(stringResource(R.string.dialog_btn_open_settings))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                shapes = ButtonDefaults.shapes(
+                    shape = CircleShape,
+                    pressedShape = RoundedCornerShape(percent = 18)
+                )
+            ) {
                 Text(stringResource(R.string.dialog_btn_not_now))
             }
         }

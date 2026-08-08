@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -134,6 +136,10 @@ fun PresetChips(
             FilterChip(
                 selected = isSelected,
                 onClick = { if (enabled) onPresetSelected(presetSeconds) },
+                shapes = FilterChipDefaults.shapes(
+                    shape = CircleShape,
+                    pressedShape = RoundedCornerShape(percent = 18)
+                ),
                 label = {
                     Text(
                         text = formatPresetDuration(presetSeconds),
