@@ -27,11 +27,20 @@ Applying this to the `ListItem` modifier achieves:
 
 ### Child `Switch` Configuration
 When `Modifier.toggleable` is placed on the parent `ListItem`, the child `Switch` must specify `onCheckedChange = null`:
-- `Switch(checked = value, onCheckedChange = null, enabled = enabled)`
+- `Switch(checked = value, onCheckedChange = null, interactionSource = sharedInteractionSource, enabled = enabled)`
 - Setting `onCheckedChange = null` makes the `Switch` purely presentational within its semantic parent, preventing:
   - Duplicate click listeners.
   - Conflicting touch event consumption.
   - Nested TalkBack focus stops.
+
+### Shared `MutableInteractionSource` & Thumb Press Expansion
+In Material 3, the `Switch` thumb dot expands from 16dp/24dp to 28dp when pressed or hovered (`isPressed by interactionSource.collectIsPressedAsState()`).
+When `onCheckedChange = null`, if no interaction source is passed to `Switch`, it defaults to an isolated internal interaction source that never receives press events because the parent `ListItem` consumes the touch gesture.
+By passing the same hoisted `remember { MutableInteractionSource() }` to both:
+- `Modifier.toggleable(interactionSource = sharedSource, indication = ripple(), ...)` on the `ListItem`
+- `Switch(interactionSource = sharedSource, ...)`
+
+The press gesture anywhere on the row immediately activates the switch's built-in thumb enlargement animation and tactile visual response in sync with the row ripple.
 
 ## 2. Setting Targets in Nightjar
 

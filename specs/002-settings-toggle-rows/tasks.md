@@ -72,3 +72,14 @@
 3. **Phase 3 (User Story 1)**: Completed.
 4. **Phase 4 & 5 (US2 & US3)**: Completed.
 5. **Phase 6 (Polish)**: Completed.
+6. **Phase 7 (Convergence)**: Visual press feedback refinement.
+
+---
+
+## Phase 7: Convergence - Visual Press & Hover Feedback
+
+**Purpose**: Forward row interaction events to child switches to trigger Material 3 switch thumb expansion animation during press and hold.
+
+- [x] T011 [US1] Instantiate and remember `MutableInteractionSource` for Commitment Mode, Sunset Warning Mode, and Sunset Sound Alert rows in `app/src/main/java/com/bl4ckswordsman/nightjar/ui/screen/SettingsScreen.kt`.
+- [x] T012 [US1] Pass shared `interactionSource` and `indication = ripple()` to `Modifier.toggleable` and child `Switch` for each toggle setting row in `app/src/main/java/com/bl4ckswordsman/nightjar/ui/screen/SettingsScreen.kt`.
+- [x] T013 Verify `./gradlew test` and `./gradlew lint` pass with zero errors.

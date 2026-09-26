@@ -23,6 +23,7 @@ As a user customizing application behavior in the Settings screen, I want to tap
 1. **Given** the user is on the Settings screen and a toggle setting is off, **When** the user taps the title or supporting description of that setting row, **Then** the switch turns on, the setting state updates, and a visual touch ripple covers the entire row.
 2. **Given** a toggle setting is on, **When** the user taps the row area outside the switch, **Then** the switch turns off and the updated state is persisted.
 3. **Given** a toggle setting row, **When** the user taps directly on the switch thumb/track, **Then** the switch toggles state exactly once without duplicate trigger events.
+4. **Given** a toggle setting row, **When** the user presses and holds down anywhere on the row or switch, **Then** the switch thumb visibly expands to provide tactile press feedback, and returns to normal rest width upon release.
 
 ---
 
@@ -71,6 +72,7 @@ As a user viewing the Settings screen while a timer session is running, I want s
 - **FR-004**: Tapping directly on the switch control MUST toggle the setting cleanly without causing secondary or conflicting events.
 - **FR-005**: When timer state dictates that settings are locked, the entire row's toggle interaction MUST be disabled.
 - **FR-006**: Setting-specific side effects (such as overlay permission checks when enabling Sunset Warning Mode) MUST execute regardless of whether the user tapped the text, icon, row background, or switch.
+- **FR-007**: The system MUST forward row touch press and hover interactions to the child switch so that the switch thumb executes its native Material 3 expansion and tactile visual feedback while pressed.
 
 ### Key Entities
 
@@ -84,6 +86,7 @@ As a user viewing the Settings screen while a timer session is running, I want s
 - **SC-002**: Accessibility inspection reveals zero duplicate or unlabelled interactive child nodes inside each toggle row.
 - **SC-003**: Row interaction ripple feedback displays across the full width and height of the row on press.
 - **SC-004**: 100% pass rate on existing automated tests and lint checks with zero regressions in timer preferences persistence.
+- **SC-005**: Pressing and holding anywhere on a toggle row visibly triggers the switch thumb enlargement animation prior to release/toggle.
 
 ## Assumptions
 

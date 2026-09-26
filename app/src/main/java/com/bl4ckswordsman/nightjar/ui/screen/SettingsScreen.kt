@@ -61,6 +61,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -432,6 +433,7 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_section_timer_behaviour))
 
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
+                val commitmentInteractionSource = remember { MutableInteractionSource() }
                 ListItem(
                     headlineContent = {
                         Text(stringResource(R.string.settings_commitment_mode_title))
@@ -450,6 +452,7 @@ fun SettingsScreen(
                         Switch(
                             checked = commitmentMode,
                             onCheckedChange = null,
+                            interactionSource = commitmentInteractionSource,
                             enabled = !timerIsRunning,
                         )
                     },
@@ -460,6 +463,8 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .toggleable(
                             value = commitmentMode,
+                            interactionSource = commitmentInteractionSource,
+                            indication = ripple(),
                             enabled = !timerIsRunning,
                             role = Role.Switch,
                             onValueChange = { timerViewModel.setCommitmentMode(it) }
@@ -489,6 +494,7 @@ fun SettingsScreen(
                 )
 
                 // Sunset warning mode toggle
+                val sunsetModeInteractionSource = remember { MutableInteractionSource() }
                 ListItem(
                     headlineContent = {
                         Text(stringResource(R.string.settings_sunset_mode_title))
@@ -507,6 +513,7 @@ fun SettingsScreen(
                         Switch(
                             checked = sunsetModeEnabled,
                             onCheckedChange = null,
+                            interactionSource = sunsetModeInteractionSource,
                             enabled = !timerIsRunning,
                         )
                     },
@@ -517,6 +524,8 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .toggleable(
                             value = sunsetModeEnabled,
+                            interactionSource = sunsetModeInteractionSource,
+                            indication = ripple(),
                             enabled = !timerIsRunning,
                             role = Role.Switch,
                             onValueChange = { isChecked ->
@@ -619,6 +628,7 @@ fun SettingsScreen(
                     )
 
                     // Sunset sound alert toggle
+                    val sunsetAudioInteractionSource = remember { MutableInteractionSource() }
                     ListItem(
                         headlineContent = {
                             Text(stringResource(R.string.settings_sunset_audio_title))
@@ -637,6 +647,7 @@ fun SettingsScreen(
                             Switch(
                                 checked = sunsetAudioEnabled,
                                 onCheckedChange = null,
+                                interactionSource = sunsetAudioInteractionSource,
                                 enabled = !timerIsRunning,
                             )
                         },
@@ -647,6 +658,8 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .toggleable(
                                 value = sunsetAudioEnabled,
+                                interactionSource = sunsetAudioInteractionSource,
+                                indication = ripple(),
                                 enabled = !timerIsRunning,
                                 role = Role.Switch,
                                 onValueChange = { isChecked ->
