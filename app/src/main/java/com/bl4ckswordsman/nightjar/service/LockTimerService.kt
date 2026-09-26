@@ -53,6 +53,9 @@ class LockTimerService : Service() {
     @Inject
     lateinit var timerRepository: TimerRepository
 
+    @Inject
+    lateinit var sunsetAudioPlayer: SunsetAudioPlayer
+
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var timerJob: Job? = null
     private val nm by lazy { getSystemService<NotificationManager>()!! }
@@ -167,6 +170,7 @@ class LockTimerService : Service() {
         val prefs = timerRepository.preferencesDataSource.preferences.first()
         val sunsetEnabled = prefs.sunsetModeEnabled
         val sunsetDuration = prefs.sunsetDurationSeconds
+        val sunsetAudioEnabled = prefs.sunsetAudioEnabled
 
         // Wall-clock end time — the single source of truth for all remaining-time calculations.
         val endTimeMs = startedAt + durationSeconds * 1_000L
@@ -177,6 +181,7 @@ class LockTimerService : Service() {
 
         var remaining = wallRemaining()
         var alertFired = false
+        var sunsetChimePlayed = false
 
         timerRepository.updateState(
             TimerState.Running(
@@ -187,14 +192,20 @@ class LockTimerService : Service() {
         )
 
         // Trigger overlay immediately if within warning window at start
-        if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
-            launch(Dispatchers.Main) {
-                registerSensor()
-                // sunsetWindowStartMs: the wall-clock moment when progress = 0 for the overlay
-                // (i.e. when remaining == sunsetDuration). Using this keeps the wave filling
-                // correctly from 0→1 over exactly sunsetDuration seconds.
-                val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
-                overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
+        if (sunsetEnabled && remaining <= sunsetDuration) {
+            if (sunsetAudioEnabled && !sunsetChimePlayed) {
+                sunsetChimePlayed = true
+                sunsetAudioPlayer.playChime()
+            }
+            if (hasOverlayPermission()) {
+                launch(Dispatchers.Main) {
+                    registerSensor()
+                    // sunsetWindowStartMs: the wall-clock moment when progress = 0 for the overlay
+                    // (i.e. when remaining == sunsetDuration). Using this keeps the wave filling
+                    // correctly from 0→1 over exactly sunsetDuration seconds.
+                    val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
+                    overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
+                }
             }
         }
 
@@ -220,14 +231,20 @@ class LockTimerService : Service() {
                 )
             )
 
-            if (sunsetEnabled && remaining <= sunsetDuration && hasOverlayPermission()) {
-                launch(Dispatchers.Main) {
-                    if (overlayManager?.isShowing == true) {
-                        overlayManager?.updateRemainingTime(remaining)
-                    } else {
-                        registerSensor()
-                        val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
-                        overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
+            if (sunsetEnabled && remaining <= sunsetDuration) {
+                if (sunsetAudioEnabled && !sunsetChimePlayed) {
+                    sunsetChimePlayed = true
+                    sunsetAudioPlayer.playChime()
+                }
+                if (hasOverlayPermission()) {
+                    launch(Dispatchers.Main) {
+                        if (overlayManager?.isShowing == true) {
+                            overlayManager?.updateRemainingTime(remaining)
+                        } else {
+                            registerSensor()
+                            val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
+                            overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
+                        }
                     }
                 }
             }

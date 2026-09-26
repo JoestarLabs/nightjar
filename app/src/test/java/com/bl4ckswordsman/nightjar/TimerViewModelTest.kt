@@ -112,4 +112,11 @@ class TimerViewModelTest {
         repository.updateState(TimerState.Idle)
         assertTrue(repository.currentState is TimerState.Idle)
     }
+
+    @Test
+    fun `setSunsetAudioEnabled updates preference`() = runTest {
+        viewModel.setSunsetAudioEnabled(false)
+        testDispatcher.scheduler.advanceUntilIdle()
+        org.mockito.kotlin.verify(mockDataSource).saveSunsetAudioEnabled(false)
+    }
 }

@@ -57,6 +57,11 @@ class TimerViewModel @Inject constructor(
     /** Duration in seconds of the sunset warning overlay. */
     val sunsetDurationSeconds: StateFlow<Long> = _sunsetDurationSeconds.asStateFlow()
 
+    private val _sunsetAudioEnabled = MutableStateFlow(true)
+
+    /** Whether sunset audio alert (chime) is enabled. */
+    val sunsetAudioEnabled: StateFlow<Boolean> = _sunsetAudioEnabled.asStateFlow()
+
     fun setSelectedSeconds(seconds: Long) {
         _selectedSeconds.value = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
     }
@@ -82,6 +87,12 @@ class TimerViewModel @Inject constructor(
     fun setSunsetDurationSeconds(seconds: Long) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveSunsetDuration(seconds)
+        }
+    }
+
+    fun setSunsetAudioEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.preferencesDataSource.saveSunsetAudioEnabled(enabled)
         }
     }
 
@@ -123,6 +134,7 @@ class TimerViewModel @Inject constructor(
                 // Restore sunset settings
                 _sunsetModeEnabled.value = prefs.sunsetModeEnabled
                 _sunsetDurationSeconds.value = prefs.sunsetDurationSeconds
+                _sunsetAudioEnabled.value = prefs.sunsetAudioEnabled
                 // Only update selected seconds if timer is not running
                 if (repository.currentState is TimerState.Idle) {
                     setSelectedSeconds(prefs.lastDurationSeconds)

@@ -117,6 +117,7 @@ fun SettingsScreen(
 
     val sunsetModeEnabled by timerViewModel.sunsetModeEnabled.collectAsStateWithLifecycle()
     val sunsetDurationSeconds by timerViewModel.sunsetDurationSeconds.collectAsStateWithLifecycle()
+    val sunsetAudioEnabled by timerViewModel.sunsetAudioEnabled.collectAsStateWithLifecycle()
 
     var showPresetsDialog by remember { mutableStateOf(false) }
     var showOverlayDialog by remember { mutableStateOf(false) }
@@ -599,6 +600,36 @@ fun SettingsScreen(
                             .clickable(enabled = !timerIsRunning) {
                                 isDurationMenuExpanded = true
                             }
+                    )
+
+                    // Sunset sound alert toggle
+                    ListItem(
+                        headlineContent = {
+                            Text(stringResource(R.string.settings_sunset_audio_title))
+                        },
+                        supportingContent = {
+                            Text(stringResource(R.string.settings_sunset_audio_desc))
+                        },
+                        leadingContent = {
+                            Icon(
+                                Icons.Rounded.Notifications,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        trailingContent = {
+                            Switch(
+                                checked = sunsetAudioEnabled,
+                                onCheckedChange = { isChecked ->
+                                    timerViewModel.setSunsetAudioEnabled(isChecked)
+                                },
+                                enabled = !timerIsRunning,
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceBright
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

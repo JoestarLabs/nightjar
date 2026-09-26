@@ -107,6 +107,8 @@
     <string name="settings_sunset_mode_desc">Gradually covers the screen with a rising wave before locking</string>
     <string name="settings_sunset_duration_title">Warning duration</string>
     <string name="settings_sunset_duration_format">%1$d seconds</string>
+    <string name="settings_sunset_audio_title">Sunset sound alert</string>
+    <string name="settings_sunset_audio_desc">Play a gentle chime when the sunset warning begins</string>
     <string name="settings_perm_overlay">Display over other apps</string>
     <string name="settings_perm_overlay_desc">Required to show the sunset warning over other apps</string>
     <string name="dialog_overlay_title">Enable Overlay Warning</string>

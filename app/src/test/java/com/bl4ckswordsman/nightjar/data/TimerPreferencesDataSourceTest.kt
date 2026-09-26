@@ -43,6 +43,7 @@ class TimerPreferencesDataSourceTest {
         assertEquals(listOf(300L, 900L, 1800L, 3600L), prefs.customPresets)
         assertTrue(prefs.sunsetModeEnabled)
         assertEquals(30L, prefs.sunsetDurationSeconds)
+        assertTrue(prefs.sunsetAudioEnabled)
     }
 
     @Test
@@ -104,6 +105,17 @@ class TimerPreferencesDataSourceTest {
         dataSource.saveSunsetDuration(45L)
         val prefs = dataSource.preferences.first()
         assertEquals(45L, prefs.sunsetDurationSeconds)
+    }
+
+    @Test
+    fun testSaveSunsetAudioEnabled() = runTest(testDispatcher) {
+        dataSource.saveSunsetAudioEnabled(false)
+        var prefs = dataSource.preferences.first()
+        assertFalse(prefs.sunsetAudioEnabled)
+
+        dataSource.saveSunsetAudioEnabled(true)
+        prefs = dataSource.preferences.first()
+        assertTrue(prefs.sunsetAudioEnabled)
     }
 
     @Test

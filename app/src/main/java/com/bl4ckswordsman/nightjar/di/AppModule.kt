@@ -3,6 +3,8 @@ package com.bl4ckswordsman.nightjar.di
 import android.content.Context
 import com.bl4ckswordsman.nightjar.data.TimerPreferencesDataSource
 import com.bl4ckswordsman.nightjar.data.TimerRepository
+import com.bl4ckswordsman.nightjar.service.AndroidSunsetAudioPlayer
+import com.bl4ckswordsman.nightjar.service.SunsetAudioPlayer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,4 +27,10 @@ object AppModule {
     fun provideTimerRepository(
         preferencesDataSource: TimerPreferencesDataSource
     ): TimerRepository = TimerRepository(preferencesDataSource)
+
+    @Provides
+    @Singleton
+    fun provideSunsetAudioPlayer(
+        @ApplicationContext context: Context
+    ): SunsetAudioPlayer = AndroidSunsetAudioPlayer(context)
 }

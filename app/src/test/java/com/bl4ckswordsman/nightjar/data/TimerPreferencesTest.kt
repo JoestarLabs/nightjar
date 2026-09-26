@@ -18,5 +18,6 @@ class TimerPreferencesTest {
         assertEquals(listOf(300L, 900L, 1800L, 3600L), preferences.customPresets)
         assertTrue(preferences.sunsetModeEnabled)
         assertEquals(30L, preferences.sunsetDurationSeconds)
+        assertTrue(preferences.sunsetAudioEnabled)
     }
 }

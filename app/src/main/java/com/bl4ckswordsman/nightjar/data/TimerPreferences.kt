@@ -26,6 +26,7 @@ object TimerPreferenceKeys {
     val CUSTOM_PRESETS = stringPreferencesKey("custom_presets_string")
     val SUNSET_MODE_ENABLED = booleanPreferencesKey("sunset_mode_enabled")
     val SUNSET_DURATION_SECONDS = longPreferencesKey("sunset_duration_seconds")
+    val SUNSET_AUDIO_ENABLED = booleanPreferencesKey("sunset_audio_enabled")
 }
 
 /**
@@ -38,7 +39,8 @@ data class TimerPreferences(
     val commitmentMode: Boolean = false,   // when true, timer cannot be cancelled once started
     val customPresets: List<Long> = listOf(300L, 900L, 1800L, 3600L), // custom presets (in seconds)
     val sunsetModeEnabled: Boolean = true,  // default: enabled
-    val sunsetDurationSeconds: Long = 30L   // default: 30 seconds
+    val sunsetDurationSeconds: Long = 30L,  // default: 30 seconds
+    val sunsetAudioEnabled: Boolean = true  // default: enabled
 )
 
 @Singleton
@@ -64,6 +66,7 @@ class TimerPreferencesDataSource(
             customPresets = presetsList,
             sunsetModeEnabled = prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] ?: true,
             sunsetDurationSeconds = prefs[TimerPreferenceKeys.SUNSET_DURATION_SECONDS] ?: 30L,
+            sunsetAudioEnabled = prefs[TimerPreferenceKeys.SUNSET_AUDIO_ENABLED] ?: true,
         )
     }
 
@@ -113,6 +116,13 @@ class TimerPreferencesDataSource(
     suspend fun saveSunsetDuration(seconds: Long) {
         dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.SUNSET_DURATION_SECONDS] = seconds
+        }
+    }
+
+    /** Persist the sunset audio alert enabled setting. */
+    suspend fun saveSunsetAudioEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[TimerPreferenceKeys.SUNSET_AUDIO_ENABLED] = enabled
         }
     }
 }
