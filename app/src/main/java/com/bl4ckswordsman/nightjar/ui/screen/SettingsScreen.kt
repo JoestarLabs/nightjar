@@ -8,6 +8,7 @@ import android.os.LocaleList
 import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +72,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -447,14 +449,21 @@ fun SettingsScreen(
                     trailingContent = {
                         Switch(
                             checked = commitmentMode,
-                            onCheckedChange = { timerViewModel.setCommitmentMode(it) },
+                            onCheckedChange = null,
                             enabled = !timerIsRunning,
                         )
                     },
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceBright
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .toggleable(
+                            value = commitmentMode,
+                            enabled = !timerIsRunning,
+                            role = Role.Switch,
+                            onValueChange = { timerViewModel.setCommitmentMode(it) }
+                        )
                 )
 
                 ListItem(
@@ -497,19 +506,26 @@ fun SettingsScreen(
                     trailingContent = {
                         Switch(
                             checked = sunsetModeEnabled,
-                            onCheckedChange = { isChecked ->
-                                if (isChecked && !Settings.canDrawOverlays(context)) {
-                                    showOverlayDialog = true
-                                }
-                                timerViewModel.setSunsetModeEnabled(isChecked)
-                            },
+                            onCheckedChange = null,
                             enabled = !timerIsRunning,
                         )
                     },
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceBright
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .toggleable(
+                            value = sunsetModeEnabled,
+                            enabled = !timerIsRunning,
+                            role = Role.Switch,
+                            onValueChange = { isChecked ->
+                                if (isChecked && !Settings.canDrawOverlays(context)) {
+                                    showOverlayDialog = true
+                                }
+                                timerViewModel.setSunsetModeEnabled(isChecked)
+                            }
+                        )
                 )
 
                 // Sunset duration selector
@@ -620,16 +636,23 @@ fun SettingsScreen(
                         trailingContent = {
                             Switch(
                                 checked = sunsetAudioEnabled,
-                                onCheckedChange = { isChecked ->
-                                    timerViewModel.setSunsetAudioEnabled(isChecked)
-                                },
+                                onCheckedChange = null,
                                 enabled = !timerIsRunning,
                             )
                         },
                         colors = ListItemDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceBright
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = sunsetAudioEnabled,
+                                enabled = !timerIsRunning,
+                                role = Role.Switch,
+                                onValueChange = { isChecked ->
+                                    timerViewModel.setSunsetAudioEnabled(isChecked)
+                                }
+                            )
                     )
                 }
             }
