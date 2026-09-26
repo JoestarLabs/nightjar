@@ -15,3 +15,8 @@
 
 ## Git Standards
 - Follow Conventional Commits format (`feat:`, `fix:`, `docs:`, `chore:`, etc.) for automated releases via Release Please.
+
+## Spec Persistence Model
+- This project follows the **Immutable Historical Records** model.
+- Completed feature directories under `specs/` remain immutable records of design intent, research, and decisions.
+- Subsequent changes, extensions, or refactoring must be initiated as new sequential features using `speckit-specify`.
