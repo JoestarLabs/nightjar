@@ -1,7 +1,7 @@
 
 # ![Nightjar Banner](.github/assets/banner.png)
 
-Nightjar is a Material 3 Expressive lock timer application for Android designed to help parents manage device screen time with playful, intuitive controls.
+​Nightjar is a Material 3 Expressive lock timer application for Android designed for flexible, standalone screen-time limits—whether for personal focus, temporary device sharing, or quick boundaries for kids when setups like Family Link aren't practical.
 
 ## Features
 - **Expressive Zen Timer Dial**: A clean, interactive circular dial to easily adjust and track active countdowns.
