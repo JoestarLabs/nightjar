@@ -3,4 +3,6 @@
     <!-- Background color for dark mode window startup / transition -->
     <color name="theme_window_background">@color/ink_surface</color>
     <color name="notification_icon_tint">@color/washi_surface</color>
+    <!-- Alert segment colour: golden amber for dark theme (WCAG-AA >= 3:1 against dark surfaces) -->
+    <color name="notification_alert_color">#FFB03A</color>
 </resources>
