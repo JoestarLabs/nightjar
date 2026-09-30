@@ -8,6 +8,12 @@
 
 **Input**: User description: "Live Updates Notifications: can't the live update notifications chip in the status bar be made to flash (or change color) or catch the user's attention in some native and clean way when the 1 minute mark passes?"
 
+## Clarifications
+
+### Session 2026-09-30
+
+- Q: What minimum contrast ratio should the urgency colour meet so the chip remains accessible to users with colour vision deficiency? → A: WCAG-AA minimum (3:1 contrast for UI components against light & dark system backgrounds)
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Chip changes to an urgent visual state at 1-minute mark (Priority: P1)
@@ -74,7 +80,7 @@ When the 1-minute heads-up notification fires, the chip visual change is coordin
 - **SC-001**: The chip visual state changes within one countdown tick (≤ 1 second) of the remaining time crossing the 60-second boundary on supported devices.
 - **SC-002**: The chip urgency colour is applied in 100% of countdown cycles once the 1-minute boundary is crossed for the remainder of that timer run.
 - **SC-003**: On devices with API < 36, no code path related to the chip urgency change is executed, and the existing heads-up alert continues to function without regression.
-- **SC-004**: The urgency colour passes basic contrast checks against standard Material You light and dark system backgrounds.
+- **SC-004**: The urgency colour achieves a minimum 3:1 contrast ratio (WCAG-AA for UI components) against standard Material You light and dark system backgrounds, verified for common colour-vision-deficiency profiles.
 - **SC-005**: A corresponding unit test verifies that the correct urgency colour branch is taken when `remainingSeconds <= 60`.
 
 ## Assumptions
