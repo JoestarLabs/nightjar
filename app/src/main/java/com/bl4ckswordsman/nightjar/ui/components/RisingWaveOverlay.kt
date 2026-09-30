@@ -79,7 +79,7 @@ private fun buildWavePath(
     val controlYScale = (4f / 3f)
 
     path.moveTo(0f, bottomExtension)
-    path.lineTo(0f, yAtX(0f, baseLineY, tiltOffset, width, amplitude, phase, useCosine))
+    path.lineTo(0f, yAtX(0f, baseLineY, tiltOffset, width, amplitude, frequency, phase, useCosine))
 
     var segStart = 0f
     while (segStart < width) {
@@ -91,10 +91,10 @@ private fun buildWavePath(
 
         // Control point Y: the sine/cosine peak sits at the quarter-point of the half-period,
         // so ctrl1 mirrors the peak and ctrl2 mirrors the trough (opposite sign).
-        val yMid = yAtX(segStart + segLen / 2f, baseLineY, tiltOffset, width, amplitude, phase, useCosine)
+        val yMid = yAtX(segStart + segLen / 2f, baseLineY, tiltOffset, width, amplitude, frequency, phase, useCosine)
         // Adjust control-point Y for Bézier overshoot (scale by 4/3 relative to the midpoint)
-        val yStart = yAtX(segStart, baseLineY, tiltOffset, width, amplitude, phase, useCosine)
-        val yEnd   = yAtX(segEnd,   baseLineY, tiltOffset, width, amplitude, phase, useCosine)
+        val yStart = yAtX(segStart, baseLineY, tiltOffset, width, amplitude, frequency, phase, useCosine)
+        val yEnd   = yAtX(segEnd,   baseLineY, tiltOffset, width, amplitude, frequency, phase, useCosine)
         val yCtrl1 = yStart + controlYScale * (yMid - (yStart + yEnd) / 2f)
         val yCtrl2 = yEnd   + controlYScale * (yMid - (yStart + yEnd) / 2f)
 
@@ -113,6 +113,7 @@ private fun yAtX(
     tiltOffset: Float,
     width: Float,
     amplitude: Float,
+    frequency: Float,
     phase: Float,
     useCosine: Boolean
 ): Float {
