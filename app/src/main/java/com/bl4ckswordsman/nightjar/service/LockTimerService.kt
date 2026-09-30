@@ -13,6 +13,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.ColorRes
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -356,11 +357,14 @@ class LockTimerService : Service() {
         }
 
         // ── Live Update chip colour change (Android 16+) ───────────────────
-        // Also update the chip to amber for one tick as an in-chip visual cue.
-        // setOnlyAlertOnce(false) is passed but the chip expand is system-determined.
+        // Also update the chip to amber for the alert tick with alertOnce = false as an in-chip visual cue.
         if (Build.VERSION.SDK_INT >= 36) {
             val urgentNotification = buildNotification(
-                durationSeconds, countdownEndEpochMs, remainingSeconds, alertOnce = false
+                durationSeconds = durationSeconds,
+                countdownEndEpochMs = countdownEndEpochMs,
+                remainingSeconds = remainingSeconds,
+                alertOnce = false,
+                isUrgent = true
             )
             nm.notify(NOTIFICATION_ID, urgentNotification)
         }
@@ -374,20 +378,21 @@ class LockTimerService : Service() {
      * The OS renders the countdown in the notification without any Gradle-side polling.
      */
     private fun getLocalizedContext(): Context {
-        val localeManager = getSystemService(android.app.LocaleManager::class.java)
-        val localeList = localeManager.applicationLocales
-        if (localeList.isEmpty) return this
+        val localeManager = ContextCompat.getSystemService(this, android.app.LocaleManager::class.java)
+        val localeList = localeManager?.applicationLocales
+        if (localeList == null || localeList.isEmpty) return this
         val locale = localeList.get(0) ?: return this
         val config = android.content.res.Configuration(resources.configuration)
         config.setLocale(locale)
         return createConfigurationContext(config)
     }
 
-    private fun buildNotification(
+    internal fun buildNotification(
         durationSeconds: Long,
         countdownEndEpochMs: Long,
         remainingSeconds: Long,
         alertOnce: Boolean = true,
+        isUrgent: Boolean = isUrgent(remainingSeconds),
     ): Notification {
         val localizedContext = getLocalizedContext()
         val tapIntent = PendingIntent.getActivity(
@@ -405,12 +410,7 @@ class LockTimerService : Service() {
         )
 
         if (Build.VERSION.SDK_INT >= 36) {
-            val segmentColor = if (alertOnce) {
-                ContextCompat.getColor(this, R.color.bamboo_green_40)
-            } else {
-                // On the alert tick use an urgency colour so the chip visually changes
-                ContextCompat.getColor(this, R.color.notification_alert_color)
-            }
+            val segmentColor = ContextCompat.getColor(this, resolveSegmentColorRes(isUrgent))
 
             val progressStyle = Notification.ProgressStyle()
                 .setProgress((durationSeconds - remainingSeconds).toInt())
@@ -522,6 +522,21 @@ class LockTimerService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val NOTIFICATION_ALERT_ID = 1002
         private const val ONE_MINUTE_SECONDS = 60L
+
+        /**
+         * Resolves the segment color resource ID for the Live Update chip.
+         * Returns [R.color.notification_alert_color] when [isUrgent] is true,
+         * or [R.color.bamboo_green_40] when false.
+         */
+        @ColorRes
+        fun resolveSegmentColorRes(isUrgent: Boolean): Int =
+            if (isUrgent) R.color.notification_alert_color else R.color.bamboo_green_40
+
+        /**
+         * Returns true if the countdown has entered the 1-minute alert window (remaining <= 60s).
+         */
+        fun isUrgent(remainingSeconds: Long): Boolean =
+            remainingSeconds <= ONE_MINUTE_SECONDS
 
         fun startIntent(
             context: Context,

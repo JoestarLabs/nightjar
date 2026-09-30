@@ -10,8 +10,8 @@
 
 **Purpose**: Establish accessible color tokens in light and dark themes before service integration.
 
-- [ ] T001 [P] Define light theme urgency color `#A05A00` with $\ge 4.2:1$ contrast in `app/src/main/res/values/colors.xml`
-- [ ] T002 [P] Define dark theme urgency color `#FFB03A` with $\ge 9.9:1$ contrast in `app/src/main/res/values-night/colors.xml`
+- [X] T001 [P] Define light theme urgency color `#A05A00` with $\ge 4.2:1$ contrast in `app/src/main/res/values/colors.xml`
+- [X] T002 [P] Define dark theme urgency color `#FFB03A` with $\ge 9.9:1$ contrast in `app/src/main/res/values-night/colors.xml`
 
 ---
 
@@ -19,7 +19,7 @@
 
 **Purpose**: Unit test harness for notification building and segment color evaluation under Robolectric.
 
-- [ ] T003 Create unit test scaffold `LockTimerServiceNotificationTest.kt` in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
+- [X] T003 Create unit test scaffold `LockTimerServiceNotificationTest.kt` in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
 
 **Checkpoint**: Foundation ready — service logic changes can be developed and verified against unit tests.
 
@@ -32,13 +32,13 @@
 **Independent Test**: Start a 75s timer; at 60s the chip turns amber and remains amber through 59s, 58s, ... 1s. Start a 30s timer; the chip starts amber immediately.
 
 ### Tests for User Story 1
-- [ ] T004 [P] [US1] Unit test verifying `buildNotification` resolves standard green segment when `remainingSeconds > 60` in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
-- [ ] T005 [P] [US1] Unit test verifying `buildNotification` resolves urgency amber segment when `remainingSeconds <= 60` (including boundary at 60s) in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
-- [ ] T006 [P] [US1] Unit test verifying initial notification for short duration ($\le 60$s) resolves urgency amber segment in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
+- [X] T004 [P] [US1] Unit test verifying `buildNotification` resolves standard green segment when `remainingSeconds > 60` in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
+- [X] T005 [P] [US1] Unit test verifying `buildNotification` resolves urgency amber segment when `remainingSeconds <= 60` (including boundary at 60s) in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
+- [X] T006 [P] [US1] Unit test verifying initial notification for short duration ($\le 60$s) resolves urgency amber segment in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
 
 ### Implementation for User Story 1
-- [ ] T007 [US1] Update `buildNotification()` in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt` to decouple `alertOnce` from segment color and set `Notification.ProgressStyle.Segment` color based on `isUrgent` (`remainingSeconds <= ONE_MINUTE_SECONDS`)
-- [ ] T008 [US1] Update countdown tick notification loop in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt` so every tick $\le 60$s maintains the urgency segment color
+- [X] T007 [US1] Update `buildNotification()` in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt` to decouple `alertOnce` from segment color and set `Notification.ProgressStyle.Segment` color based on `isUrgent` (`remainingSeconds <= ONE_MINUTE_SECONDS`)
+- [X] T008 [US1] Update countdown tick notification loop in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt` so every tick $\le 60$s maintains the urgency segment color
 
 **Checkpoint**: User Story 1 is fully functional and all User Story 1 unit tests pass.
 
@@ -51,11 +51,11 @@
 **Independent Test**: At 60s, both heads-up alert and chip amber transition dispatch simultaneously; dismiss heads-up notification and confirm chip remains amber.
 
 ### Tests for User Story 2
-- [ ] T009 [P] [US2] Unit test verifying `postOneMinuteAlert` posts heads-up on `CHANNEL_ALERT_ID` and updates ongoing notification with `isUrgent = true` in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
+- [X] T009 [P] [US2] Unit test verifying `postOneMinuteAlert` posts heads-up on `CHANNEL_ALERT_ID` and updates ongoing notification with `isUrgent = true` in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
 
 ### Implementation for User Story 2
-- [ ] T010 [US2] Align `postOneMinuteAlert()` in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt` to update ongoing notification `NOTIFICATION_ID` with explicit `isUrgent = true` and `alertOnce = false`
-- [ ] T011 [US2] Ensure `alertFired` logic cleanly coordinates with continuous `isUrgent` ticks without duplicate heads-up alerts in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt`
+- [X] T010 [US2] Align `postOneMinuteAlert()` in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt` to update ongoing notification `NOTIFICATION_ID` with explicit `isUrgent = true` and `alertOnce = false`
+- [X] T011 [US2] Ensure `alertFired` logic cleanly coordinates with continuous `isUrgent` ticks without duplicate heads-up alerts in `app/src/main/java/com/bl4ckswordsman/nightjar/service/LockTimerService.kt`
 
 **Checkpoint**: User Stories 1 & 2 are complete and verified together.
 
@@ -65,9 +65,9 @@
 
 **Purpose**: Final verification, linting, and regression tests.
 
-- [ ] T012 Run full unit test suite `./gradlew testDebugUnitTest`
-- [ ] T013 Run static analysis and lint checks `./gradlew lint`
-- [ ] T014 Execute quickstart validation scenarios documented in `specs/003-live-update-one-minute-alert/quickstart.md`
+- [X] T012 Run full unit test suite `./gradlew testDebugUnitTest`
+- [X] T013 Run static analysis and lint checks `./gradlew lint`
+- [X] T014 Execute quickstart validation scenarios documented in `specs/003-live-update-one-minute-alert/quickstart.md`
 
 ---
 
