@@ -1,13 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Data extraction rules for API 31+ (dataExtractionRules).
+
+    Cloud backup: DISABLED — Nightjar does not sync preferences to Google Account.
+    Device transfer: ENABLED — timer duration and commitment-mode preferences are
+    transferred when a user moves to a new phone, which is a harmless convenience.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <include
-            domain="file"
-            path="datastore/nightjar_timer_prefs.preferences_pb" />
+        <!-- Intentionally empty: no data is backed up to Google Account. -->
+        <exclude domain="file" path="." />
     </cloud-backup>
     <device-transfer>
         <include
