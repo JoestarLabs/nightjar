@@ -73,17 +73,20 @@ internal fun buildNotification(
   - Segment color:
     - If `!isUrgent`: `ContextCompat.getColor(context, R.color.bamboo_green_40)`
     - If `isUrgent`: `ContextCompat.getColor(context, R.color.notification_alert_color)`
-- **End Icon**: Lock icon (`R.drawable.ic_lock_notification`) tinted with `R.color.notification_icon_tint`
+- **Small Icon**: `R.drawable.outline_error_24` when `isUrgent` is `true`; `R.drawable.ic_lock_notification` when `false`
+- **Status Bar Chip**: Chronometer countdown (`usesChronometer = true`, `chronometerCountDown = true`) remains continuously active and visible in the status bar pill without static text overrides
+- **End Icon**: `resolveSmallIconRes(isUrgent)` tinted with `R.color.notification_alert_color` when `isUrgent`, else `R.color.notification_icon_tint`
 - **Ongoing Request**: `Bundle` with `android.requestPromotedOngoing = true`
 - **Chronometer**: `usesChronometer = true`, `chronometerCountDown = true`, `when = countdownEndEpochMs`
 
 ### Contract B: Legacy Platforms (API $33..35$)
 
 - **Style**: Standard `NotificationCompat.Builder`
+- **Small Icon**: `resolveSmallIconRes(isUrgent)` (`outline_error_24` when `isUrgent` is `true`)
 - **Progress**: `setProgress(durationSeconds.toInt(), (durationSeconds - remainingSeconds).toInt(), false)`
 - **Large Icon**: 120x120 Bitmap of `ic_lock_notification` tinted with `R.color.notification_icon_tint`
 - **Chronometer**: `setUsesChronometer(true)`, `setChronometerCountDown(true)`, `setWhen(countdownEndEpochMs)`
-- **No ProgressStyle**: Does not invoke `Notification.ProgressStyle` APIs to maintain backward compatibility.
+- **No ProgressStyle**: Legacy fallback continues without calling API 36 methods.
 
 ---
 

@@ -71,6 +71,17 @@
 
 ---
 
+## Phase 6: Enhancement — Status Bar Chip Urgency Visuals (Priority: P2)
+
+**Goal**: Elevate unexpanded status bar chip visibility when the 1-minute threshold is crossed by swapping the lock icon to `outline_error_24` tinted with `notification_alert_color`, while preserving real-time countdown chronometer visibility in the chip without static text overrides.
+
+- [X] T015 [P] Add error alert drawable `app/src/main/res/drawable/outline_error_24.xml`
+- [X] T016 Update `LockTimerService.kt` to bind `resolveSmallIconRes()` to `outline_error_24` and preserve chronometer countdown in status bar chip when `isUrgent == true`
+- [X] T017 Unit test `resolveSmallIconRes` in `app/src/test/java/com/bl4ckswordsman/nightjar/service/LockTimerServiceNotificationTest.kt`
+- [X] T018 Re-run quality gates `./gradlew testDebugUnitTest` and `./gradlew lint`
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

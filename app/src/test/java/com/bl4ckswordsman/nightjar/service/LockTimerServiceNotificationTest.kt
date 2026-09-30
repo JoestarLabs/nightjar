@@ -39,8 +39,6 @@ class LockTimerServiceNotificationTest {
         assertEquals(R.color.notification_alert_color, colorRes)
     }
 
-    // ── T006: Short duration (<= 60s) begins in urgency state ─────────────────
-
     @Test
     fun isUrgent_isTrueForInitialShortDuration() {
         val shortDuration = 30L
@@ -48,5 +46,17 @@ class LockTimerServiceNotificationTest {
             "Timer started with 30s must immediately evaluate to urgent",
             LockTimerService.isUrgent(remainingSeconds = shortDuration)
         )
+    }
+
+    @Test
+    fun resolveSmallIconRes_returnsStandardLock_whenNotUrgent() {
+        val iconRes = LockTimerService.resolveSmallIconRes(isUrgent = false)
+        assertEquals(R.drawable.ic_lock_notification, iconRes)
+    }
+
+    @Test
+    fun resolveSmallIconRes_returnsAlertIcon_whenUrgent() {
+        val iconRes = LockTimerService.resolveSmallIconRes(isUrgent = true)
+        assertEquals(R.drawable.outline_error_24, iconRes)
     }
 }
