@@ -48,25 +48,38 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val prefs = preferencesDataSource.preferences.first()
-                val startedAt = prefs.startedAtMillis
-                val duration = prefs.lastDurationSeconds
-
-                if (startedAt > 0L && duration > 0L) {
-                    val elapsedSeconds = (System.currentTimeMillis() - startedAt) / 1_000
-                    val remaining = duration - elapsedSeconds
-                    if (remaining > 5) {
-                        // Resume timer with remaining seconds
-                        ContextCompat.startForegroundService(
-                            context,
-                            LockTimerService.startIntent(context, remaining)
-                        )
-                    }
-                    // If ≤ 5 s remain after reboot, skip — not worth resuming.
-                }
+                handleBoot(context, preferencesDataSource)
             } finally {
                 pendingResult.finish()
             }
         }
     }
+
+    internal suspend fun handleBoot(
+        context: Context,
+        preferencesDataSource: TimerPreferencesDataSource,
+        currentTimeMillis: Long = System.currentTimeMillis(),
+        startService: (Context, Intent) -> Unit = { ctx, startIntent ->
+            ContextCompat.startForegroundService(ctx, startIntent)
+        }
+    ) {
+        val prefs = preferencesDataSource.preferences.first()
+        val startedAt = prefs.startedAtMillis
+        val duration = prefs.lastDurationSeconds
+        val commitmentMode = prefs.commitmentMode
+
+        if (startedAt > 0L && duration > 0L) {
+            val elapsedSeconds = (currentTimeMillis - startedAt) / 1_000
+            val remaining = duration - elapsedSeconds
+            if (remaining > 5) {
+                // Resume timer with remaining seconds and preserved commitment mode
+                startService(
+                    context,
+                    LockTimerService.startIntent(context, remaining, commitmentMode)
+                )
+            }
+            // If ≤ 5 s remain after reboot, skip — not worth resuming.
+        }
+    }
 }
+
