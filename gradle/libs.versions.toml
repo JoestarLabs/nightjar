@@ -17,7 +17,7 @@ lifecycleViewmodel = "2.9.0"
 mockitoKotlin = "5.4.0"
 mockitoCore = "5.14.2"
 robolectric = "4.14.1"
-appcompat = "1.7.1"
+appcompat = "1.8.0"
 aboutLibraries = "14.0.0-b03"
 
 
