@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.0](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.4...nightjar-v0.1.0) (2026-10-04)
+
+
+### Features
+
+* add GitHub repository link to settings screen and update about section strings ([d24d4fa](https://github.com/JoestarLabs/nightjar/commit/d24d4fa79be01304984eea55bd5b79699111499d))
+* implement emergency unlock slider to allow overriding commitment mode ([f80e64b](https://github.com/JoestarLabs/nightjar/commit/f80e64be38a8afb9a232405d3c7bcb21864cd168))
+* **notification:** display error icon in status bar chip during final minute ([a2ef3e6](https://github.com/JoestarLabs/nightjar/commit/a2ef3e643d5c7e05104757c12c22433ec28dcd0f))
+* **notification:** make live update chip turn amber persistently at 1-minute mark ([ab2bf2d](https://github.com/JoestarLabs/nightjar/commit/ab2bf2d0046eafbe0ff5cb273d1d5ed7789144fd))
+* **sunset:** add audible chime warning on sunset transition ([a979457](https://github.com/JoestarLabs/nightjar/commit/a9794579791012f9c2b74ae4c067832747c8ff13))
+
+
+### Bug Fixes
+
+* **security:** preserve commitment mode across device reboots and updates ([12872ec](https://github.com/JoestarLabs/nightjar/commit/12872ec79a8bfb1b06416df5360d0d157dfa068d))
+* **security:** preserve commitment mode across device reboots in BootReceiver ([1a41d9b](https://github.com/JoestarLabs/nightjar/commit/1a41d9b0a71e1dc93e96572f219cca2b55b3987b))
+* **ui:** expand tap target for setting toggle rows ([63b03bc](https://github.com/JoestarLabs/nightjar/commit/63b03bcc6f8704d557c5ee9a3feefec8107c0413))
+* **ui:** pass frequency parameter to yAtX in RisingWaveOverlay ([821e10b](https://github.com/JoestarLabs/nightjar/commit/821e10b102b7e10afec041ad6ccbb497cfca2951))
+* **ui:** synchronize switch thumb press animation with row interaction source ([7f02ccc](https://github.com/JoestarLabs/nightjar/commit/7f02ccc4de99051bd712a18a29fcdd650cd9970e))
+
+
+### Performance Improvements
+
+* optimize wave animation path generation with cubic Bézier curves ([4c5ae79](https://github.com/JoestarLabs/nightjar/commit/4c5ae79579bdf21c918068daf4c851684ccba0dd))
+* replace wave lineTo loop with cubic Bézier path builder in RisingWaveOverlay ([853b603](https://github.com/JoestarLabs/nightjar/commit/853b603dfa8b509df2342114c7eec94dc4a7e069))
+
 ## [0.0.4](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.3...nightjar-v0.0.4) (2026-07-29)
 
 
