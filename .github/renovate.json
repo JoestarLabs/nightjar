@@ -1,6 +1,83 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "schedule:weekly"
+  ],
+  "dependencyDashboard": true,
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "description": "Group Kotlin, Coroutines, and KSP together so compiler and runtime versions stay in lockstep",
+      "groupName": "Kotlin & KSP",
+      "groupSlug": "kotlin-ksp",
+      "matchPackageNames": [
+        "/^org\\.jetbrains\\.kotlin/",
+        "/^org\\.jetbrains\\.kotlinx/",
+        "/^com\\.google\\.devtools\\.ksp/"
+      ]
+    },
+    {
+      "description": "Group AndroidX and Compose ecosystem dependencies",
+      "groupName": "AndroidX & Compose",
+      "groupSlug": "androidx-compose",
+      "matchPackageNames": [
+        "/^androidx\\./"
+      ]
+    },
+    {
+      "description": "Group Hilt dependencies",
+      "groupName": "Hilt dependencies",
+      "groupSlug": "hilt",
+      "matchPackageNames": [
+        "/^com\\.google\\.dagger/",
+        "/^androidx\\.hilt/"
+      ]
+    },
+    {
+      "description": "Group Android Gradle Plugin",
+      "groupName": "Build Tooling & Gradle",
+      "groupSlug": "build-tooling",
+      "matchPackageNames": [
+        "/^com\\.android\\./"
+      ]
+    },
+    {
+      "description": "Group Gradle Wrapper",
+      "groupName": "Build Tooling & Gradle",
+      "groupSlug": "build-tooling",
+      "matchManagers": [
+        "gradle-wrapper"
+      ]
+    },
+    {
+      "description": "Group Test framework dependencies",
+      "groupName": "Testing dependencies",
+      "groupSlug": "test-dependencies",
+      "matchPackageNames": [
+        "junit:junit",
+        "/^androidx\\.test/",
+        "/^org\\.mockito/",
+        "/^org\\.robolectric/"
+      ]
+    },
+    {
+      "description": "Group AboutLibraries dependencies",
+      "groupName": "AboutLibraries dependencies",
+      "groupSlug": "aboutlibraries",
+      "matchPackageNames": [
+        "/^com\\.mikepenz/"
+      ]
+    },
+    {
+      "description": "Group GitHub Actions workflow updates",
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions",
+      "matchManagers": [
+        "github-actions"
+      ]
+    }
   ]
 }
