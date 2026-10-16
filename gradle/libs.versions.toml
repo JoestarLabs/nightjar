@@ -18,7 +18,7 @@ mockitoKotlin = "5.4.0"
 mockitoCore = "5.24.0"
 robolectric = "4.17"
 appcompat = "1.7.1"
-aboutLibraries = "14.2.1"
+aboutLibraries = "15.3.0"
 
 
 [libraries]
