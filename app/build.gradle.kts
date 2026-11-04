@@ -23,7 +23,7 @@ android {
         applicationId = "com.bl4ckswordsman.nightjar"
         minSdk = 33
         targetSdk = 36
-        versionName = "0.0.4" // x-release-please-version
+        versionName = "0.1.0" // x-release-please-version
         versionCode = calculateVersionCode(versionName!!)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
