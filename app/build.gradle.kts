@@ -6,6 +6,15 @@ plugins {
     alias(libs.plugins.aboutlibraries)
 }
 
+fun calculateVersionCode(version: String): Int {
+    val clean = version.substringBefore('-').trim()
+    val parts = clean.split('.').map { it.toIntOrNull() ?: 0 }
+    val major = parts.getOrElse(0) { 0 }
+    val minor = parts.getOrElse(1) { 0 }
+    val patch = parts.getOrElse(2) { 0 }
+    return major * 10000 + minor * 100 + patch
+}
+
 android {
     namespace = "com.bl4ckswordsman.nightjar"
     compileSdk = 37
@@ -14,8 +23,8 @@ android {
         applicationId = "com.bl4ckswordsman.nightjar"
         minSdk = 33
         targetSdk = 36
-        versionCode = 1
         versionName = "0.0.4" // x-release-please-version
+        versionCode = calculateVersionCode(versionName!!)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
