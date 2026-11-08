@@ -1,13 +1,15 @@
 
 # ![Nightjar Banner](.github/assets/banner.png)
 
-​Nightjar is a Material 3 Expressive lock timer application for Android designed for flexible, standalone screen-time limits—whether for personal focus, temporary device sharing, or quick boundaries for kids when setups like Family Link aren't practical.
+Nightjar is a Material 3 Expressive lock timer application for Android designed for flexible, standalone screen-time limits—whether for personal focus, temporary device sharing, or quick boundaries for kids when setups like Family Link aren't practical.
 
 ## Features
 - **Expressive Zen Timer Dial**: A clean, interactive circular dial to easily adjust and track active countdowns.
 - **Duration Picker Sheet**: A playful, Material 3 bottom sheet for precise hour, minute, and second configurations.
 - **Sunset warning (Rising Wave)**: A fullscreen, gyroscope-responsive liquid wave overlay that rises from the bottom to gently alert children when their time is almost up.
+- **Commitment Mode & Emergency Unlock**: Prevent canceling active timers prematurely, with a slide-to-unlock emergency override.
 - **Collapsing Settings App Bar**: Collapses dynamically on scroll.
+- **Open Source License Tracking**: Built-in dependencies and license viewer powered by AboutLibraries.
 
 ## Download
 
@@ -27,7 +29,7 @@ Download a GitHub actions build (scanned by 🛡VirusTotal) here:
 ## Building from Source
 ### Build Requirements
 - Android SDK (API level 33+)
-- JDK 17
+- JDK 17+
 - Gradle 9+
 
 ### Build release APK
