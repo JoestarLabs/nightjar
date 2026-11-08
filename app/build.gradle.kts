@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.aboutlibraries)
 }
 
+/**
+ * Computes an integer versionCode from a semantic version string (e.g. "0.0.5" -> 5).
+ * Formula: major * 10000 + minor * 100 + patch
+ */
 fun calculateVersionCode(version: String): Int {
     val clean = version.substringBefore('-').trim()
     val parts = clean.split('.').map { it.toIntOrNull() ?: 0 }
