@@ -19,8 +19,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.bl4ckswordsman.nightjar.R
+import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 
 /**
  * Formats [seconds] as HH:MM:SS or MM:SS and displays it as a large
@@ -38,33 +40,41 @@ fun TimerText(
     val text = if (h > 0) "%02d:%02d:%02d".format(h, m, s)
     else "%02d:%02d".format(m, s)
 
-    // ── Width axis tick bounce ────────────────────────────────────────────────
-    val tickWidth = remember { Animatable(100f) }
+    // ── Urgency calculation (final 60 seconds) ────────────────────────────────
+    val urgencyProgress = if (isRunning && seconds in 1L..60L) {
+        (60L - seconds).toFloat() / 60f
+    } else if (isRunning && seconds == 0L) {
+        1.0f
+    } else {
+        0.0f
+    }
+
+    // ── Width axis tick bounce & urgency widening ─────────────────────────────
+    // Baseline condensed master (78f) naturally widens to 94f as urgency swells
+    val targetBaseWidth = 78f + (16f * urgencyProgress)
+    val tickWidth = remember { Animatable(78f) }
     LaunchedEffect(seconds) {
         if (isRunning && seconds > 0) {
-            tickWidth.snapTo(145f) // Snap to a stretched width
+            val pulseSnap = targetBaseWidth + 30f // Noticeable pulse bounce on every second
+            tickWidth.snapTo(pulseSnap)
             tickWidth.animateTo(
-                targetValue = 100f,
+                targetValue = targetBaseWidth,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessLow
                 )
             )
         } else {
-            tickWidth.snapTo(100f)
+            tickWidth.snapTo(targetBaseWidth)
         }
     }
 
     // ── Weight axis urgency bolding ───────────────────────────────────────────
+    // Solid SemiBold baseline (600f) ensures text is bold & crisp while leaving
+    // significant dynamic headroom to ramp to Ultra Black (1000f) at countdown end
     val targetWeight = when {
-        !isRunning -> 300f  // Light font weight equivalent
-        seconds <= 60L -> {
-            // Transition from W400 (Normal) to W900 (Black) in the final 60 seconds
-            val progress = (60L - seconds).toFloat() / 60f
-            400f + (900f - 400f) * progress
-        }
-
-        else -> 400f        // Normal font weight equivalent
+        !isRunning -> 600f
+        else -> 600f + (1000f - 600f) * urgencyProgress
     }
 
     val animatedWeight by animateFloatAsState(
@@ -77,31 +87,45 @@ fun TimerText(
     )
 
     // ── Create custom variable font family from animated values ──────────────
+    // Natural tall display: native condensed axis, opsz=72 display sizing, subtle 10% softening
     val timerFontFamily = remember(tickWidth.value, animatedWeight) {
         FontFamily(
             Font(
                 resId = R.font.google_sans_flex,
                 variationSettings = FontVariation.Settings(
                     FontVariation.width(tickWidth.value),
-                    FontVariation.weight(animatedWeight.toInt())
+                    FontVariation.weight(animatedWeight.toInt()),
+                    FontVariation.Setting("opsz", 72f),
+                    FontVariation.Setting("ROND", 10f),
                 )
             )
         )
     }
 
+    // ── Dynamic font size enlargement during countdown ───────────────────────
     val currentFontScale = LocalDensity.current.fontScale
-    val baseStyle = MaterialTheme.typography.displaySmall
-    val scaledFontSize = if (currentFontScale > 1.2f) {
-        (baseStyle.fontSize.value * 1.2f).sp
+    // Smoothly expands in size (50sp -> 56sp for MM:ss) in the final 60 seconds
+    val targetBaseFontSize = if (h > 0) {
+        36f + (4f * urgencyProgress)
     } else {
-        baseStyle.fontSize
+        50f + (6f * urgencyProgress)
     }
+    val animatedFontSize by animateFloatAsState(
+        targetValue = targetBaseFontSize,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "timer_font_size"
+    )
+    val scaledFontSize = (animatedFontSize * currentFontScale.coerceIn(1.0f, 1.25f)).sp
 
     Text(
         text = text,
-        style = baseStyle.copy(
+        style = MaterialTheme.typography.displayMedium.copy(
             fontSize = scaledFontSize,
             fontFamily = timerFontFamily,
+            fontFeatureSettings = "tnum",
             color = if (isRunning) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface,
         ),
@@ -111,5 +135,16 @@ fun TimerText(
         overflow = TextOverflow.Clip,
         modifier = modifier,
     )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF111210)
+@Composable
+private fun TimerTextPreview() {
+    NightjarTheme {
+        TimerText(
+            seconds = 1500L,
+            isRunning = true,
+        )
+    }
 }
 
