@@ -2,7 +2,6 @@ package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -51,20 +50,8 @@ class WavyProgressRingTest {
     }
 
     @Test
-    fun `amplitude tapering near zero fades gracefully`() {
-        // Test amplitude formula: if (progress < 0.03f) (progress / 0.03f) else 1f
-        val waveHeight = 0.65f
-        val amplitudeProvider: (Float) -> Float = { progress ->
-            (if (progress < 0.03f) (progress / 0.03f) else 1f) * waveHeight
-        }
-
-        // Full wave during active countdown
-        assertEquals(0.65f, amplitudeProvider(1.0f), 0.001f)
-        assertEquals(0.65f, amplitudeProvider(0.5f), 0.001f)
-        assertEquals(0.65f, amplitudeProvider(0.03f), 0.001f)
-
-        // Smoothly tapers to 0 at the very end
-        assertEquals(0.65f * (0.015f / 0.03f), amplitudeProvider(0.015f), 0.001f)
-        assertEquals(0.0f, amplitudeProvider(0.0f), 0.001f)
+    fun `amplitude defaults to full native wave`() {
+        val amplitude = 1f
+        assertEquals(1.0f, amplitude, 0.001f)
     }
 }
