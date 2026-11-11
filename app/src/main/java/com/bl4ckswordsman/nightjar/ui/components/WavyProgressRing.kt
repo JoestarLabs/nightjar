@@ -27,7 +27,32 @@ private val DefaultRingStrokeWidth = 16.dp
 private val DefaultWavelength = 32.dp
 
 /** Default wave amplitude (1f = native Material 3 Expressive wave). */
-private const val DefaultAmplitude = 1f
+internal const val DefaultAmplitude = 1f
+
+/**
+ * Calculates the remaining fraction [0f..1f] for countdown timer displays.
+ *
+ * @param remainingSeconds Number of seconds remaining until completion.
+ * @param totalSeconds Total timer duration in seconds. Returns 0f when non-positive.
+ * @return Normalized fraction clamped to [0f, 1f].
+ */
+internal fun calculateRemainingFraction(remainingSeconds: Long, totalSeconds: Long): Float {
+    if (totalSeconds <= 0L) return 0f
+    return (remainingSeconds.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
+}
+
+/**
+ * Computes the total outer diameter of the circular wavy progress ring so that its center stroke
+ * coincides exactly with the timer dial's track radius.
+ *
+ * @param dialSize Overall diameter of the dial composable.
+ * @param strokeWidth Stroke thickness of the wavy ring.
+ * @param dialInset Margin between dial edge and track center (defaults to 40.dp).
+ * @return Ring size in [Dp].
+ */
+internal fun calculateDialRingSize(dialSize: Dp, strokeWidth: Dp, dialInset: Dp = 40.dp): Dp {
+    return (dialSize - dialInset) + strokeWidth
+}
 
 /**
  * Expressive circular wavy progress indicator inspired by Morphe Manager.

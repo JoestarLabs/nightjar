@@ -92,13 +92,22 @@ class TimerPreferencesDataSourceTest {
 
     @Test
     fun testSaveSunsetMode() = runTest(testDispatcher) {
-        dataSource.saveSunsetMode(false)
+        dataSource.saveSunsetAnimation(SunsetAnimation.CLASSIC_WAVE)
         var prefs = dataSource.preferences.first()
-        assertFalse(prefs.sunsetModeEnabled)
+        assertEquals(SunsetAnimation.CLASSIC_WAVE, prefs.sunsetAnimation)
+        assertTrue(prefs.sunsetModeEnabled)
 
+        // Disabling sunset mode preserves the chosen animation style
+        dataSource.saveSunsetMode(false)
+        prefs = dataSource.preferences.first()
+        assertFalse(prefs.sunsetModeEnabled)
+        assertEquals(SunsetAnimation.CLASSIC_WAVE, prefs.sunsetAnimation)
+
+        // Re-enabling sunset mode restores the chosen animation style
         dataSource.saveSunsetMode(true)
         prefs = dataSource.preferences.first()
         assertTrue(prefs.sunsetModeEnabled)
+        assertEquals(SunsetAnimation.CLASSIC_WAVE, prefs.sunsetAnimation)
     }
 
     @Test

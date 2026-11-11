@@ -122,7 +122,7 @@
     <string name="settings_perm_overlay">Visa över andra appar</string>
     <string name="settings_perm_overlay_desc">Krävs för att visa solnedgångsvarningen över andra appar</string>
     <string name="dialog_overlay_title">Aktivera överlagrad varning</string>
-    <string name="dialog_overlay_body">För att visa varningen med den stigande vågen när timern slutar, behöver Nightjar behörighet att visas över andra appar. Du skickas till Android-inställningar för att aktivera den.</string>
+    <string name="dialog_overlay_body">För att visa solnedgångsvarningen när timern slutar, behöver Nightjar behörighet att visas över andra appar. Du skickas till Android-inställningar för att aktivera den.</string>
     <string name="sunset_warning_text">Tiden är nästan slut!</string>
     <string name="settings_about_version_desc">Nightjar för Android</string>
     <string name="settings_about_github">GitHub (JoestarLabs)</string>
