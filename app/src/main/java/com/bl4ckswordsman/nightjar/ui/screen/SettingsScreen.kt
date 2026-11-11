@@ -1089,8 +1089,15 @@ fun SettingsScreen(
 
     if (showAnimationPreview) {
         SunsetAnimationPreviewDialog(
-            currentAnimation = sunsetAnimation,
-            onAnimationSelected = onSelectSunsetAnimation,
+            initialAnimation = sunsetAnimation,
+            onApplyAnimation = { anim ->
+                if (anim != SunsetAnimation.OFF && !Settings.canDrawOverlays(context)) {
+                    showOverlayDialog = true
+                } else {
+                    timerViewModel.setSunsetAnimation(anim)
+                    showAnimationPreview = false
+                }
+            },
             onDismiss = { showAnimationPreview = false }
         )
     }

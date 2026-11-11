@@ -10,6 +10,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,11 +62,18 @@ import kotlinx.coroutines.delay
  *
  * Simulates a 10-second sunset warning progression with active device tilt tracking,
  * allowing instant side-by-side comparison of all animation styles.
+ *
+ * Choosing preview chips updates local dialog state only, without altering persisted settings
+ * or triggering overlay permission dialogs until confirmed via [onApplyAnimation].
+ *
+ * @param initialAnimation The currently configured sunset warning animation.
+ * @param onApplyAnimation Invoked when the user confirms and applies the selected animation style.
+ * @param onDismiss Invoked when closing the preview dialog without saving changes.
  */
 @Composable
 fun SunsetAnimationPreviewDialog(
-    currentAnimation: SunsetAnimation,
-    onAnimationSelected: (SunsetAnimation) -> Unit,
+    initialAnimation: SunsetAnimation,
+    onApplyAnimation: (SunsetAnimation) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -76,6 +86,7 @@ fun SunsetAnimationPreviewDialog(
 
     var currentTilt by remember { mutableFloatStateOf(0f) }
     var currentGravityAngleRad by remember { mutableFloatStateOf(0f) }
+    var previewAnimation by remember { mutableStateOf(initialAnimation) }
 
     // Accelerometer sensor lifecycle bound strictly to preview visibility
     DisposableEffect(sensorManager, accelerometer) {
@@ -112,7 +123,7 @@ fun SunsetAnimationPreviewDialog(
     var loopStartedAtMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var remainingSeconds by remember { mutableLongStateOf(totalSeconds) }
 
-    LaunchedEffect(currentAnimation) {
+    LaunchedEffect(previewAnimation) {
         // Reset loop smoothly when switching animation styles
         loopStartedAtMillis = System.currentTimeMillis()
         remainingSeconds = totalSeconds
@@ -146,7 +157,7 @@ fun SunsetAnimationPreviewDialog(
                 .background(Color.Black.copy(alpha = 0.5f))
         ) {
             // Live animation layer
-            when (currentAnimation) {
+            when (previewAnimation) {
                 SunsetAnimation.FLUID_LIQUID -> {
                     FluidLiquidOverlay(
                         remainingSeconds = remainingSeconds,
@@ -237,17 +248,39 @@ fun SunsetAnimationPreviewDialog(
                     }
                 }
 
-                IconButton(
-                    onClick = onDismiss,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f),
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.settings_sunset_animation_preview_close)
-                    )
+                    Button(
+                        onClick = { onApplyAnimation(previewAnimation) },
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.settings_sunset_animation_preview_apply),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDismiss,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            Icons.Rounded.Close,
+                            contentDescription = stringResource(R.string.settings_sunset_animation_preview_close)
+                        )
+                    }
                 }
             }
 
@@ -275,10 +308,10 @@ fun SunsetAnimationPreviewDialog(
                         SunsetAnimation.CLASSIC_WAVE to R.string.settings_sunset_animation_classic_wave,
                         SunsetAnimation.OFF to R.string.settings_sunset_animation_off
                     ).forEach { (anim, labelRes) ->
-                        val isSelected = currentAnimation == anim
+                        val isSelected = previewAnimation == anim
                         FilterChip(
                             selected = isSelected,
-                            onClick = { onAnimationSelected(anim) },
+                            onClick = { previewAnimation = anim },
                             label = { Text(stringResource(labelRes)) },
                             leadingIcon = if (isSelected) {
                                 {
