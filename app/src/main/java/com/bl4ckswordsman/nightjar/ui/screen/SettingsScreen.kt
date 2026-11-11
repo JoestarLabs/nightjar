@@ -71,6 +71,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -109,6 +110,16 @@ private fun RoundedCardContainer(
     )
 }
 
+/**
+ * Settings and customization screen for Nightjar.
+ *
+ * Provides controls for commitment mode, custom duration presets, sunset warning options,
+ * language preferences, and open source attribution.
+ *
+ * @param onNavigateBack Callback invoked when navigating back from the settings screen.
+ * @param modifier Modifier applied to the root layout.
+ * @param timerViewModel Shared [TimerViewModel] instance providing timer configuration state.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
@@ -128,9 +139,9 @@ fun SettingsScreen(
     val sunsetDurationSeconds by timerViewModel.sunsetDurationSeconds.collectAsStateWithLifecycle()
     val sunsetAudioEnabled by timerViewModel.sunsetAudioEnabled.collectAsStateWithLifecycle()
 
-    var showPresetsDialog by remember { mutableStateOf(false) }
-    var showOverlayDialog by remember { mutableStateOf(false) }
-    var showAnimationPreview by remember { mutableStateOf(false) }
+    var showPresetsDialog by rememberSaveable { mutableStateOf(false) }
+    var showOverlayDialog by rememberSaveable { mutableStateOf(false) }
+    var showAnimationPreview by rememberSaveable { mutableStateOf(false) }
 
     val onSelectSunsetAnimation: (SunsetAnimation) -> Unit = { anim ->
         if (anim != SunsetAnimation.OFF) {
@@ -1103,6 +1114,11 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * Header label for sections in the settings list.
+ *
+ * @param title Section title text.
+ */
 @Composable
 private fun SettingsSectionHeader(title: String) {
     Text(

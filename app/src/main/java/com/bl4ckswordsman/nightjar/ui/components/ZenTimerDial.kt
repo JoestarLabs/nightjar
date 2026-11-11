@@ -61,6 +61,17 @@ private val TICK_RADIANS = TICK_ANGLES.map { Math.toRadians((it - 90.0)) }
  *   3. Tick marks at quarter positions
  *   4. Drag handle (filled circle at arc end)
  *   5. Centre text: formatted HH:MM:SS
+ *
+ * @param selectedSeconds Duration in seconds selected while idle.
+ * @param runningSeconds Remaining duration in seconds while timer is active, or null when idle.
+ * @param onSecondsChanged Invoked when the user drags the dial handle to select duration.
+ * @param maxSeconds Maximum duration represented by a full 360° rotation (defaults to 7200s / 2 hours).
+ * @param runningTotalSeconds Total duration in seconds of the running timer.
+ * @param startedAtMillis Epoch-ms when the active timer started, enabling smooth continuous sweep.
+ * @param onDialClicked Invoked when tapping the dial face while idle.
+ * @param size Desired diameter of the dial before accessibility scaling.
+ * @param contentDesc Accessibility description for the dial.
+ * @param modifier Modifier applied to the dial container.
  */
 @Composable
 fun ZenTimerDial(
@@ -148,7 +159,7 @@ fun ZenTimerDial(
     val onSurface = MaterialTheme.colorScheme.onSurface
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
 
-    var dragCenter by remember { mutableFloatStateOf(0f) }
+    var dragCenter by remember { mutableStateOf(Offset.Zero) }
 
     // ── Drag & tactile physics animations ──────────────────────────────────────
     var isDragging by remember { mutableStateOf(false) }
@@ -215,17 +226,19 @@ fun ZenTimerDial(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(maxSeconds, adaptedSize) {
+                    .pointerInput(maxSeconds) {
                         detectDragGestures(
-                            onDragStart = { offset ->
-                                dragCenter = adaptedSize.toPx() / 2f
+                            onDragStart = { _ ->
+                                dragCenter = Offset(
+                                    x = this.size.width / 2f,
+                                    y = this.size.height / 2f
+                                )
                                 isDragging = true
                             },
                             onDrag = { change, _ ->
                                 change.consume()
-                                val center = dragCenter
-                                val dx = change.position.x - center
-                                val dy = change.position.y - center
+                                val dx = change.position.x - dragCenter.x
+                                val dy = change.position.y - dragCenter.y
                                 // atan2 gives angle from positive-x axis; shift so 0 = top
                                 var angle =
                                     (atan2(dy, dx) * (180f / Math.PI.toFloat())) + 90f
