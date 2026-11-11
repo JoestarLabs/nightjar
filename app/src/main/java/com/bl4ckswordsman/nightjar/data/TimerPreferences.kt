@@ -132,13 +132,16 @@ class TimerPreferencesDataSource(
         }
     }
 
-    /** Persist the sunset mode enabled setting. */
+    /**
+     * Persist the sunset mode enabled setting.
+     *
+     * Disabling preserves the stored [SunsetAnimation] so it is automatically restored
+     * on re-enable instead of resetting to the default.
+     */
     suspend fun saveSunsetMode(enabled: Boolean) {
         dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] = enabled
-            if (!enabled) {
-                prefs[TimerPreferenceKeys.SUNSET_ANIMATION] = SunsetAnimation.OFF.id
-            } else if (prefs[TimerPreferenceKeys.SUNSET_ANIMATION] == SunsetAnimation.OFF.id) {
+            if (enabled && prefs[TimerPreferenceKeys.SUNSET_ANIMATION] == SunsetAnimation.OFF.id) {
                 prefs[TimerPreferenceKeys.SUNSET_ANIMATION] = SunsetAnimation.FLUID_LIQUID.id
             }
         }

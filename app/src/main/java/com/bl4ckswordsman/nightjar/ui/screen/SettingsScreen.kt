@@ -132,6 +132,18 @@ fun SettingsScreen(
     var showOverlayDialog by remember { mutableStateOf(false) }
     var showAnimationPreview by remember { mutableStateOf(false) }
 
+    val onSelectSunsetAnimation: (SunsetAnimation) -> Unit = { anim ->
+        if (anim != SunsetAnimation.OFF) {
+            if (!Settings.canDrawOverlays(context)) {
+                showOverlayDialog = true
+            } else {
+                timerViewModel.setSunsetAnimation(anim)
+            }
+        } else {
+            timerViewModel.setSunsetAnimation(SunsetAnimation.OFF)
+        }
+    }
+
     // Trigger state to force recomposition when returning to settings screen (on resume)
     var refreshTrigger by remember { mutableStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -636,13 +648,12 @@ fun SettingsScreen(
                                             SunsetAnimation.MATERIAL_SHAPES to R.string.settings_sunset_animation_material_shapes,
                                             SunsetAnimation.SNOWFLAKES to R.string.settings_sunset_animation_snowflakes,
                                             SunsetAnimation.CLASSIC_WAVE to R.string.settings_sunset_animation_classic_wave,
-                                            SunsetAnimation.OFF to R.string.settings_sunset_animation_off
                                         ).forEach { (anim, stringRes) ->
                                             androidx.compose.material3.DropdownMenuItem(
                                                 text = { Text(stringResource(stringRes)) },
                                                 onClick = {
                                                     isAnimationMenuExpanded = false
-                                                    timerViewModel.setSunsetAnimation(anim)
+                                                    onSelectSunsetAnimation(anim)
                                                 }
                                             )
                                         }
@@ -1079,7 +1090,7 @@ fun SettingsScreen(
     if (showAnimationPreview) {
         SunsetAnimationPreviewDialog(
             currentAnimation = sunsetAnimation,
-            onAnimationSelected = { timerViewModel.setSunsetAnimation(it) },
+            onAnimationSelected = onSelectSunsetAnimation,
             onDismiss = { showAnimationPreview = false }
         )
     }

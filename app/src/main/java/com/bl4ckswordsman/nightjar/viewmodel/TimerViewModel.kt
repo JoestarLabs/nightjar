@@ -78,30 +78,35 @@ class TimerViewModel @Inject constructor(
         }
     }
 
+    /** Persists updated custom duration presets (in minutes). */
     fun saveCustomPresets(presetsMinutes: List<Long>) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveCustomPresets(presetsMinutes)
         }
     }
 
+    /** Enables or disables the sunset mode warning. */
     fun setSunsetModeEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveSunsetMode(enabled)
         }
     }
 
+    /** Persists the chosen sunset warning visual animation style. */
     fun setSunsetAnimation(animation: SunsetAnimation) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveSunsetAnimation(animation)
         }
     }
 
+    /** Sets the warning duration (in seconds) for the sunset overlay animation. */
     fun setSunsetDurationSeconds(seconds: Long) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveSunsetDuration(seconds)
         }
     }
 
+    /** Enables or disables the gentle audio chime when sunset warning begins. */
     fun setSunsetAudioEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveSunsetAudioEnabled(enabled)
@@ -110,6 +115,7 @@ class TimerViewModel @Inject constructor(
 
     // ── Commands ──────────────────────────────────────────────────────────────
 
+    /** Starts the countdown timer service with the currently selected duration. */
     fun startTimer() {
         if (selectedSeconds <= 0) return
         ContextCompat.startForegroundService(
@@ -121,12 +127,14 @@ class TimerViewModel @Inject constructor(
         }
     }
 
+    /** Stops the active countdown timer service. Requires [force] if commitment mode is active. */
     fun stopTimer(force: Boolean = false) {
         // No-op when commitment mode is active and the timer is running, unless force is true
         if (!force && _commitmentMode.value && repository.currentState is TimerState.Running) return
         context.startService(LockTimerService.stopIntent(context, force = force))
     }
 
+    /** Toggles the timer between running and stopped states. */
     fun toggleTimer() {
         when (repository.currentState) {
             is TimerState.Running -> stopTimer()

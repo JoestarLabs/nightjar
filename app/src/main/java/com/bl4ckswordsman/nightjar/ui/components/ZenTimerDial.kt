@@ -170,15 +170,16 @@ fun ZenTimerDial(
     )
 
     val wavyStrokeWidth = 16.dp
-    val dialRingSize = (size - 40.dp) + wavyStrokeWidth
+    val dialRingSize = calculateDialRingSize(size, wavyStrokeWidth)
 
     val remainingFraction: () -> Float = {
         if (startedAtMillis != null) {
             (continuousSweep.floatValue / 360f).coerceIn(0f, 1f)
         } else {
-            val rem = runningSeconds ?: 0L
-            val tot = total.takeIf { it > 0L } ?: 1L
-            (rem.toFloat() / tot.toFloat()).coerceIn(0f, 1f)
+            calculateRemainingFraction(
+                remainingSeconds = runningSeconds ?: 0L,
+                totalSeconds = total
+            )
         }
     }
 
@@ -279,6 +280,7 @@ fun ZenTimerDial(
 
 // ── Draw helpers ──────────────────────────────────────────────────────────────
 
+/** Draws the inactive circular background track of the dial. */
 private fun DrawScope.drawDialTrack(color: Color, strokeWidthPx: Float) {
     drawArc(
         color = color.copy(alpha = 0.35f),
@@ -291,6 +293,7 @@ private fun DrawScope.drawDialTrack(color: Color, strokeWidthPx: Float) {
     )
 }
 
+/** Draws the active swept gradient arc showing selected or running timer duration. */
 private fun DrawScope.drawDialArc(
     sweep: Float,
     primary: Color,
@@ -314,7 +317,7 @@ private fun DrawScope.drawDialArc(
     )
 }
 
-
+/** Draws the four cardinal tick marks (12, 3, 6, 9 o'clock) around the dial track. */
 private fun DrawScope.drawTickMarks(color: Color) {
     val cx = size.width / 2f
     val cy = size.height / 2f
@@ -337,6 +340,7 @@ private fun DrawScope.drawTickMarks(color: Color) {
     }
 }
 
+/** Draws the circular draggable thumb handle at the end of the dial arc. */
 private fun DrawScope.drawDragHandle(
     sweep: Float,
     primary: Color,

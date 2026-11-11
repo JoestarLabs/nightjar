@@ -122,7 +122,7 @@
     <string name="settings_perm_overlay">Display over other apps</string>
     <string name="settings_perm_overlay_desc">Required to show the sunset warning over other apps</string>
     <string name="dialog_overlay_title">Enable Overlay Warning</string>
-    <string name="dialog_overlay_body">To show the rising wave warning overlay when the timer is ending, Nightjar needs permission to display over other apps. You will be redirected to Android Settings to enable it.</string>
+    <string name="dialog_overlay_body">To show the sunset warning overlay when the timer is ending, Nightjar needs permission to display over other apps. You will be redirected to Android Settings to enable it.</string>
     <string name="sunset_warning_text">Time is almost up!</string>
     <string name="settings_about_version_desc">Nightjar for Android</string>
     <string name="settings_about_github">GitHub (JoestarLabs)</string>

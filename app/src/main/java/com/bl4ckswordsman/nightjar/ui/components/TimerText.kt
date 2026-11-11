@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
@@ -103,7 +104,8 @@ fun TimerText(
     }
 
     // ── Dynamic font size enlargement during countdown ───────────────────────
-    val currentFontScale = LocalDensity.current.fontScale
+    val density = LocalDensity.current
+    val currentFontScale = density.fontScale
     // Smoothly expands in size (50sp -> 56sp for MM:ss) in the final 60 seconds
     val targetBaseFontSize = if (h > 0) {
         36f + (4f * urgencyProgress)
@@ -118,7 +120,11 @@ fun TimerText(
         ),
         label = "timer_font_size"
     )
-    val scaledFontSize = (animatedFontSize * currentFontScale.coerceIn(1.0f, 1.25f)).sp
+    val clampedScale = currentFontScale.coerceIn(1.0f, 1.25f)
+    // Convert through dp to sp with current density to prevent double application of system font scaling
+    val scaledFontSize = with(density) {
+        (animatedFontSize * clampedScale).dp.toSp()
+    }
 
     Text(
         text = text,
