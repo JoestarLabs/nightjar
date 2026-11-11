@@ -20,9 +20,9 @@
 - [x] 2.10 Commit Phase 2 with `Release-As: 0.0.6` footer and pause for user testing.
 
 ## Phase 3: Morphe-Inspired Reverse Circular Wavy Progress Dial
-- [ ] 3.1 Upgrade `ZenTimerDial.kt` running arc to smooth M3 Expressive wavy progress ring counting down in reverse.
-- [ ] 3.2 Verify wall-clock sync and visual fidelity.
-- [ ] 3.3 Commit Phase 3 with `Release-As: 0.0.6` footer and pause for final user review.
+- [x] 3.1 Upgrade `ZenTimerDial.kt` running arc to smooth M3 Expressive wavy progress ring counting down in reverse.
+- [x] 3.2 Verify wall-clock sync and visual fidelity.
+- [x] 3.3 Commit Phase 3 with `Release-As: 0.0.6` footer and pause for final user review.
 
 ## Phase 4: Native Android 12+ Blur / Glass Frost Effect Toggle
 - [ ] 4.1 Add `blurEffectsEnabled` setting to `TimerPreferences.kt`, `TimerViewModel.kt`, and `SettingsScreen.kt`.
