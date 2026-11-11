@@ -119,4 +119,11 @@ class TimerViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
         org.mockito.kotlin.verify(mockDataSource).saveSunsetAudioEnabled(false)
     }
+
+    @Test
+    fun `setSunsetAnimation updates preference`() = runTest {
+        viewModel.setSunsetAnimation(com.bl4ckswordsman.nightjar.data.SunsetAnimation.MATERIAL_SHAPES)
+        testDispatcher.scheduler.advanceUntilIdle()
+        org.mockito.kotlin.verify(mockDataSource).saveSunsetAnimation(com.bl4ckswordsman.nightjar.data.SunsetAnimation.MATERIAL_SHAPES)
+    }
 }
