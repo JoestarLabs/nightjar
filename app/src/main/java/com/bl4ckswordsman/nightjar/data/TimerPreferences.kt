@@ -41,6 +41,7 @@ enum class SunsetAnimation(val id: String) {
     SNOWFLAKES("snowflakes");
 
     companion object {
+        /** Resolves a [SunsetAnimation] matching [id] case-insensitively, defaulting to [FLUID_LIQUID]. */
         fun fromId(id: String?): SunsetAnimation {
             return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: FLUID_LIQUID
         }
@@ -97,6 +98,7 @@ class TimerPreferencesDataSource(
         )
     }
 
+    /** Persist the most recently selected timer duration in seconds. */
     suspend fun saveLastDuration(durationSeconds: Long) {
         dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.LAST_DURATION_SECONDS] = durationSeconds

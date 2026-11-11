@@ -68,10 +68,12 @@ class TimerViewModel @Inject constructor(
     /** Whether sunset audio alert (chime) is enabled. */
     val sunsetAudioEnabled: StateFlow<Boolean> = _sunsetAudioEnabled.asStateFlow()
 
+    /** Sets the idle dial duration in seconds, clamped between minimum and maximum bounds. */
     fun setSelectedSeconds(seconds: Long) {
         _selectedSeconds.value = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
     }
 
+    /** Enables or disables commitment mode preventing timer cancellation. */
     fun setCommitmentMode(enabled: Boolean) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveCommitmentMode(enabled)

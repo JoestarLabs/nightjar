@@ -27,6 +27,10 @@ import com.bl4ckswordsman.nightjar.ui.components.RisingWaveOverlay
 import com.bl4ckswordsman.nightjar.ui.components.SnowflakesOverlay
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 
+/**
+ * Minimal [LifecycleOwner], [ViewModelStoreOwner], and [SavedStateRegistryOwner] enabling
+ * Jetpack Compose composition within an Android Foreground Service window.
+ */
 class ServiceLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
     private val lifecycleRegistry = LifecycleRegistry(this)
     private val store = ViewModelStore()
@@ -36,10 +40,12 @@ class ServiceLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateReg
         controller.performRestore(null)
     }
 
+    /** Transitions the lifecycle state to [Lifecycle.State.STARTED]. */
     fun start() {
         lifecycleRegistry.currentState = Lifecycle.State.STARTED
     }
 
+    /** Transitions the lifecycle state to [Lifecycle.State.DESTROYED] and clears the view model store. */
     fun stop() {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         store.clear()
@@ -50,6 +56,11 @@ class ServiceLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateReg
     override val savedStateRegistry: SavedStateRegistry get() = controller.savedStateRegistry
 }
 
+/**
+ * Manages the floating system overlay window displaying sunset warning animations.
+ *
+ * @param context Application or service context used to access [WindowManager].
+ */
 class ComposeOverlayManager(private val context: Context) {
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var composeView: ComposeView? = null
@@ -63,8 +74,19 @@ class ComposeOverlayManager(private val context: Context) {
     private val animationState = mutableStateOf(SunsetAnimation.FLUID_LIQUID)
     private val startedAtMillisState = mutableLongStateOf(0L)
 
+    /** Indicates whether the overlay window is currently active and attached. */
     val isShowing: Boolean get() = composeView != null
 
+    /**
+     * Attaches and displays the sunset animation overlay with the specified parameters.
+     *
+     * @param remainingSeconds Seconds remaining in the countdown.
+     * @param totalSeconds Total duration of the sunset warning window.
+     * @param tilt Normalized lateral device tilt in `[-1.0, 1.0]`.
+     * @param gravityAngleRad Full 2D gravity orientation angle in radians.
+     * @param animation Visual sunset animation style to render.
+     * @param startedAtMillis Epoch-ms timestamp when the timer started.
+     */
     fun show(
         remainingSeconds: Long,
         totalSeconds: Long,
@@ -92,6 +114,7 @@ class ComposeOverlayManager(private val context: Context) {
         this.composeView = view
     }
 
+    /** Creates and configures the [ComposeView] hosting the sunset animation composables. */
     private fun createComposeView(lifecycleOwner: ServiceLifecycleOwner): ComposeView {
         return ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -144,6 +167,7 @@ class ComposeOverlayManager(private val context: Context) {
         }
     }
 
+    /** Creates [WindowManager.LayoutParams] configured for an untargetable, transparent system overlay. */
     private fun createLayoutParams(): WindowManager.LayoutParams {
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
@@ -165,19 +189,23 @@ class ComposeOverlayManager(private val context: Context) {
         }
     }
 
+    /** Updates the remaining countdown time displayed by the overlay. */
     fun updateRemainingTime(remainingSeconds: Long) {
         remainingSecondsState.longValue = remainingSeconds
     }
 
+    /** Updates the lateral tilt factor used by the classic wave animation. */
     fun updateTilt(tilt: Float) {
         tiltState.floatValue = tilt
     }
 
+    /** Updates sensor values for physical gravity alignment across 360 degrees. */
     fun updateSensors(tilt: Float, gravityAngleRad: Float) {
         tiltState.floatValue = tilt
         gravityAngleRadState.floatValue = gravityAngleRad
     }
 
+    /** Dismisses and removes the overlay window from the window manager. */
     fun dismiss() {
         val view = composeView ?: return
         composeView = null

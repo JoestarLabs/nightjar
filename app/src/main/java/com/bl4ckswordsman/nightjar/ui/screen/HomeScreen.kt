@@ -75,6 +75,13 @@ import com.bl4ckswordsman.nightjar.ui.components.StatusChip
 import com.bl4ckswordsman.nightjar.ui.components.ZenTimerDial
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 
+/**
+ * Main timer screen displaying the active or idle dial, quick presets, and start/lock controls.
+ *
+ * @param viewModel Shared [TimerViewModel] managing timer state and actions.
+ * @param onNavigateToSettings Navigation callback to open the settings screen.
+ * @param modifier Modifier applied to the root screen layout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -370,6 +377,7 @@ fun HomeScreen(
     }
 }
 
+/** Checks whether POST_NOTIFICATIONS runtime permission has been granted on Android 13+. */
 private fun hasNotificationPermission(context: android.content.Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==

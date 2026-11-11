@@ -20,15 +20,7 @@
 - **Component**: Integration of M3 Expressive wavy stroke mathematics in `ZenTimerDial.kt`.
 - **Reverse Countdown**: Smooth progression from full arc ($1.0$) down to zero ($0.0$) while maintaining phase ripple animation.
 
-### 4. Native Android 12+ Blur / Glass Frost Effect Toggle (Phase 4)
-- **Settings Toggle**: Preference to enable/disable native Android 12+ (`minSdk = 33` hardware `RenderEffect.createBlurEffect`) frosted glass blur.
-- **Glass Frost Applications**:
-  - Sunset warning overlay background/scrim blur (blurring the apps/homescreen underneath the wave, liquid, and shapes).
-  - Dialogs, bottom sheets, and navigation drawers across the app.
-- **Performance & Hardware Fallback**: Hardware accelerated via `RenderEffect`, with clean fallback to translucent scrim when disabled or in battery saver mode.
-
 ## Phased Delivery & Testing
 - **Phase 1**: Ripple/warp button effect $\to$ test $\to$ commit (`Release-As: 0.0.6`) $\to$ pause for user testing.
 - **Phase 2**: Sunset warning animations suite $\to$ test $\to$ commit (`Release-As: 0.0.6`) $\to$ pause for user testing.
 - **Phase 3**: Reverse circular wavy progress indicator $\to$ test $\to$ commit (`Release-As: 0.0.6`) $\to$ pause for user testing.
-- **Phase 4**: Native Android 12+ blur/glass frost effect toggle and surfaces $\to$ test $\to$ commit (`Release-As: 0.0.6`) $\to$ pause for user testing.
