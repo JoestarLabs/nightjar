@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,50 +22,45 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.graphics.shapes.toPath
 import com.bl4ckswordsman.nightjar.R
 import kotlin.random.Random
 
-private enum class M3ShapeType {
-    CIRCLE,
-    PILL,
-    SQUIRCLE,
-    SPARKLE,
-    CLOVER,
-    ARCH
-}
-
-private data class SettledShape(
+private data class SettledM3Shape(
     val relX: Float,
     val relY: Float,
-    val shapeType: M3ShapeType,
-    val sizePx: Float,
+    val shapeIndex: Int,
+    val scaleFactor: Float,
     val rotation: Float,
     val colorIndex: Int
 )
 
-private data class FallingParticle(
+private data class FallingM3Shape(
     val relX: Float,
     val initialRelY: Float,
     val speedPxPerSec: Float,
-    val shapeType: M3ShapeType,
+    val shapeIndex: Int,
     val sizePx: Float,
     val rotationSpeed: Float,
     val colorIndex: Int
 )
 
+/**
+ * Material 3 Expressive sunset overlay.
+ * Uses official native [MaterialShapes] (4-sided cookie, 6-sided cookie, bun, heart,
+ * ghostish, fan, very sunny, slanted, arch, flower, clamshell, boom, clover, pill, sunny)
+ * that tumble from the sky and stack up to fill the screen without any separate rectangular layer.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MaterialShapesOverlay(
     remainingSeconds: Long,
@@ -124,55 +121,82 @@ fun MaterialShapesOverlay(
         )
     }
 
-    // Material 3 Color Palette
+    // Official native Material 3 Expressive shapes paths (converted once to Compose Path)
+    val nativeShapePaths = remember {
+        listOf(
+            MaterialShapes.Cookie4Sided,
+            MaterialShapes.Cookie6Sided,
+            MaterialShapes.Cookie9Sided,
+            MaterialShapes.Bun,
+            MaterialShapes.Heart,
+            MaterialShapes.Ghostish,
+            MaterialShapes.Fan,
+            MaterialShapes.VerySunny,
+            MaterialShapes.Slanted,
+            MaterialShapes.Arch,
+            MaterialShapes.Flower,
+            MaterialShapes.ClamShell,
+            MaterialShapes.Boom,
+            MaterialShapes.SoftBoom,
+            MaterialShapes.Clover4Leaf,
+            MaterialShapes.Pill,
+            MaterialShapes.Sunny
+        ).map { polygon ->
+            polygon.toPath().asComposePath()
+        }
+    }
+
+    // Material 3 Expressive Palette
     val colors = listOf(
         MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary,
         MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.secondary,
         MaterialTheme.colorScheme.secondaryContainer,
+        MaterialTheme.colorScheme.tertiary,
         MaterialTheme.colorScheme.tertiaryContainer,
-        MaterialTheme.colorScheme.surfaceVariant
+        MaterialTheme.colorScheme.surfaceVariant,
+        MaterialTheme.colorScheme.errorContainer
     )
 
-    // Deterministic random generation of settled bed shapes and falling particles
+    // Staggered tessellation of shapes that stack and fill the entire screen
     val settledShapes = remember {
-        val rng = Random(42)
-        val list = mutableListOf<SettledShape>()
-        val cols = 8
-        val rows = 16
+        val rng = Random(888)
+        val list = mutableListOf<SettledM3Shape>()
+        val cols = 7
+        val rows = 14
         for (r in 0 until rows) {
-            for (c in 0 until cols) {
-                val relX = (c + 0.5f + rng.nextFloat() * 0.6f - 0.3f) / cols
-                val relY = (r + 0.5f + rng.nextFloat() * 0.6f - 0.3f) / rows
-                val shape = M3ShapeType.entries[rng.nextInt(M3ShapeType.entries.size)]
-                val size = 26f + rng.nextFloat() * 18f
-                val rot = rng.nextFloat() * 360f
+            val isStaggered = (r % 2 == 1)
+            val rowCols = if (isStaggered) cols + 1 else cols
+            for (c in 0 until rowCols) {
+                val baseX = if (isStaggered) (c - 0.5f) / cols else c.toFloat() / cols
+                val relX = (baseX + (0.5f / cols) + (rng.nextFloat() * 0.3f - 0.15f) / cols).coerceIn(0f, 1f)
+                val relY = (r.toFloat() / rows + (0.5f / rows) + (rng.nextFloat() * 0.3f - 0.15f) / rows).coerceIn(0f, 1f)
+
+                val shapeIdx = rng.nextInt(nativeShapePaths.size)
+                val scale = 1.35f + rng.nextFloat() * 0.25f // overlap cells to pack seamlessly
+                val rot = (rng.nextFloat() * 60f) - 30f
                 val colorIdx = rng.nextInt(colors.size)
-                list.add(SettledShape(relX, relY, shape, size, rot, colorIdx))
+                list.add(SettledM3Shape(relX, relY, shapeIdx, scale, rot, colorIdx))
             }
         }
         list
     }
 
-    val fallingParticles = remember {
-        val rng = Random(1337)
-        List(35) {
-            FallingParticle(
+    // Shower of falling shapes tumbling down towards the fill line
+    val fallingShapes = remember {
+        val rng = Random(555)
+        List(30) {
+            FallingM3Shape(
                 relX = rng.nextFloat(),
                 initialRelY = rng.nextFloat(),
-                speedPxPerSec = 220f + rng.nextFloat() * 180f,
-                shapeType = M3ShapeType.entries[rng.nextInt(M3ShapeType.entries.size)],
-                sizePx = 20f + rng.nextFloat() * 14f,
-                rotationSpeed = (rng.nextFloat() - 0.5f) * 160f,
+                speedPxPerSec = 220f + rng.nextFloat() * 200f,
+                shapeIndex = rng.nextInt(nativeShapePaths.size),
+                sizePx = 42f + rng.nextFloat() * 22f,
+                rotationSpeed = (rng.nextFloat() - 0.5f) * 180f,
                 colorIndex = rng.nextInt(colors.size)
             )
         }
     }
-
-    val sparklePath = remember { Path() }
-    val cloverPath = remember { Path() }
-    val archPath = remember { Path() }
 
     Box(
         modifier = modifier
@@ -183,77 +207,54 @@ fun MaterialShapesOverlay(
             val width = size.width
             val height = size.height
 
-            // Bed rising from bottom to top
-            val bedY = height * (1f - animatedProgress)
+            // The fill line rises from bottom (height) to top (0)
+            val fillLineY = height * (1f - animatedProgress)
+            val cellBaseSize = width / 6.5f
 
-            // Gradient filling the accumulated bed below bedY
-            if (bedY < height) {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            colors[3].copy(alpha = 0.85f),
-                            colors[4].copy(alpha = 0.90f),
-                            Color.Black.copy(alpha = 0.95f)
-                        ),
-                        startY = bedY,
-                        endY = height
-                    ),
-                    topLeft = Offset(0f, bedY),
-                    size = Size(width, height - bedY)
-                )
-            }
-
-            // Draw settled shapes in the rising bed
+            // ── 1. Draw settled M3 expressive shapes (mosaic stacking from bottom up) ──
             for (shape in settledShapes) {
                 val shapeX = shape.relX * width
                 val shapeY = shape.relY * height
 
-                if (shapeY >= bedY) {
-                    // Pop in with scale as bed line rises above it
-                    val popProgress = ((shapeY - bedY) / 70f).coerceIn(0f, 1f)
-                    val scale = popProgress * (1f + 0.15f * (1f - popProgress))
+                // If the fill line has reached this shape's position
+                if (shapeY >= fillLineY - 30f) {
+                    val popProgress = ((shapeY - fillLineY + 30f) / (height / 10f)).coerceIn(0f, 1f)
+                    // Bouncy overshoot spring scale as each shape appears into place
+                    val springScale = popProgress * (1f + 0.18f * (1f - popProgress))
+                    val drawSize = cellBaseSize * shape.scaleFactor * springScale
                     val color = colors[shape.colorIndex % colors.size]
+                    val path = nativeShapePaths[shape.shapeIndex % nativeShapePaths.size]
 
                     withTransform({
                         translate(shapeX, shapeY)
                         rotate(shape.rotation, Offset.Zero)
-                        scale(scale, scale, Offset.Zero)
+                        scale(drawSize, drawSize, Offset.Zero)
+                        translate(-0.5f, -0.5f) // Center the normalized [0,1] polygon at (0,0)
                     }) {
-                        drawM3Shape(
-                            shapeType = shape.shapeType,
-                            sizePx = shape.sizePx,
-                            color = color,
-                            sparklePath = sparklePath,
-                            cloverPath = cloverPath,
-                            archPath = archPath
-                        )
+                        drawPath(path, color)
                     }
                 }
             }
 
-            // Draw falling tumbling shapes above bedY
+            // ── 2. Shower of falling native M3 shapes above the fill line ──
             val elapsedSec = (frameTimeMillis.longValue - (startedAtMillis ?: frameTimeMillis.longValue)) / 1000f
-            for (particle in fallingParticles) {
-                val totalDistance = (particle.initialRelY * height + particle.speedPxPerSec * elapsedSec)
-                val currentY = if (bedY > 0f) totalDistance % (bedY + 40f) else -100f
+            for (falling in fallingShapes) {
+                val totalDistance = (falling.initialRelY * height + falling.speedPxPerSec * elapsedSec)
+                val currentY = if (fillLineY > 0f) totalDistance % (fillLineY + 40f) else -100f
 
-                if (currentY < bedY && currentY > -50f) {
-                    val currentX = particle.relX * width
-                    val rotation = particle.rotationSpeed * elapsedSec
-                    val color = colors[particle.colorIndex % colors.size].copy(alpha = 0.9f)
+                if (currentY < fillLineY && currentY > -50f) {
+                    val currentX = falling.relX * width
+                    val rotation = falling.rotationSpeed * elapsedSec
+                    val color = colors[falling.colorIndex % colors.size].copy(alpha = 0.92f)
+                    val path = nativeShapePaths[falling.shapeIndex % nativeShapePaths.size]
 
                     withTransform({
                         translate(currentX, currentY)
                         rotate(rotation, Offset.Zero)
+                        scale(falling.sizePx, falling.sizePx, Offset.Zero)
+                        translate(-0.5f, -0.5f)
                     }) {
-                        drawM3Shape(
-                            shapeType = particle.shapeType,
-                            sizePx = particle.sizePx,
-                            color = color,
-                            sparklePath = sparklePath,
-                            cloverPath = cloverPath,
-                            archPath = archPath
-                        )
+                        drawPath(path, color)
                     }
                 }
             }
@@ -293,71 +294,6 @@ fun MaterialShapesOverlay(
                     outlineWidth = 8f
                 )
             }
-        }
-    }
-}
-
-private fun DrawScope.drawM3Shape(
-    shapeType: M3ShapeType,
-    sizePx: Float,
-    color: Color,
-    sparklePath: Path,
-    cloverPath: Path,
-    archPath: Path
-) {
-    val half = sizePx / 2f
-    when (shapeType) {
-        M3ShapeType.CIRCLE -> {
-            drawCircle(color = color, radius = half, center = Offset.Zero)
-        }
-        M3ShapeType.PILL -> {
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(-sizePx * 0.8f, -half * 0.7f),
-                size = Size(sizePx * 1.6f, sizePx * 0.7f),
-                cornerRadius = CornerRadius(half * 0.35f)
-            )
-        }
-        M3ShapeType.SQUIRCLE -> {
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(-half, -half),
-                size = Size(sizePx, sizePx),
-                cornerRadius = CornerRadius(sizePx * 0.32f)
-            )
-        }
-        M3ShapeType.SPARKLE -> {
-            sparklePath.reset()
-            sparklePath.moveTo(0f, -half)
-            sparklePath.quadraticTo(0f, 0f, half, 0f)
-            sparklePath.quadraticTo(0f, 0f, 0f, half)
-            sparklePath.quadraticTo(0f, 0f, -half, 0f)
-            sparklePath.quadraticTo(0f, 0f, 0f, -half)
-            sparklePath.close()
-            drawPath(sparklePath, color)
-        }
-        M3ShapeType.CLOVER -> {
-            cloverPath.reset()
-            val r = half * 0.5f
-            cloverPath.addOval(androidx.compose.ui.geometry.Rect(0f, -half, half, -half + 2 * r))
-            cloverPath.addOval(androidx.compose.ui.geometry.Rect(0f, 0f, half, 2 * r))
-            cloverPath.addOval(androidx.compose.ui.geometry.Rect(-half, 0f, 0f, 2 * r))
-            cloverPath.addOval(androidx.compose.ui.geometry.Rect(-half, -half, 0f, -half + 2 * r))
-            drawPath(cloverPath, color)
-        }
-        M3ShapeType.ARCH -> {
-            archPath.reset()
-            archPath.moveTo(-half, half)
-            archPath.lineTo(half, half)
-            archPath.lineTo(half, 0f)
-            archPath.arcTo(
-                rect = androidx.compose.ui.geometry.Rect(-half, -half, half, half),
-                startAngleDegrees = 0f,
-                sweepAngleDegrees = -180f,
-                forceMoveTo = false
-            )
-            archPath.close()
-            drawPath(archPath, color)
         }
     }
 }
