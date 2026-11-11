@@ -21,16 +21,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
@@ -42,8 +44,56 @@ import com.bl4ckswordsman.nightjar.R
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.sin
+import kotlin.random.Random
+
+/**
+ * Micro-bubble drifting upward inside the liquid body.
+ */
+private data class LiquidBubble(
+    val relX: Float,          // -1f to 1f across fluid width
+    var currentDepth: Float,  // 0f (surface) to 1f (deep bottom)
+    val speed: Float,         // depth decrement per second
+    val radiusPx: Float,
+    val wobbleFrequency: Float,
+    val wobblePhase: Float,
+    val alpha: Float
+)
+
+/**
+ * Calculates trochoidal fluid surface height at [x] with realistic wave steepness and meniscus.
+ */
+private fun fluidSurfaceY(
+    x: Float,
+    baseLineY: Float,
+    xStart: Float,
+    xEnd: Float,
+    amp1: Float,
+    freq1: Float,
+    phase1: Float,
+    amp2: Float,
+    freq2: Float,
+    phase2: Float,
+    sloshTilt: Float
+): Float {
+    val theta1 = x * freq1 + phase1
+    val theta2 = x * freq2 + phase2
+
+    // Trochoidal wave: sharper crests, broader troughs
+    val wave1 = (sin(theta1) - 0.22f * cos(2f * theta1)) * amp1
+    val wave2 = (cos(theta2) + 0.15f * sin(2f * theta2)) * amp2
+
+    // Dynamic tilt slosh across the width
+    val sloshOffset = (x / (xEnd - xStart).coerceAtLeast(1f)) * sloshTilt
+
+    // Surface tension meniscus near the container walls
+    val distToEdge = (x - xStart).coerceAtMost(xEnd - x).coerceAtLeast(0f)
+    val meniscus = 8f * exp(-distToEdge / 60f)
+
+    return baseLineY + wave1 + wave2 + sloshOffset - meniscus
+}
 
 /**
  * Builds a multi-harmonic fluid liquid surface path across [xStart] to [xEnd].
@@ -60,14 +110,15 @@ private fun buildFluidWavePath(
     amp2: Float,
     freq2: Float,
     phase2: Float,
-    step: Float = 40f
+    sloshTilt: Float,
+    step: Float = 35f
 ) {
     path.reset()
     path.moveTo(xStart, bottomLimit)
 
-    fun waveY(x: Float): Float {
-        return baseLineY + sin(x * freq1 + phase1) * amp1 + cos(x * freq2 + phase2) * amp2
-    }
+    fun waveY(x: Float): Float = fluidSurfaceY(
+        x, baseLineY, xStart, xEnd, amp1, freq1, phase1, amp2, freq2, phase2, sloshTilt
+    )
 
     path.lineTo(xStart, waveY(xStart))
 
@@ -95,7 +146,7 @@ private fun buildFluidWavePath(
 }
 
 /**
- * Builds only the surface line path for drawing a specular highlight crest.
+ * Builds the surface crest path for drawing specular water highlights.
  */
 private fun buildFluidCrestLinePath(
     path: Path,
@@ -108,11 +159,13 @@ private fun buildFluidCrestLinePath(
     amp2: Float,
     freq2: Float,
     phase2: Float,
-    step: Float = 40f
+    sloshTilt: Float,
+    step: Float = 35f
 ) {
     path.reset()
-    fun waveY(x: Float): Float =
-        baseLineY + sin(x * freq1 + phase1) * amp1 + cos(x * freq2 + phase2) * amp2
+    fun waveY(x: Float): Float = fluidSurfaceY(
+        x, baseLineY, xStart, xEnd, amp1, freq1, phase1, amp2, freq2, phase2, sloshTilt
+    )
 
     path.moveTo(xStart, waveY(xStart))
     var currentX = xStart
@@ -136,9 +189,11 @@ private fun buildFluidCrestLinePath(
 }
 
 /**
- * Fluid liquid sunset overlay that rotates a full 360° to track physical gravity,
- * even when held upside down. The countdown text also adapts its cardinal orientation
- * so it stays readable in any orientation.
+ * Realistic fluid liquid sunset overlay that tracks physical gravity in a 360° range,
+ * keeping the liquid surface level with the real world horizon, even when held upside down.
+ * Features realistic trochoidal wave harmonics, specular meniscus crest highlights,
+ * dynamic inertial slosh response, rising micro-bubbles, and cardinal orientation tracking
+ * for the countdown timer.
  */
 @Composable
 fun FluidLiquidOverlay(
@@ -148,13 +203,13 @@ fun FluidLiquidOverlay(
     startedAtMillis: Long? = null,
     modifier: Modifier = Modifier
 ) {
-    // ── Phase oscillators for organic fluid sloshing ──
+    // ── Multi-frequency wave phase oscillators ──
     val infiniteTransition = rememberInfiniteTransition(label = "fluid_waves")
     val phase1 by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = (2 * PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = LinearEasing),
+            animation = tween(durationMillis = 2600, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "phase1"
@@ -163,7 +218,7 @@ fun FluidLiquidOverlay(
         initialValue = 0f,
         targetValue = -(2 * PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3100, easing = LinearEasing),
+            animation = tween(durationMillis = 3400, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "phase2"
@@ -181,12 +236,15 @@ fun FluidLiquidOverlay(
         )
     }
     val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
+    val frameTime = remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(startedAtMillis, totalSeconds) {
         if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
         while (true) {
             withFrameMillis {
-                val elapsed = (System.currentTimeMillis() - startedAtMillis).coerceAtLeast(0L)
+                val now = System.currentTimeMillis()
+                frameTime.longValue = now
+                val elapsed = (now - startedAtMillis).coerceAtLeast(0L)
                 continuousProgress.floatValue =
                     (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
                 displayRemaining.longValue =
@@ -208,23 +266,29 @@ fun FluidLiquidOverlay(
         unwrappedGravityAngle += diff
     }
 
+    // Angular spring for the liquid surface with natural fluid inertia
     val animatedGravityAngle by animateFloatAsState(
         targetValue = unwrappedGravityAngle,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
+            dampingRatio = 0.65f, // slight liquid bounce/overshoot
             stiffness = Spring.StiffnessLow
         ),
         label = "fluid_gravity_angle"
     )
 
+    // Dynamic slosh tilt computed from angular lag (rotational inertia)
+    val angularLag = unwrappedGravityAngle - animatedGravityAngle
+    val sloshTiltPx = (angularLag * 35.dp.value).coerceIn(-40f, 40f)
+
     // ── Orientation tracking for countdown text ──
+    // To counteract phone rotation and remain upright, text rotates in opposite direction (-deg)
     val deg = (Math.toDegrees(animatedGravityAngle.toDouble()).toFloat()) % 360f
     val normalizedDeg = if (deg > 180f) deg - 360f else if (deg < -180f) deg + 360f else deg
 
     val targetTextAngle = when {
-        normalizedDeg > 45f && normalizedDeg <= 135f -> 90f
+        normalizedDeg > 45f && normalizedDeg <= 135f -> -90f
         normalizedDeg > 135f || normalizedDeg <= -135f -> 180f
-        normalizedDeg >= -135f && normalizedDeg < -45f -> -90f
+        normalizedDeg >= -135f && normalizedDeg < -45f -> 90f
         else -> 0f
     }
 
@@ -264,6 +328,22 @@ fun FluidLiquidOverlay(
         )
     }
 
+    // ── Micro-bubbles pool ──
+    val bubbles = remember {
+        val rng = Random(42)
+        List(22) {
+            LiquidBubble(
+                relX = (rng.nextFloat() * 2f - 1f) * 0.75f,
+                currentDepth = rng.nextFloat(),
+                speed = 0.08f + rng.nextFloat() * 0.14f,
+                radiusPx = 1.5f + rng.nextFloat() * 2.2f,
+                wobbleFrequency = 2.5f + rng.nextFloat() * 2f,
+                wobblePhase = rng.nextFloat() * (2f * PI.toFloat()),
+                alpha = 0.35f + rng.nextFloat() * 0.45f
+            )
+        }
+    }
+
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
@@ -275,7 +355,7 @@ fun FluidLiquidOverlay(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.42f * animatedProgress))
+            .background(Color.Black.copy(alpha = 0.45f * animatedProgress))
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width
@@ -286,55 +366,57 @@ fun FluidLiquidOverlay(
             val diagonal = hypot(width, height)
             val r = diagonal * 0.75f
 
-            // Extent of screen along gravity direction at the current angle
+            // Extent of screen along gravity direction at current angle
             val absSin = abs(sin(animatedGravityAngle))
             val absCos = abs(cos(animatedGravityAngle))
             val hProj = width * absSin + height * absCos
 
-            // Base Y in the rotated coordinate space (where +Y points along gravity)
-            val bottomExtent = hProj / 2f + 24.dp.toPx()
-            val topExtent = -hProj / 2f - 24.dp.toPx()
+            // Base Y in rotated coordinate space (+Y points along gravity)
+            val bottomExtent = hProj / 2f + 28.dp.toPx()
+            val topExtent = -hProj / 2f - 28.dp.toPx()
             val baseLineY = bottomExtent - animatedProgress * (bottomExtent - topExtent)
 
-            val rotationDegrees = Math.toDegrees(animatedGravityAngle.toDouble()).toFloat()
+            // Canvas rotation is negated (-rotationDegrees) so the fluid stays level with the real world
+            val rotationDegrees = -Math.toDegrees(animatedGravityAngle.toDouble()).toFloat()
 
             withTransform({
                 translate(left = centerX, top = centerY)
-                rotate(degrees = rotationDegrees, pivot = androidx.compose.ui.geometry.Offset.Zero)
+                rotate(degrees = rotationDegrees, pivot = Offset.Zero)
             }) {
-                val amp1 = 14.dp.toPx()
+                val amp1 = 15.dp.toPx()
                 val amp2 = 6.dp.toPx()
-                val freq1 = 0.005f
+                val freq1 = 0.0055f
                 val freq2 = 0.012f
 
-                // ── 1. Back fluid wave ──
+                // ── 1. Back fluid wave (3D depth volume) ──
                 buildFluidWavePath(
                     path = backWavePath,
                     xStart = -r,
                     xEnd = r,
                     baseLineY = baseLineY,
                     bottomLimit = r,
-                    amp1 = amp1 * 1.1f,
-                    freq1 = freq1 * 0.9f,
+                    amp1 = amp1 * 1.15f,
+                    freq1 = freq1 * 0.88f,
                     phase1 = phase2,
-                    amp2 = amp2 * 1.2f,
-                    freq2 = freq2 * 0.85f,
-                    phase2 = phase1
+                    amp2 = amp2 * 1.25f,
+                    freq2 = freq2 * 0.9f,
+                    phase2 = phase1,
+                    sloshTilt = sloshTiltPx * 0.8f
                 )
                 drawPath(
                     path = backWavePath,
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            tertiaryColor.copy(alpha = 0.65f),
-                            secondaryColor.copy(alpha = 0.82f),
-                            Color.Black.copy(alpha = 0.92f)
+                            tertiaryColor.copy(alpha = 0.60f),
+                            secondaryColor.copy(alpha = 0.80f),
+                            Color(0xFF020617).copy(alpha = 0.94f)
                         ),
                         startY = baseLineY - amp1 - amp2,
                         endY = r
                     )
                 )
 
-                // ── 2. Front fluid wave ──
+                // ── 2. Front fluid wave (Rich liquid body) ──
                 buildFluidWavePath(
                     path = frontWavePath,
                     xStart = -r,
@@ -346,7 +428,8 @@ fun FluidLiquidOverlay(
                     phase1 = phase1,
                     amp2 = amp2,
                     freq2 = freq2,
-                    phase2 = phase2
+                    phase2 = phase2,
+                    sloshTilt = sloshTiltPx
                 )
                 drawPath(
                     path = frontWavePath,
@@ -354,14 +437,14 @@ fun FluidLiquidOverlay(
                         colors = listOf(
                             primaryColor.copy(alpha = 0.88f),
                             secondaryColor.copy(alpha = 0.92f),
-                            Color.Black.copy(alpha = 0.96f)
+                            Color.Black.copy(alpha = 0.97f)
                         ),
                         startY = baseLineY - amp1 - amp2,
                         endY = r
                     )
                 )
 
-                // ── 3. Specular crest highlight ──
+                // ── 3. Specular crest highlight (Meniscus edge reflection) ──
                 buildFluidCrestLinePath(
                     path = crestPath,
                     xStart = -r,
@@ -372,13 +455,43 @@ fun FluidLiquidOverlay(
                     phase1 = phase1,
                     amp2 = amp2,
                     freq2 = freq2,
-                    phase2 = phase2
+                    phase2 = phase2,
+                    sloshTilt = sloshTiltPx
                 )
+                // Soft caustic glow behind crest
                 drawPath(
                     path = crestPath,
-                    color = primaryColor.copy(alpha = 0.75f),
-                    style = Stroke(width = 3.dp.toPx())
+                    color = primaryColor.copy(alpha = 0.35f),
+                    style = Stroke(width = 6.dp.toPx(), cap = StrokeCap.Round)
                 )
+                // Sharp specular water line
+                drawPath(
+                    path = crestPath,
+                    color = Color.White.copy(alpha = 0.85f),
+                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+                )
+
+                // ── 4. Rising buoyant micro-bubbles ──
+                val fluidDepth = (r - baseLineY).coerceAtLeast(10f)
+                val timeSec = frameTime.longValue / 1000f
+                for (b in bubbles) {
+                    val currentY = baseLineY + (1f - ((b.currentDepth + b.speed * timeSec) % 1f)) * fluidDepth
+                    val currentX = b.relX * (r * 0.7f) + sin(timeSec * b.wobbleFrequency + b.wobblePhase) * 8f
+
+                    // Only draw if fully submerged
+                    if (currentY > baseLineY + 12f && currentY < r) {
+                        drawCircle(
+                            color = Color.White.copy(alpha = b.alpha),
+                            radius = b.radiusPx,
+                            center = Offset(currentX, currentY)
+                        )
+                        drawCircle(
+                            color = primaryColor.copy(alpha = b.alpha * 0.8f),
+                            radius = b.radiusPx * 0.5f,
+                            center = Offset(currentX - b.radiusPx * 0.3f, currentY - b.radiusPx * 0.3f)
+                        )
+                    }
+                }
             }
         }
 
