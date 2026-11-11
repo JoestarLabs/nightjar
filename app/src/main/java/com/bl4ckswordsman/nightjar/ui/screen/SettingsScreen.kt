@@ -93,6 +93,15 @@ import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 
+/**
+ * Container layout applying rounded corners and spacing to a column of card items.
+ *
+ * @param modifier Modifier applied to the container layout.
+ * @param spacing Vertical spacing between items.
+ * @param cornerRadius Corner radius of the card container.
+ * @param containerColor Background color of the container.
+ * @param content Composable column content.
+ */
 @Composable
 private fun RoundedCardContainer(
     modifier: Modifier = Modifier,
@@ -932,12 +941,12 @@ fun SettingsScreen(
 
     if (showPresetsDialog) {
         val currentPresets = presetsState
-        var preset1 by remember { mutableStateOf(if (currentPresets.isNotEmpty()) (currentPresets[0] / 60).toString() else "5") }
-        var preset2 by remember { mutableStateOf(if (currentPresets.size > 1) (currentPresets[1] / 60).toString() else "15") }
-        var preset3 by remember { mutableStateOf(if (currentPresets.size > 2) (currentPresets[2] / 60).toString() else "30") }
-        var preset4 by remember { mutableStateOf(if (currentPresets.size > 3) (currentPresets[3] / 60).toString() else "60") }
+        var preset1 by rememberSaveable { mutableStateOf(if (currentPresets.isNotEmpty()) (currentPresets[0] / 60).toString() else "5") }
+        var preset2 by rememberSaveable { mutableStateOf(if (currentPresets.size > 1) (currentPresets[1] / 60).toString() else "15") }
+        var preset3 by rememberSaveable { mutableStateOf(if (currentPresets.size > 2) (currentPresets[2] / 60).toString() else "30") }
+        var preset4 by rememberSaveable { mutableStateOf(if (currentPresets.size > 3) (currentPresets[3] / 60).toString() else "60") }
 
-        var errorMessage by remember { mutableStateOf<String?>(null) }
+        var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
         val invalidInputStr = stringResource(R.string.dialog_invalid_input)
 
         AlertDialog(
@@ -1051,6 +1060,21 @@ fun SettingsScreen(
         )
     }
 
+    if (showAnimationPreview) {
+        SunsetAnimationPreviewDialog(
+            initialAnimation = sunsetAnimation,
+            onApplyAnimation = { anim ->
+                if (anim != SunsetAnimation.OFF && !Settings.canDrawOverlays(context)) {
+                    showOverlayDialog = true
+                } else {
+                    timerViewModel.setSunsetAnimation(anim)
+                    showAnimationPreview = false
+                }
+            },
+            onDismiss = { showAnimationPreview = false }
+        )
+    }
+
     if (showOverlayDialog) {
         AlertDialog(
             onDismissRequest = { showOverlayDialog = false },
@@ -1095,21 +1119,6 @@ fun SettingsScreen(
                     Text(stringResource(android.R.string.cancel))
                 }
             }
-        )
-    }
-
-    if (showAnimationPreview) {
-        SunsetAnimationPreviewDialog(
-            initialAnimation = sunsetAnimation,
-            onApplyAnimation = { anim ->
-                if (anim != SunsetAnimation.OFF && !Settings.canDrawOverlays(context)) {
-                    showOverlayDialog = true
-                } else {
-                    timerViewModel.setSunsetAnimation(anim)
-                    showAnimationPreview = false
-                }
-            },
-            onDismiss = { showAnimationPreview = false }
         )
     }
 }

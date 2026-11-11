@@ -155,6 +155,7 @@ fun TimerText(
     )
 }
 
+/** Preview of [TimerText] displaying active countdown. */
 @Preview(showBackground = true, backgroundColor = 0xFF111210)
 @Composable
 private fun TimerTextPreview() {
