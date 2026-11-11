@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,6 +89,7 @@ fun ZenTimerDial(
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
+    val currentOnSecondsChanged by rememberUpdatedState(onSecondsChanged)
 
     // Wall-clock remaining seconds for the centre text — same floor((end-now)/1000) formula
     // as the Chronometer, so all three displays tick in unison.
@@ -250,7 +252,7 @@ fun ZenTimerDial(
                                 scope.launch {
                                     sweepAnim.snapTo(angle)
                                 }
-                                onSecondsChanged(newSeconds)
+                                currentOnSecondsChanged(newSeconds)
                             },
                             onDragEnd = {
                                 isDragging = false
@@ -394,6 +396,7 @@ private fun DrawScope.drawDragHandle(
     )
 }
 
+/** Preview of [ZenTimerDial] in the idle state with interactive drag. */
 @Preview(showBackground = true)
 @Composable
 private fun ZenTimerDialPreview() {
@@ -406,6 +409,7 @@ private fun ZenTimerDialPreview() {
     }
 }
 
+/** Preview of [ZenTimerDial] in the active running state with wavy progress. */
 @Preview(showBackground = true)
 @Composable
 private fun ZenTimerDialRunningPreview() {
