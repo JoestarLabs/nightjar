@@ -198,7 +198,7 @@ fun ZenTimerDial(
                 modifier = Modifier.size(dialRingSize),
                 strokeWidth = wavyStrokeWidth,
                 wavelength = 32.dp,
-                amplitude = 0.65f,
+                amplitude = 1f,
                 color = primary,
                 trackColor = surfaceVariant.copy(alpha = 0.35f),
             )
