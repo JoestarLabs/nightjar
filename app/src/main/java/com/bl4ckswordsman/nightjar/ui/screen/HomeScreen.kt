@@ -13,9 +13,13 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,19 +45,26 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
+import com.bl4ckswordsman.nightjar.ui.animation.liquidRipple
 import com.bl4ckswordsman.nightjar.ui.components.AnimatedAppTitle
 import com.bl4ckswordsman.nightjar.ui.components.DeviceAdminPermissionDialog
 import com.bl4ckswordsman.nightjar.ui.components.DurationPickerSheet
@@ -128,6 +139,10 @@ fun HomeScreen(
             )
         ) { value, _ -> gearRotation = value }
     }
+
+    // ── Liquid ripple effect on start (sameerasw/essentials v19.0) ───────────
+    var rippleTrigger by remember { mutableStateOf(0) }
+    var buttonCenterInRoot by remember { mutableStateOf(Offset.Zero) }
 
 
     // ── Dialogs ───────────────────────────────────────────────────────────────
@@ -207,7 +222,17 @@ fun HomeScreen(
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxSize()
+            .liquidRipple(
+                trigger = rippleTrigger,
+                origin = buttonCenterInRoot,
+                durationMillis = 2800,
+                amplitudeDp = 34f,
+                frequency = 12f,
+                decay = 4.5f,
+                speedDp = 1400f,
+            ),
     ) { innerPadding ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -219,72 +244,83 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .navigationBarsPadding(),
         ) {
-            Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
-            // ── Zen timer dial ────────────────────────────────────────────────
-            ZenTimerDial(
-                selectedSeconds = viewModel.selectedSeconds,
-                runningSeconds = runningSeconds,
-                runningTotalSeconds = runningTotalSeconds,
-                startedAtMillis = runningStartedAt,
-                onDialClicked = { showDurationSheet = true },
-                onSecondsChanged = { viewModel.setSelectedSeconds(it) },
-                contentDesc = stringResource(R.string.cd_timer_dial),
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            // ── Preset chips ──────────────────────────────────────────────────
-            AnimatedVisibility(
-                visible = !isRunning && !isFinished,
-                enter = fadeIn() + slideInVertically { it / 2 },
-                exit = fadeOut(),
-            ) {
-                PresetChips(
+                // ── Zen timer dial ────────────────────────────────────────────────
+                ZenTimerDial(
                     selectedSeconds = viewModel.selectedSeconds,
-                    onPresetSelected = { viewModel.setSelectedSeconds(it) },
-                    enabled = !isRunning,
-                    presets = presets,
+                    runningSeconds = runningSeconds,
+                    runningTotalSeconds = runningTotalSeconds,
+                    startedAtMillis = runningStartedAt,
+                    onDialClicked = { showDurationSheet = true },
+                    onSecondsChanged = { viewModel.setSelectedSeconds(it) },
+                    contentDesc = stringResource(R.string.cd_timer_dial),
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                // ── Preset chips ──────────────────────────────────────────────────
+                AnimatedVisibility(
+                    visible = !isRunning && !isFinished,
+                    enter = fadeIn() + slideInVertically { it / 2 },
+                    exit = fadeOut(),
+                ) {
+                    PresetChips(
+                        selectedSeconds = viewModel.selectedSeconds,
+                        onPresetSelected = { viewModel.setSelectedSeconds(it) },
+                        enabled = !isRunning,
+                        presets = presets,
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // ── Status chip ───────────────────────────────────────────────────
+                StatusChip(
+                    isRunning = isRunning,
+                    isFinishing = isFinished,
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                val lockedHintMsg = stringResource(R.string.hint_commitment_hold_to_stop)
+
+                // ── Start / Stop button ───────────────────────────────────────────
+                LockButton(
+                    isRunning = isRunning,
+                    isFinishing = isFinished,
+                    isLocked = isRunning && commitmentMode,
+                    onClick = {
+                        when {
+                            isRunning -> viewModel.stopTimer()
+                            !LockDeviceAdminReceiver.isEnabled(context) -> showAdminDialog = true
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                    !hasNotificationPermission(context) -> showNotifDialog = true
+
+                            else -> {
+                                rippleTrigger++
+                                viewModel.startTimer()
+                            }
+                        }
+                    },
+                    onRevealSlider = {
+                        showEmergencySheet = true
+                    },
+                    onLockedShortTap = {
+                        android.widget.Toast.makeText(context, lockedHintMsg, android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .onGloballyPositioned { coords ->
+                            val pos = coords.positionInRoot()
+                            buttonCenterInRoot = Offset(
+                                pos.x + coords.size.width / 2f,
+                                pos.y + coords.size.height / 2f
+                            )
+                        },
                 )
             }
-
-            Spacer(Modifier.height(24.dp))
-
-            // ── Status chip ───────────────────────────────────────────────────
-            StatusChip(
-                isRunning = isRunning,
-                isFinishing = isFinished,
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            val lockedHintMsg = stringResource(R.string.hint_commitment_hold_to_stop)
-
-            // ── Start / Stop button ───────────────────────────────────────────
-            LockButton(
-                isRunning = isRunning,
-                isFinishing = isFinished,
-                isLocked = isRunning && commitmentMode,
-                onClick = {
-                    when {
-                        isRunning -> viewModel.stopTimer()
-                        !LockDeviceAdminReceiver.isEnabled(context) -> showAdminDialog = true
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                                !hasNotificationPermission(context) -> showNotifDialog = true
-
-                        else -> viewModel.startTimer()
-                    }
-                },
-                onRevealSlider = {
-                    showEmergencySheet = true
-                },
-                onLockedShortTap = {
-                    android.widget.Toast.makeText(context, lockedHintMsg, android.widget.Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.padding(bottom = 16.dp),
-            )
-        }
     }
 
     if (showEmergencySheet) {
