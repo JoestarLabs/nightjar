@@ -346,32 +346,3 @@ fun RisingWaveOverlay(
         }
     }
 }
-
-@Composable
-private fun OutlinedText(
-    text: String,
-    style: androidx.compose.ui.text.TextStyle,
-    outlineColor: Color,
-    fillColor: Color,
-    outlineWidth: Float,
-    modifier: Modifier = Modifier
-) {
-    Box(contentAlignment = Alignment.Center, modifier = modifier) {
-        Text(
-            text = text,
-            style = style.copy(
-                color = outlineColor,
-                drawStyle = Stroke(
-                    width = outlineWidth,
-                    join = StrokeJoin.Round
-                )
-            )
-        )
-        Text(
-            text = text,
-            style = style.copy(
-                color = fillColor
-            )
-        )
-    }
-}

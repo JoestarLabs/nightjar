@@ -6,6 +6,7 @@ import android.os.Build
 import android.view.WindowManager
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
@@ -19,7 +20,11 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.bl4ckswordsman.nightjar.data.SunsetAnimation
+import com.bl4ckswordsman.nightjar.ui.components.FluidLiquidOverlay
+import com.bl4ckswordsman.nightjar.ui.components.MaterialShapesOverlay
 import com.bl4ckswordsman.nightjar.ui.components.RisingWaveOverlay
+import com.bl4ckswordsman.nightjar.ui.components.SnowflakesOverlay
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 
 class ServiceLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
@@ -54,14 +59,25 @@ class ComposeOverlayManager(private val context: Context) {
     private val remainingSecondsState = mutableLongStateOf(0L)
     private val totalSecondsState = mutableLongStateOf(0L)
     private val tiltState = mutableFloatStateOf(0f)
+    private val gravityAngleRadState = mutableFloatStateOf(0f)
+    private val animationState = mutableStateOf(SunsetAnimation.FLUID_LIQUID)
     private val startedAtMillisState = mutableLongStateOf(0L)
 
     val isShowing: Boolean get() = composeView != null
 
-    fun show(remainingSeconds: Long, totalSeconds: Long, tilt: Float = 0f, startedAtMillis: Long? = null) {
+    fun show(
+        remainingSeconds: Long,
+        totalSeconds: Long,
+        tilt: Float = 0f,
+        gravityAngleRad: Float = 0f,
+        animation: SunsetAnimation = SunsetAnimation.FLUID_LIQUID,
+        startedAtMillis: Long? = null
+    ) {
         remainingSecondsState.longValue = remainingSeconds
         totalSecondsState.longValue = totalSeconds
         tiltState.floatValue = tilt
+        gravityAngleRadState.floatValue = gravityAngleRad
+        animationState.value = animation
         startedAtMillisState.longValue = startedAtMillis ?: 0L
 
         if (composeView != null) return
@@ -88,12 +104,41 @@ class ComposeOverlayManager(private val context: Context) {
 
             setContent {
                 NightjarTheme {
-                    RisingWaveOverlay(
-                        remainingSeconds = remainingSecondsState.longValue,
-                        totalSeconds = totalSecondsState.longValue,
-                        tilt = tiltState.floatValue,
-                        startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
-                    )
+                    when (animationState.value) {
+                        SunsetAnimation.OFF -> Unit
+                        SunsetAnimation.FLUID_LIQUID -> {
+                            FluidLiquidOverlay(
+                                remainingSeconds = remainingSecondsState.longValue,
+                                totalSeconds = totalSecondsState.longValue,
+                                gravityAngleRad = gravityAngleRadState.floatValue,
+                                startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
+                            )
+                        }
+                        SunsetAnimation.CLASSIC_WAVE -> {
+                            RisingWaveOverlay(
+                                remainingSeconds = remainingSecondsState.longValue,
+                                totalSeconds = totalSecondsState.longValue,
+                                tilt = tiltState.floatValue,
+                                startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
+                            )
+                        }
+                        SunsetAnimation.MATERIAL_SHAPES -> {
+                            MaterialShapesOverlay(
+                                remainingSeconds = remainingSecondsState.longValue,
+                                totalSeconds = totalSecondsState.longValue,
+                                gravityAngleRad = gravityAngleRadState.floatValue,
+                                startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
+                            )
+                        }
+                        SunsetAnimation.SNOWFLAKES -> {
+                            SnowflakesOverlay(
+                                remainingSeconds = remainingSecondsState.longValue,
+                                totalSeconds = totalSecondsState.longValue,
+                                gravityAngleRad = gravityAngleRadState.floatValue,
+                                startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -126,6 +171,11 @@ class ComposeOverlayManager(private val context: Context) {
 
     fun updateTilt(tilt: Float) {
         tiltState.floatValue = tilt
+    }
+
+    fun updateSensors(tilt: Float, gravityAngleRad: Float) {
+        tiltState.floatValue = tilt
+        gravityAngleRadState.floatValue = gravityAngleRad
     }
 
     fun dismiss() {
