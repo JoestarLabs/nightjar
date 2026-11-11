@@ -65,6 +65,18 @@ private const val LIQUID_RIPPLE_AGSL = """
     }
 """
 
+/**
+ * Applies a hardware-accelerated AGSL liquid ripple distortion radiating from [origin].
+ *
+ * @param trigger Incrementing integer value to trigger a new ripple animation.
+ * @param origin The center offset coordinates from which the ripple radiates.
+ * @param enabled Whether the ripple effect is enabled.
+ * @param durationMillis Duration of the ripple animation in milliseconds.
+ * @param amplitudeDp Maximum wave displacement amplitude in dp.
+ * @param frequency Spatial frequency of the ripple wave.
+ * @param decay Rate at which the wave decays over time and distance.
+ * @param speedDp Radial propagation speed in dp per second.
+ */
 fun Modifier.liquidRipple(
     trigger: Int,
     origin: Offset,
@@ -110,6 +122,9 @@ fun Modifier.liquidRipple(
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private object Api33LiquidRipple {
+    /**
+     * Internal implementation of the API 33+ RuntimeShader liquid ripple effect.
+     */
     @Composable
     fun applyLiquidRipple(
         modifier: Modifier,

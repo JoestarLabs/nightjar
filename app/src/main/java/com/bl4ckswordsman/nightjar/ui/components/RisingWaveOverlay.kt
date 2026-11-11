@@ -123,6 +123,17 @@ private fun yAtX(
                           else           kotlin.math.sin(angle) * (amplitude * 0.8f)
 }
 
+/**
+ * Fullscreen classic wave sunset warning animation overlay.
+ *
+ * Simulates a rising liquid wave responding dynamically to device tilt as the countdown expires.
+ *
+ * @param remainingSeconds Seconds remaining until the timer expires.
+ * @param totalSeconds Total duration of the sunset warning window.
+ * @param tilt Device tilt offset factor used for wave inclination.
+ * @param startedAtMillis Epoch-ms when the timer started, enabling continuous wall-clock animation.
+ * @param modifier Modifier applied to the overlay container.
+ */
 @Composable
 fun RisingWaveOverlay(
     remainingSeconds: Long,

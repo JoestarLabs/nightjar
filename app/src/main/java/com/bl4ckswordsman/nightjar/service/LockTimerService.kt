@@ -106,16 +106,19 @@ class LockTimerService : Service() {
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
     }
 
+    /** Registers the accelerometer sensor listener for tilt tracking. */
     private fun registerSensor() {
         accelerometer?.let {
             sensorManager.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_GAME)
         }
     }
 
+    /** Unregisters the accelerometer sensor listener. */
     private fun unregisterSensor() {
         sensorManager.unregisterListener(sensorListener)
     }
 
+    /** Returns whether the application has granted SYSTEM_ALERT_WINDOW permission. */
     private fun hasOverlayPermission(): Boolean {
         return android.provider.Settings.canDrawOverlays(this)
     }
@@ -156,6 +159,7 @@ class LockTimerService : Service() {
 
     // ── Timer logic ───────────────────────────────────────────────────────────
 
+    /** Starts the timer countdown for [durationSeconds] and posts the foreground notification. */
     private fun startTimer(durationSeconds: Long) {
         timerJob?.cancel()
         val startedAt = System.currentTimeMillis()
@@ -173,6 +177,7 @@ class LockTimerService : Service() {
         }
     }
 
+    /** Persists timer start parameters to DataStore for reboot recovery. */
     private fun persistTimerStart(durationSeconds: Long, startedAt: Long) {
         // Persist so BootReceiver can resume if the device restarts
         serviceScope.launch {
@@ -180,6 +185,7 @@ class LockTimerService : Service() {
         }
     }
 
+    /** Executes the coroutine countdown loop and updates notification/overlay state. */
     private suspend fun CoroutineScope.runCountdown(durationSeconds: Long, startedAt: Long) {
         val prefs = timerRepository.preferencesDataSource.preferences.first()
         val sunsetAnimation = prefs.sunsetAnimation
@@ -304,6 +310,7 @@ class LockTimerService : Service() {
         }
     }
 
+    /** Stops the active countdown, cleans up overlay windows, and terminates the service. */
     private fun stopTimer() {
         timerJob?.cancel()
         timerJob = null
@@ -317,6 +324,7 @@ class LockTimerService : Service() {
         stopSelf()
     }
 
+    /** Invoked upon countdown expiry to lock device screen and update completion state. */
     private fun onTimerExpired() {
         timerRepository.updateState(TimerState.Finished)
 
@@ -415,6 +423,7 @@ class LockTimerService : Service() {
         return createConfigurationContext(config)
     }
 
+    /** Constructs the ongoing countdown foreground notification with Live Update chip styling. */
     internal fun buildNotification(
         durationSeconds: Long,
         countdownEndEpochMs: Long,
@@ -516,6 +525,7 @@ class LockTimerService : Service() {
         }
     }
 
+    /** Returns a cached lock icon bitmap for notification styling. */
     private fun getLockBitmap(context: Context): android.graphics.Bitmap? {
         var bitmap = cachedLockBitmap
         if (bitmap == null) {
@@ -532,6 +542,7 @@ class LockTimerService : Service() {
         return bitmap
     }
 
+    /** Builds the brief completion notification displayed when countdown finishes. */
     private fun buildFinishedNotification(): Notification {
         val localizedContext = getLocalizedContext()
         return NotificationCompat.Builder(this, NightjarApp.CHANNEL_TIMER_ID)
@@ -577,6 +588,7 @@ class LockTimerService : Service() {
         fun isUrgent(remainingSeconds: Long): Boolean =
             remainingSeconds <= ONE_MINUTE_SECONDS
 
+        /** Creates an [Intent] to start the timer countdown service. */
         fun startIntent(
             context: Context,
             durationSeconds: Long,
@@ -588,6 +600,7 @@ class LockTimerService : Service() {
                 putExtra(EXTRA_COMMITMENT_MODE, commitmentMode)
             }
 
+        /** Creates an [Intent] to stop the active timer countdown service. */
         fun stopIntent(context: Context, force: Boolean = false): Intent =
             Intent(context, LockTimerService::class.java).apply {
                 action = ACTION_STOP
