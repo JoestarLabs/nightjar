@@ -27,6 +27,24 @@ object TimerPreferenceKeys {
     val SUNSET_MODE_ENABLED = booleanPreferencesKey("sunset_mode_enabled")
     val SUNSET_DURATION_SECONDS = longPreferencesKey("sunset_duration_seconds")
     val SUNSET_AUDIO_ENABLED = booleanPreferencesKey("sunset_audio_enabled")
+    val SUNSET_ANIMATION = stringPreferencesKey("sunset_animation")
+}
+
+/**
+ * Supported sunset warning animation types.
+ */
+enum class SunsetAnimation(val id: String) {
+    OFF("off"),
+    FLUID_LIQUID("fluid_liquid"),
+    CLASSIC_WAVE("classic_wave"),
+    MATERIAL_SHAPES("material_shapes"),
+    SNOWFLAKES("snowflakes");
+
+    companion object {
+        fun fromId(id: String?): SunsetAnimation {
+            return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: FLUID_LIQUID
+        }
+    }
 }
 
 /**
@@ -40,7 +58,8 @@ data class TimerPreferences(
     val customPresets: List<Long> = listOf(300L, 900L, 1800L, 3600L), // custom presets (in seconds)
     val sunsetModeEnabled: Boolean = true,  // default: enabled
     val sunsetDurationSeconds: Long = 30L,  // default: 30 seconds
-    val sunsetAudioEnabled: Boolean = true  // default: enabled
+    val sunsetAudioEnabled: Boolean = true, // default: enabled
+    val sunsetAnimation: SunsetAnimation = SunsetAnimation.FLUID_LIQUID
 )
 
 @Singleton
@@ -59,14 +78,22 @@ class TimerPreferencesDataSource(
         } catch (e: Exception) {
             listOf(300L, 900L, 1800L, 3600L)
         }
+        val sunsetEnabled = prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] ?: true
+        val animStr = prefs[TimerPreferenceKeys.SUNSET_ANIMATION]
+        val animation = when {
+            animStr != null -> SunsetAnimation.fromId(animStr)
+            !sunsetEnabled -> SunsetAnimation.OFF
+            else -> SunsetAnimation.FLUID_LIQUID
+        }
         TimerPreferences(
             lastDurationSeconds = prefs[TimerPreferenceKeys.LAST_DURATION_SECONDS] ?: 300L,
             startedAtMillis = prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] ?: 0L,
             commitmentMode = prefs[TimerPreferenceKeys.COMMITMENT_MODE] ?: false,
             customPresets = presetsList,
-            sunsetModeEnabled = prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] ?: true,
+            sunsetModeEnabled = sunsetEnabled && animation != SunsetAnimation.OFF,
             sunsetDurationSeconds = prefs[TimerPreferenceKeys.SUNSET_DURATION_SECONDS] ?: 30L,
             sunsetAudioEnabled = prefs[TimerPreferenceKeys.SUNSET_AUDIO_ENABLED] ?: true,
+            sunsetAnimation = animation
         )
     }
 
@@ -109,6 +136,19 @@ class TimerPreferencesDataSource(
     suspend fun saveSunsetMode(enabled: Boolean) {
         dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] = enabled
+            if (!enabled) {
+                prefs[TimerPreferenceKeys.SUNSET_ANIMATION] = SunsetAnimation.OFF.id
+            } else if (prefs[TimerPreferenceKeys.SUNSET_ANIMATION] == SunsetAnimation.OFF.id) {
+                prefs[TimerPreferenceKeys.SUNSET_ANIMATION] = SunsetAnimation.FLUID_LIQUID.id
+            }
+        }
+    }
+
+    /** Persist the sunset animation style. */
+    suspend fun saveSunsetAnimation(animation: SunsetAnimation) {
+        dataStore.edit { prefs ->
+            prefs[TimerPreferenceKeys.SUNSET_ANIMATION] = animation.id
+            prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] = (animation != SunsetAnimation.OFF)
         }
     }
 

@@ -44,6 +44,7 @@ class TimerPreferencesDataSourceTest {
         assertTrue(prefs.sunsetModeEnabled)
         assertEquals(30L, prefs.sunsetDurationSeconds)
         assertTrue(prefs.sunsetAudioEnabled)
+        assertEquals(SunsetAnimation.FLUID_LIQUID, prefs.sunsetAnimation)
     }
 
     @Test
@@ -116,6 +117,24 @@ class TimerPreferencesDataSourceTest {
         dataSource.saveSunsetAudioEnabled(true)
         prefs = dataSource.preferences.first()
         assertTrue(prefs.sunsetAudioEnabled)
+    }
+
+    @Test
+    fun testSaveSunsetAnimation() = runTest(testDispatcher) {
+        dataSource.saveSunsetAnimation(SunsetAnimation.MATERIAL_SHAPES)
+        var prefs = dataSource.preferences.first()
+        assertEquals(SunsetAnimation.MATERIAL_SHAPES, prefs.sunsetAnimation)
+        assertTrue(prefs.sunsetModeEnabled)
+
+        dataSource.saveSunsetAnimation(SunsetAnimation.OFF)
+        prefs = dataSource.preferences.first()
+        assertEquals(SunsetAnimation.OFF, prefs.sunsetAnimation)
+        assertFalse(prefs.sunsetModeEnabled)
+
+        dataSource.saveSunsetAnimation(SunsetAnimation.SNOWFLAKES)
+        prefs = dataSource.preferences.first()
+        assertEquals(SunsetAnimation.SNOWFLAKES, prefs.sunsetAnimation)
+        assertTrue(prefs.sunsetModeEnabled)
     }
 
     @Test

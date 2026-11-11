@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Code
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Warning
+import com.bl4ckswordsman.nightjar.data.SunsetAnimation
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
@@ -118,6 +120,7 @@ fun SettingsScreen(
     val presetsState by timerViewModel.presets.collectAsStateWithLifecycle()
 
     val sunsetModeEnabled by timerViewModel.sunsetModeEnabled.collectAsStateWithLifecycle()
+    val sunsetAnimation by timerViewModel.sunsetAnimation.collectAsStateWithLifecycle()
     val sunsetDurationSeconds by timerViewModel.sunsetDurationSeconds.collectAsStateWithLifecycle()
     val sunsetAudioEnabled by timerViewModel.sunsetAudioEnabled.collectAsStateWithLifecycle()
 
@@ -536,8 +539,103 @@ fun SettingsScreen(
                         )
                 )
 
-                // Sunset duration selector
+                // Sunset warning options
                 if (sunsetModeEnabled) {
+                    // Sunset animation style selector
+                    var isAnimationMenuExpanded by remember { mutableStateOf(false) }
+                    val animationInteractionSource = remember { MutableInteractionSource() }
+                    val isAnimationPressed by animationInteractionSource.collectIsPressedAsState()
+                    val animationCornerPercent by animateIntAsState(
+                        targetValue = if (isAnimationPressed) 18 else 50,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium,
+                        ),
+                        label = "sunset_animation_corners"
+                    )
+
+                    ListItem(
+                        headlineContent = {
+                            Text(stringResource(R.string.settings_sunset_animation_title))
+                        },
+                        supportingContent = {
+                            val animationLabel = when (sunsetAnimation) {
+                                SunsetAnimation.FLUID_LIQUID -> stringResource(R.string.settings_sunset_animation_fluid_liquid)
+                                SunsetAnimation.CLASSIC_WAVE -> stringResource(R.string.settings_sunset_animation_classic_wave)
+                                SunsetAnimation.MATERIAL_SHAPES -> stringResource(R.string.settings_sunset_animation_material_shapes)
+                                SunsetAnimation.SNOWFLAKES -> stringResource(R.string.settings_sunset_animation_snowflakes)
+                                SunsetAnimation.OFF -> stringResource(R.string.settings_sunset_animation_off)
+                            }
+                            Text(animationLabel)
+                        },
+                        leadingContent = {
+                            Icon(
+                                Icons.Rounded.AutoAwesome,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        trailingContent = {
+                            Box {
+                                androidx.compose.material3.Surface(
+                                    onClick = {
+                                        if (!timerIsRunning) isAnimationMenuExpanded = true
+                                    },
+                                    interactionSource = animationInteractionSource,
+                                    shape = RoundedCornerShape(percent = animationCornerPercent),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ) {
+                                    val currentText = when (sunsetAnimation) {
+                                        SunsetAnimation.FLUID_LIQUID -> stringResource(R.string.settings_sunset_animation_fluid_liquid)
+                                        SunsetAnimation.CLASSIC_WAVE -> stringResource(R.string.settings_sunset_animation_classic_wave)
+                                        SunsetAnimation.MATERIAL_SHAPES -> stringResource(R.string.settings_sunset_animation_material_shapes)
+                                        SunsetAnimation.SNOWFLAKES -> stringResource(R.string.settings_sunset_animation_snowflakes)
+                                        SunsetAnimation.OFF -> stringResource(R.string.settings_sunset_animation_off)
+                                    }
+                                    Text(
+                                        text = currentText,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        modifier = Modifier.padding(
+                                            horizontal = 12.dp,
+                                            vertical = 8.dp
+                                        )
+                                    )
+                                }
+
+                                androidx.compose.material3.DropdownMenu(
+                                    expanded = isAnimationMenuExpanded,
+                                    onDismissRequest = { isAnimationMenuExpanded = false }
+                                ) {
+                                    listOf(
+                                        SunsetAnimation.FLUID_LIQUID to R.string.settings_sunset_animation_fluid_liquid,
+                                        SunsetAnimation.CLASSIC_WAVE to R.string.settings_sunset_animation_classic_wave,
+                                        SunsetAnimation.MATERIAL_SHAPES to R.string.settings_sunset_animation_material_shapes,
+                                        SunsetAnimation.SNOWFLAKES to R.string.settings_sunset_animation_snowflakes,
+                                        SunsetAnimation.OFF to R.string.settings_sunset_animation_off
+                                    ).forEach { (anim, stringRes) ->
+                                        androidx.compose.material3.DropdownMenuItem(
+                                            text = { Text(stringResource(stringRes)) },
+                                            onClick = {
+                                                isAnimationMenuExpanded = false
+                                                timerViewModel.setSunsetAnimation(anim)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceBright
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !timerIsRunning) {
+                                isAnimationMenuExpanded = true
+                            }
+                    )
+
+                    // Sunset duration selector
                     var isDurationMenuExpanded by remember { mutableStateOf(false) }
                     val sunsetDurationInteractionSource = remember { MutableInteractionSource() }
                     val isSunsetDurationPressed by sunsetDurationInteractionSource.collectIsPressedAsState()

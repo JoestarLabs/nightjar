@@ -19,5 +19,17 @@ class TimerPreferencesTest {
         assertTrue(preferences.sunsetModeEnabled)
         assertEquals(30L, preferences.sunsetDurationSeconds)
         assertTrue(preferences.sunsetAudioEnabled)
+        assertEquals(SunsetAnimation.FLUID_LIQUID, preferences.sunsetAnimation)
+    }
+
+    @Test
+    fun testSunsetAnimationFromId() {
+        assertEquals(SunsetAnimation.OFF, SunsetAnimation.fromId("off"))
+        assertEquals(SunsetAnimation.FLUID_LIQUID, SunsetAnimation.fromId("fluid_liquid"))
+        assertEquals(SunsetAnimation.CLASSIC_WAVE, SunsetAnimation.fromId("classic_wave"))
+        assertEquals(SunsetAnimation.MATERIAL_SHAPES, SunsetAnimation.fromId("material_shapes"))
+        assertEquals(SunsetAnimation.SNOWFLAKES, SunsetAnimation.fromId("snowflakes"))
+        assertEquals(SunsetAnimation.FLUID_LIQUID, SunsetAnimation.fromId("unknown_value"))
+        assertEquals(SunsetAnimation.FLUID_LIQUID, SunsetAnimation.fromId(null))
     }
 }

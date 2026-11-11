@@ -22,6 +22,7 @@ import androidx.core.graphics.drawable.toBitmap
 import com.bl4ckswordsman.nightjar.MainActivity
 import com.bl4ckswordsman.nightjar.NightjarApp
 import com.bl4ckswordsman.nightjar.R
+import com.bl4ckswordsman.nightjar.data.SunsetAnimation
 import com.bl4ckswordsman.nightjar.data.TimerRepository
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
@@ -72,22 +73,33 @@ class LockTimerService : Service() {
     // Sensor-based tilt detection
     private val sensorManager by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
     private var accelerometer: Sensor? = null
+    private var filteredGx = 0f
+    private var filteredGy = 9.8f
     private var currentTilt = 0f
+    private var currentGravityAngleRad = 0f
 
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null || event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
 
-            // X-axis value measures left/right tilt.
             val x = event.values[0]
+            val y = event.values[1]
 
-            // Apply a low-pass filter to smooth the tilt changes:
-            currentTilt = currentTilt * 0.85f + x * 0.15f
+            // Apply low-pass filter
+            filteredGx = filteredGx * 0.85f + x * 0.15f
+            filteredGy = filteredGy * 0.85f + y * 0.15f
+
+            // Map accelerometer X to a normalized tilt float (-1f to 1f) for classic wave
+            currentTilt = (filteredGx / 5.5f).coerceIn(-1f, 1f)
+
+            // Compute 360-degree gravity angle in radians (atan2(-gx, gy))
+            val xyMagnitude = kotlin.math.hypot(filteredGx, filteredGy)
+            if (xyMagnitude > 1.2f) {
+                currentGravityAngleRad = kotlin.math.atan2(-filteredGx, filteredGy)
+            }
 
             if (overlayManager?.isShowing == true) {
-                // Map accelerometer X to a normalized tilt float (-1f to 1f)
-                val normalizedTilt = (currentTilt / 5.5f).coerceIn(-1f, 1f)
-                overlayManager?.updateTilt(normalizedTilt)
+                overlayManager?.updateSensors(tilt = currentTilt, gravityAngleRad = currentGravityAngleRad)
             }
         }
 
@@ -170,7 +182,8 @@ class LockTimerService : Service() {
 
     private suspend fun CoroutineScope.runCountdown(durationSeconds: Long, startedAt: Long) {
         val prefs = timerRepository.preferencesDataSource.preferences.first()
-        val sunsetEnabled = prefs.sunsetModeEnabled
+        val sunsetAnimation = prefs.sunsetAnimation
+        val sunsetEnabled = prefs.sunsetModeEnabled && sunsetAnimation != SunsetAnimation.OFF
         val sunsetDuration = prefs.sunsetDurationSeconds
         val sunsetAudioEnabled = prefs.sunsetAudioEnabled
 
@@ -206,7 +219,14 @@ class LockTimerService : Service() {
                     // (i.e. when remaining == sunsetDuration). Using this keeps the wave filling
                     // correctly from 0→1 over exactly sunsetDuration seconds.
                     val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
-                    overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
+                    overlayManager?.show(
+                        remainingSeconds = remaining,
+                        totalSeconds = sunsetDuration,
+                        tilt = currentTilt,
+                        gravityAngleRad = currentGravityAngleRad,
+                        animation = sunsetAnimation,
+                        startedAtMillis = sunsetWindowStartMs
+                    )
                 }
             }
         }
@@ -245,7 +265,14 @@ class LockTimerService : Service() {
                         } else {
                             registerSensor()
                             val sunsetWindowStartMs = endTimeMs - sunsetDuration * 1_000L
-                            overlayManager?.show(remaining, sunsetDuration, currentTilt, startedAtMillis = sunsetWindowStartMs)
+                            overlayManager?.show(
+                                remainingSeconds = remaining,
+                                totalSeconds = sunsetDuration,
+                                tilt = currentTilt,
+                                gravityAngleRad = currentGravityAngleRad,
+                                animation = sunsetAnimation,
+                                startedAtMillis = sunsetWindowStartMs
+                            )
                         }
                     }
                 }

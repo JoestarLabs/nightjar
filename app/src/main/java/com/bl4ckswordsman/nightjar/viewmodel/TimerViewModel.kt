@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bl4ckswordsman.nightjar.data.SunsetAnimation
 import com.bl4ckswordsman.nightjar.data.TimerRepository
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.service.LockTimerService
@@ -52,6 +53,11 @@ class TimerViewModel @Inject constructor(
     /** Whether sunset mode (overlay warning) is enabled. */
     val sunsetModeEnabled: StateFlow<Boolean> = _sunsetModeEnabled.asStateFlow()
 
+    private val _sunsetAnimation = MutableStateFlow(SunsetAnimation.FLUID_LIQUID)
+
+    /** Sunset warning animation style. */
+    val sunsetAnimation: StateFlow<SunsetAnimation> = _sunsetAnimation.asStateFlow()
+
     private val _sunsetDurationSeconds = MutableStateFlow(30L)
 
     /** Duration in seconds of the sunset warning overlay. */
@@ -81,6 +87,12 @@ class TimerViewModel @Inject constructor(
     fun setSunsetModeEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.preferencesDataSource.saveSunsetMode(enabled)
+        }
+    }
+
+    fun setSunsetAnimation(animation: SunsetAnimation) {
+        viewModelScope.launch {
+            repository.preferencesDataSource.saveSunsetAnimation(animation)
         }
     }
 
@@ -133,6 +145,7 @@ class TimerViewModel @Inject constructor(
                 _presets.value = prefs.customPresets
                 // Restore sunset settings
                 _sunsetModeEnabled.value = prefs.sunsetModeEnabled
+                _sunsetAnimation.value = prefs.sunsetAnimation
                 _sunsetDurationSeconds.value = prefs.sunsetDurationSeconds
                 _sunsetAudioEnabled.value = prefs.sunsetAudioEnabled
                 // Only update selected seconds if timer is not running
