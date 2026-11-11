@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.0.6](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.5...nightjar-v0.0.6) (2026-11-11)
+
+
+### Features
+
+* **overlay:** add multi-style sunset warning animations ([ecf9f01](https://github.com/JoestarLabs/nightjar/commit/ecf9f017f6db667bc3e6bc3e0030282d56302d9a))
+* **overlay:** include all 35 MaterialShapes and eliminate overlapping ([6ff08a9](https://github.com/JoestarLabs/nightjar/commit/6ff08a9bb1a64db3303fcc533a749e3bfe636c32))
+* **overlay:** integrate Material 3 Expressive motionScheme and calibrate 0.5s lock buffer ([7a3553a](https://github.com/JoestarLabs/nightjar/commit/7a3553a63cd9a6206243984cc105e08e9cc9e89f))
+* **overlay:** tighten MaterialShapes spacing and add Phase 4 blur/frost to plan ([562254a](https://github.com/JoestarLabs/nightjar/commit/562254ae194a3a4a3e1ab2168d22792f7c1b904a))
+* **settings:** add live fullscreen preview and clarify sunset warning animation setting ([2685c46](https://github.com/JoestarLabs/nightjar/commit/2685c46888b960d89e29e96490c289358114ea3e))
+* **ui:** add liquid ripple effect on timer start ([e99a389](https://github.com/JoestarLabs/nightjar/commit/e99a3899e2a7518939a81bed532a104360e463c4))
+* **ui:** add Morphe-inspired reverse circular wavy progress countdown indicator ([07346ec](https://github.com/JoestarLabs/nightjar/commit/07346ec029a87b9c4a8c80fa28759754fcd60b14))
+* **ui:** invert wavy progress ripple motion to flow clockwise ([2eb676d](https://github.com/JoestarLabs/nightjar/commit/2eb676d1c263a08c616bede0d33663bab90a3c88))
+* **ui:** update timer font to M3 expressive condensed with dynamic crescendo ([37cf56f](https://github.com/JoestarLabs/nightjar/commit/37cf56f6c49481eedb0393b5eace275b70055ff4))
+
+
+### Bug Fixes
+
+* **overlay:** correct fluid tilt orientation and use native MaterialShapes ([4a3c93c](https://github.com/JoestarLabs/nightjar/commit/4a3c93cfd393f69339ade767e88dcfbaab7d2fcf))
+* **overlay:** unify MaterialShapes falling physics and impact landing ([05a8f01](https://github.com/JoestarLabs/nightjar/commit/05a8f01877163b53461b0af210876ec2637e4d84))
+* **ui:** address code review findings across timer text, sunset settings, and wavy progress ([5a30b25](https://github.com/JoestarLabs/nightjar/commit/5a30b253f9b70db903087edd5bba1cdf6146dfda))
+* **ui:** apply direct sp scaling and separate preview state from persisted sunset animation ([5783079](https://github.com/JoestarLabs/nightjar/commit/5783079b0603761bfa0982d3ae545f2cf892b65f))
+* **ui:** persist preview state across recreation and derive drag center from measured pointer bounds ([571a9d4](https://github.com/JoestarLabs/nightjar/commit/571a9d46fcf8c8c7bcaf6a59aa9022a1a5ad8825))
+* **ui:** reorder dialogs, capture updated drag callback, and add UI recreation tests ([20dc274](https://github.com/JoestarLabs/nightjar/commit/20dc274969addc23ed2cbeca00e2897060b97ec9))
+* **ui:** use full native amplitude to ensure persistent wavy progress indicator ([6d8f2b1](https://github.com/JoestarLabs/nightjar/commit/6d8f2b1ae318bec605aa620809459652c56ee967))
+
+
+### Documentation
+
+* remove unbuilt blur planning and achieve 100% docstring coverage ([cff532b](https://github.com/JoestarLabs/nightjar/commit/cff532b794867190aa8895ffafa438351beae6fd))
+
+
+### Tests
+
+* **ui:** verify onSecondsChanged callback replacement during active drag gesture ([b35ffc5](https://github.com/JoestarLabs/nightjar/commit/b35ffc5af8c20f1bc8699de78ec1d36d04bdce80))
+* **viewmodel:** add test for setSunsetAnimation ([3fc985f](https://github.com/JoestarLabs/nightjar/commit/3fc985f21f4588ee4aaf090dc8743569fbb078cc))
+
 ## [0.0.5](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.4...nightjar-v0.0.5) (2026-11-08)
 
 
