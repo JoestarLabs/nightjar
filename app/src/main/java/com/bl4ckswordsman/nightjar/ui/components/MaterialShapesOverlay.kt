@@ -33,38 +33,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.toPath
 import com.bl4ckswordsman.nightjar.R
+import kotlin.math.PI
 import kotlin.math.min
+import kotlin.math.sin
 import kotlin.random.Random
 
-private data class SettledM3Shape(
+private data class PhysicalM3Shape(
+    val col: Int,
+    val row: Int,
     val relX: Float,
     val relY: Float,
     val shapeIndex: Int,
+    val colorIndex: Int,
     val scaleFactor: Float,
-    val rotation: Float,
-    val colorIndex: Int
-)
-
-private data class FallingM3Shape(
-    val relX: Float,
-    val initialRelY: Float,
-    val speedPxPerSec: Float,
-    val shapeIndex: Int,
-    val scaleFactor: Float,
-    val rotationSpeed: Float,
-    val colorIndex: Int
+    val restingRotation: Float,
+    val tumbleSpin: Float,
+    val dropProgress: Float,
+    val landProgress: Float
 )
 
 /**
  * Material 3 Expressive sunset overlay.
- * Features ALL 35 official native [MaterialShapes] from the Material 3 Expressive API:
- * (Arch, Arrow, Boom, SoftBoom, Bun, Burst, SoftBurst, Circle, ClamShell, Clover4Leaf,
- * Clover8Leaf, Cookie4Sided, Cookie6Sided, Cookie7Sided, Cookie9Sided, Cookie12Sided,
- * Diamond, Fan, Flower, Gem, Ghostish, Heart, Oval, Pentagon, Pill, PixelCircle,
- * PixelTriangle, Puffy, PuffyDiamond, SemiCircle, Slanted, Square, Sunny, Triangle, VerySunny).
+ * Features ALL 35 official native [MaterialShapes] from the Material 3 Expressive API.
  *
- * Shapes pile up neatly without overlapping into each other, letting each distinct shape
- * remain fully visible as the screen fills up from the bottom.
+ * Uses a single unified physics system: each shape falls smoothly under gravity from the top
+ * of the screen and lands directly into its non-overlapping resting slot with an expressive
+ * squash-and-stretch impact, building up the pile row-by-row from bottom to top at a steady,
+ * constant pace throughout the countdown.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -87,14 +82,12 @@ fun MaterialShapesOverlay(
         )
     }
     val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
-    val frameTimeMillis = remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(startedAtMillis, totalSeconds) {
         if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
         while (true) {
             withFrameMillis {
                 val now = System.currentTimeMillis()
-                frameTimeMillis.longValue = now
                 val elapsed = (now - startedAtMillis).coerceAtLeast(0L)
                 continuousProgress.floatValue =
                     (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
@@ -182,112 +175,127 @@ fun MaterialShapesOverlay(
         MaterialTheme.colorScheme.errorContainer
     )
 
-    // Grid layout with non-overlapping cells: 6 columns x 13 rows
-    val settledShapes = remember {
-        val rng = Random(777)
-        val list = mutableListOf<SettledM3Shape>()
+    // Grid layout: 6 columns x 13 rows = 78 shapes.
+    // Each shape has an assigned target slot, drop time, and land time.
+    val physicalShapes = remember {
+        val rng = Random(999)
+        val list = mutableListOf<PhysicalM3Shape>()
         val cols = 6
         val rows = 13
+        val fallDurationProgress = 0.045f // Constant fall duration across all rows
         var shapeSequence = 0
 
+        // Build from bottom row (row 12) to top row (row 0)
         for (r in 0 until rows) {
-            for (c in 0 until cols) {
-                // Exact cell center with minimal jitter (keeps shapes neatly separated without overlapping)
-                val relX = (c + 0.5f + (rng.nextFloat() * 0.12f - 0.06f)) / cols
-                val relY = (r + 0.5f + (rng.nextFloat() * 0.12f - 0.06f)) / rows
+            // Rows pile up from bottom to top
+            val rowFromBottom = (rows - 1) - r // 0 for bottom row, 12 for top row
+            val baseLandP = 0.06f + (rowFromBottom.toFloat() / (rows - 1)) * 0.84f
 
-                // Cycle through all shapes so every single M3 shape appears prominently
+            for (c in 0 until cols) {
+                val relX = (c + 0.5f) / cols
+                val relY = (r + 0.5f) / rows
+
+                // Slight stagger within each row so shapes don't hit at the exact same millisecond
+                val colStagger = (rng.nextFloat() * 0.025f)
+                val landP = (baseLandP + colStagger).coerceAtMost(0.98f)
+                val dropP = (landP - fallDurationProgress).coerceAtLeast(0f)
+
                 val shapeIdx = (shapeSequence++) % nativeShapePaths.size
-                // Scale factor between 0.86 and 0.94 to guarantee no overlap with neighbors
-                val scale = 0.86f + rng.nextFloat() * 0.08f
-                val rot = (rng.nextFloat() * 16f) - 8f
+                val scale = 0.88f + rng.nextFloat() * 0.06f
+                val restingRot = (rng.nextFloat() * 16f) - 8f
+                val spin = (rng.nextFloat() - 0.5f) * 120f
                 val colorIdx = rng.nextInt(colors.size)
-                list.add(SettledM3Shape(relX, relY, shapeIdx, scale, rot, colorIdx))
+
+                list.add(
+                    PhysicalM3Shape(
+                        col = c,
+                        row = r,
+                        relX = relX,
+                        relY = relY,
+                        shapeIndex = shapeIdx,
+                        colorIndex = colorIdx,
+                        scaleFactor = scale,
+                        restingRotation = restingRot,
+                        tumbleSpin = spin,
+                        dropProgress = dropP,
+                        landProgress = landP
+                    )
+                )
             }
         }
         list
     }
 
-    // Shower of falling shapes tumbling down towards the fill line
-    val fallingShapes = remember {
-        val rng = Random(333)
-        List(25) {
-            FallingM3Shape(
-                relX = (it + 0.5f + (rng.nextFloat() * 0.4f - 0.2f)) / 25f,
-                initialRelY = rng.nextFloat(),
-                speedPxPerSec = 220f + rng.nextFloat() * 180f,
-                shapeIndex = rng.nextInt(nativeShapePaths.size),
-                scaleFactor = 0.82f + rng.nextFloat() * 0.12f,
-                rotationSpeed = (rng.nextFloat() - 0.5f) * 140f,
-                colorIndex = rng.nextInt(colors.size)
-            )
-        }
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.60f * animatedProgress))
+            .background(Color.Black.copy(alpha = 0.55f * animatedProgress))
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width
             val height = size.height
 
-            // The fill line rises from bottom (height) to top (0)
-            val fillLineY = height * (1f - animatedProgress)
             val cols = 6f
             val rows = 13f
             val cellWidth = width / cols
             val cellHeight = height / rows
-            // Sized to fit cleanly inside cell bounds without overlapping neighbors
             val maxShapeSize = min(cellWidth, cellHeight)
+            val spawnY = -maxShapeSize * 1.5f
 
-            // ── 1. Draw settled M3 expressive shapes (mosaic stacking from bottom up without overlap) ──
-            for (shape in settledShapes) {
-                val shapeX = shape.relX * width
-                val shapeY = shape.relY * height
+            for (shape in physicalShapes) {
+                // If shape hasn't started its drop yet, do not draw
+                if (animatedProgress < shape.dropProgress) continue
 
-                // If the fill line has reached this shape's position
-                if (shapeY >= fillLineY - cellHeight * 0.5f) {
-                    val popProgress = ((shapeY - fillLineY + cellHeight * 0.5f) / cellHeight).coerceIn(0f, 1f)
-                    // Joyful M3 spring overshoot scaling into its spot
-                    val springScale = popProgress * (1f + 0.14f * (1f - popProgress))
-                    val drawSize = maxShapeSize * shape.scaleFactor * springScale
-                    val color = colors[shape.colorIndex % colors.size]
-                    val path = nativeShapePaths[shape.shapeIndex % nativeShapePaths.size]
+                val targetX = shape.relX * width
+                val targetY = shape.relY * height
+                val baseDrawSize = maxShapeSize * shape.scaleFactor
+                val color = colors[shape.colorIndex % colors.size]
+                val path = nativeShapePaths[shape.shapeIndex % nativeShapePaths.size]
 
-                    withTransform({
-                        translate(shapeX, shapeY)
-                        rotate(shape.rotation, Offset.Zero)
-                        scale(drawSize, drawSize, Offset.Zero)
-                        translate(-0.5f, -0.5f) // Center the normalized [0,1] polygon at (0,0)
-                    }) {
-                        drawPath(path, color)
+                val currentX: Float
+                val currentY: Float
+                val currentRot: Float
+                val scaleX: Float
+                val scaleY: Float
+
+                if (animatedProgress < shape.landProgress) {
+                    // ── In flight: Smooth gravitational acceleration from top of screen ──
+                    val fallProgress = ((animatedProgress - shape.dropProgress) /
+                            (shape.landProgress - shape.dropProgress)).coerceIn(0f, 1f)
+                    // Quadratic ease-in acceleration (gravity physics)
+                    val gravityT = fallProgress * fallProgress
+
+                    currentX = targetX
+                    currentY = spawnY + (targetY - spawnY) * gravityT
+                    currentRot = shape.restingRotation + (1f - fallProgress) * shape.tumbleSpin
+                    scaleX = 1f
+                    scaleY = 1f
+                } else {
+                    // ── Landed: Expressive squash-and-stretch impact settling into place ──
+                    currentX = targetX
+                    currentY = targetY
+                    currentRot = shape.restingRotation
+
+                    // Time elapsed since touchdown (lasts 0.02 progress units)
+                    val impactT = ((animatedProgress - shape.landProgress) / 0.022f).coerceIn(0f, 1f)
+                    if (impactT < 1f) {
+                        // Dampened harmonic squash on impact: wide & short, then settles to 1.0
+                        val squash = sin(impactT * PI.toFloat()) * (1f - impactT) * 0.22f
+                        scaleX = 1f + squash
+                        scaleY = 1f - squash
+                    } else {
+                        scaleX = 1f
+                        scaleY = 1f
                     }
                 }
-            }
 
-            // ── 2. Shower of falling native M3 shapes above the fill line ──
-            val elapsedSec = (frameTimeMillis.longValue - (startedAtMillis ?: frameTimeMillis.longValue)) / 1000f
-            for (falling in fallingShapes) {
-                val totalDistance = (falling.initialRelY * height + falling.speedPxPerSec * elapsedSec)
-                val currentY = if (fillLineY > 0f) totalDistance % (fillLineY + cellHeight) else -100f
-
-                if (currentY < fillLineY && currentY > -50f) {
-                    val currentX = (falling.relX * width).coerceIn(0f, width)
-                    val rotation = falling.rotationSpeed * elapsedSec
-                    val color = colors[falling.colorIndex % colors.size].copy(alpha = 0.92f)
-                    val path = nativeShapePaths[falling.shapeIndex % nativeShapePaths.size]
-                    val drawSize = maxShapeSize * falling.scaleFactor
-
-                    withTransform({
-                        translate(currentX, currentY)
-                        rotate(rotation, Offset.Zero)
-                        scale(drawSize, drawSize, Offset.Zero)
-                        translate(-0.5f, -0.5f)
-                    }) {
-                        drawPath(path, color)
-                    }
+                withTransform({
+                    translate(currentX, currentY)
+                    rotate(currentRot, Offset.Zero)
+                    scale(baseDrawSize * scaleX, baseDrawSize * scaleY, Offset.Zero)
+                    translate(-0.5f, -0.5f) // Center unit [0,1] polygon at (0,0)
+                }) {
+                    drawPath(path, color)
                 }
             }
         }
