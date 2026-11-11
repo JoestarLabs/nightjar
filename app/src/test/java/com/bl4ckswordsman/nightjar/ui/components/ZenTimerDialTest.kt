@@ -70,15 +70,16 @@ class ZenTimerDialTest {
     }
 
     /**
-     * Verifies that updating the [ZenTimerDial] onSecondsChanged callback lambda does not
-     * reset the gesture coroutine and delivers subsequent changes to the updated callback.
+     * Verifies that updating the [ZenTimerDial] onSecondsChanged callback lambda during an active
+     * drag does not cancel or reset the gesture coroutine and delivers subsequent drag events to the
+     * replacement callback without requiring a new pointer-down event.
      */
     @Test
     fun idleDial_whenCallbackChanges_invokesUpdatedCallback() {
-        var callback1Called = false
+        var callback1Value: Long? = null
         var callback2Value: Long? = null
 
-        var callback: (Long) -> Unit by mutableStateOf({ callback1Called = true })
+        var callback: (Long) -> Unit by mutableStateOf({ callback1Value = it })
 
         composeTestRule.setContent {
             Box(modifier = Modifier.size(200.dp)) {
@@ -93,21 +94,23 @@ class ZenTimerDialTest {
             }
         }
 
+        composeTestRule.onNodeWithTag("zen_dial_callback").performTouchInput {
+            down(center)
+            moveTo(Offset(width.toFloat() - 1f, center.y))
+        }
+
         // Update the callback instance
         callback = { callback2Value = it }
         composeTestRule.waitForIdle()
 
-        // Drag to 6 o'clock (180 degrees -> 1800 seconds)
         composeTestRule.onNodeWithTag("zen_dial_callback").performTouchInput {
-            swipe(
-                start = center,
-                end = Offset(center.x, height.toFloat() - 1f),
-                durationMillis = 200
-            )
+            moveTo(Offset(center.x, height.toFloat() - 1f))
+            up()
         }
 
         composeTestRule.waitForIdle()
 
+        assertEquals(900L, callback1Value)
         assertEquals(1800L, callback2Value)
     }
 }
