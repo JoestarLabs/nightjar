@@ -113,6 +113,7 @@
     <string name="settings_sunset_animation_off">Av</string>
     <string name="settings_sunset_animation_preview">Förhandsgranska</string>
     <string name="settings_sunset_animation_preview_cd">Förhandsgranska varningsanimation</string>
+    <string name="settings_sunset_animation_preview_apply">Tillämpa</string>
     <string name="settings_sunset_animation_preview_close">Stäng</string>
     <string name="settings_sunset_animation_preview_off_desc">Varningsanimation för solnedgång är avstängd.\nSkärmen låses direkt när timern är slut.</string>
     <string name="settings_sunset_duration_title">Varningstid</string>

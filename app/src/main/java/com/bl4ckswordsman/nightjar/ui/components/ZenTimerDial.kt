@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -169,8 +171,13 @@ fun ZenTimerDial(
         label = "handle_radius"
     )
 
+    val density = LocalDensity.current
+    val fontScale = density.fontScale
+    // Adapt dial diameter proportionally when accessibility font scaling is enlarged
+    val adaptedSize = (size * fontScale.coerceIn(1f, 1.12f)).coerceAtMost(320.dp)
+
     val wavyStrokeWidth = 16.dp
-    val dialRingSize = calculateDialRingSize(size, wavyStrokeWidth)
+    val dialRingSize = calculateDialRingSize(adaptedSize, wavyStrokeWidth)
 
     val remainingFraction: () -> Float = {
         if (startedAtMillis != null) {
@@ -186,7 +193,7 @@ fun ZenTimerDial(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(size)
+            .size(adaptedSize)
             .semantics { contentDescription = contentDesc }
     ) {
         if (runningSeconds != null) {
@@ -208,10 +215,10 @@ fun ZenTimerDial(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(maxSeconds) {
+                    .pointerInput(maxSeconds, adaptedSize) {
                         detectDragGestures(
                             onDragStart = { offset ->
-                                dragCenter = size.toPx() / 2f
+                                dragCenter = adaptedSize.toPx() / 2f
                                 isDragging = true
                             },
                             onDrag = { change, _ ->
@@ -273,7 +280,7 @@ fun ZenTimerDial(
         TimerText(
             seconds = displaySeconds,
             isRunning = runningSeconds != null,
-            modifier = dialClickableModifier,
+            modifier = dialClickableModifier.padding(horizontal = 8.dp),
         )
     }
 }

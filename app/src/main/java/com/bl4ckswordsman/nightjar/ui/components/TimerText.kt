@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,13 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 /**
  * Formats [seconds] as HH:MM:SS or MM:SS and displays it as a large
  * serif time string. Used in the centre of [ZenTimerDial].
+ *
+ * System font scaling is applied directly through sp units, while base font sizing
+ * gracefully adapts to prevent clipping at high accessibility font scales (up to 2.0x).
+ *
+ * @param seconds Remaining or selected time in seconds.
+ * @param isRunning True if the countdown timer is currently active.
+ * @param modifier Modifier applied to the text component.
  */
 @Composable
 fun TimerText(
@@ -106,11 +114,19 @@ fun TimerText(
     // ── Dynamic font size enlargement during countdown ───────────────────────
     val density = LocalDensity.current
     val currentFontScale = density.fontScale
-    // Smoothly expands in size (50sp -> 56sp for MM:ss) in the final 60 seconds
-    val targetBaseFontSize = if (h > 0) {
-        36f + (4f * urgencyProgress)
+
+    // Base font sizing smoothly expands during the final 60 seconds (urgencyProgress).
+    // When accessibility font scaling is enabled by the system (up to 2.0x), base font sizing
+    // gracefully scales so the countdown remains highly legible while avoiding clipping against the dial edges.
+    val fontScalingCompensator = if (currentFontScale > 1.0f) {
+        (1f + 0.35f * (currentFontScale - 1f)) / currentFontScale
     } else {
-        50f + (6f * urgencyProgress)
+        1.0f
+    }
+    val targetBaseFontSize = if (h > 0) {
+        (34f + (4f * urgencyProgress)) * fontScalingCompensator
+    } else {
+        (48f + (6f * urgencyProgress)) * fontScalingCompensator
     }
     val animatedFontSize by animateFloatAsState(
         targetValue = targetBaseFontSize,
@@ -120,11 +136,7 @@ fun TimerText(
         ),
         label = "timer_font_size"
     )
-    val clampedScale = currentFontScale.coerceIn(1.0f, 1.25f)
-    // Convert through dp to sp with current density to prevent double application of system font scaling
-    val scaledFontSize = with(density) {
-        (animatedFontSize * clampedScale).dp.toSp()
-    }
+    val scaledFontSize = animatedFontSize.sp
 
     Text(
         text = text,
@@ -138,8 +150,8 @@ fun TimerText(
         textAlign = TextAlign.Center,
         maxLines = 1,
         softWrap = false,
-        overflow = TextOverflow.Clip,
-        modifier = modifier,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier.padding(horizontal = 8.dp),
     )
 }
 

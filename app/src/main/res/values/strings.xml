@@ -113,6 +113,7 @@
     <string name="settings_sunset_animation_off">Off</string>
     <string name="settings_sunset_animation_preview">Preview</string>
     <string name="settings_sunset_animation_preview_cd">Preview sunset warning animation</string>
+    <string name="settings_sunset_animation_preview_apply">Apply</string>
     <string name="settings_sunset_animation_preview_close">Close</string>
     <string name="settings_sunset_animation_preview_off_desc">Sunset warning animation is turned off.\nThe screen will lock directly when the timer ends.</string>
     <string name="settings_sunset_duration_title">Warning duration</string>
