@@ -202,8 +202,9 @@ fun MaterialShapesOverlay(
                 val dropP = (landP - fallDurationProgress).coerceAtLeast(0f)
 
                 val shapeIdx = (shapeSequence++) % nativeShapePaths.size
-                val scale = 0.88f + rng.nextFloat() * 0.06f
-                val restingRot = (rng.nextFloat() * 16f) - 8f
+                // Snug sizing so shapes sit tightly adjacent to each other with minimal gaps
+                val scale = 1.03f + rng.nextFloat() * 0.04f
+                val restingRot = (rng.nextFloat() * 10f) - 5f
                 val spin = (rng.nextFloat() - 0.5f) * 120f
                 val colorIdx = rng.nextInt(colors.size)
 
