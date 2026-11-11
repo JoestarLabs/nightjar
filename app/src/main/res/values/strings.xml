@@ -105,12 +105,16 @@
     <!-- Sunset Mode -->
     <string name="settings_sunset_mode_title">Sunset warning</string>
     <string name="settings_sunset_mode_desc">Gradually covers the screen with an animation before locking</string>
-    <string name="settings_sunset_animation_title">Animation style</string>
+    <string name="settings_sunset_animation_title">Sunset warning animation</string>
     <string name="settings_sunset_animation_fluid_liquid">Fluid liquid (Default)</string>
     <string name="settings_sunset_animation_classic_wave">Classic wave</string>
     <string name="settings_sunset_animation_material_shapes">Material shapes</string>
     <string name="settings_sunset_animation_snowflakes">Snowflakes</string>
     <string name="settings_sunset_animation_off">Off</string>
+    <string name="settings_sunset_animation_preview">Preview</string>
+    <string name="settings_sunset_animation_preview_cd">Preview sunset warning animation</string>
+    <string name="settings_sunset_animation_preview_close">Close</string>
+    <string name="settings_sunset_animation_preview_off_desc">Sunset warning animation is turned off.\nThe screen will lock directly when the timer ends.</string>
     <string name="settings_sunset_duration_title">Warning duration</string>
     <string name="settings_sunset_duration_format">%1$d seconds</string>
     <string name="settings_sunset_audio_title">Sunset sound alert</string>

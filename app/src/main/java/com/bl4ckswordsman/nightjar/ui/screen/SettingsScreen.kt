@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
@@ -36,8 +37,11 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.ui.Alignment
 import com.bl4ckswordsman.nightjar.data.SunsetAnimation
+import com.bl4ckswordsman.nightjar.ui.components.SunsetAnimationPreviewDialog
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
@@ -126,6 +130,7 @@ fun SettingsScreen(
 
     var showPresetsDialog by remember { mutableStateOf(false) }
     var showOverlayDialog by remember { mutableStateOf(false) }
+    var showAnimationPreview by remember { mutableStateOf(false) }
 
     // Trigger state to force recomposition when returning to settings screen (on resume)
     var refreshTrigger by remember { mutableStateOf(0) }
@@ -576,51 +581,71 @@ fun SettingsScreen(
                             )
                         },
                         trailingContent = {
-                            Box {
-                                androidx.compose.material3.Surface(
-                                    onClick = {
-                                        if (!timerIsRunning) isAnimationMenuExpanded = true
-                                    },
-                                    interactionSource = animationInteractionSource,
-                                    shape = RoundedCornerShape(percent = animationCornerPercent),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                IconButton(
+                                    onClick = { showAnimationPreview = true },
+                                    enabled = !timerIsRunning,
+                                    shapes = IconButtonDefaults.shapes(
+                                        shape = CircleShape,
+                                        pressedShape = RoundedCornerShape(percent = 18)
+                                    )
                                 ) {
-                                    val currentText = when (sunsetAnimation) {
-                                        SunsetAnimation.FLUID_LIQUID -> stringResource(R.string.settings_sunset_animation_fluid_liquid)
-                                        SunsetAnimation.CLASSIC_WAVE -> stringResource(R.string.settings_sunset_animation_classic_wave)
-                                        SunsetAnimation.MATERIAL_SHAPES -> stringResource(R.string.settings_sunset_animation_material_shapes)
-                                        SunsetAnimation.SNOWFLAKES -> stringResource(R.string.settings_sunset_animation_snowflakes)
-                                        SunsetAnimation.OFF -> stringResource(R.string.settings_sunset_animation_off)
-                                    }
-                                    Text(
-                                        text = currentText,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        modifier = Modifier.padding(
-                                            horizontal = 12.dp,
-                                            vertical = 8.dp
-                                        )
+                                    Icon(
+                                        Icons.Rounded.Visibility,
+                                        contentDescription = stringResource(R.string.settings_sunset_animation_preview_cd),
+                                        tint = if (!timerIsRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                     )
                                 }
 
-                                androidx.compose.material3.DropdownMenu(
-                                    expanded = isAnimationMenuExpanded,
-                                    onDismissRequest = { isAnimationMenuExpanded = false }
-                                ) {
-                                    listOf(
-                                        SunsetAnimation.FLUID_LIQUID to R.string.settings_sunset_animation_fluid_liquid,
-                                        SunsetAnimation.CLASSIC_WAVE to R.string.settings_sunset_animation_classic_wave,
-                                        SunsetAnimation.MATERIAL_SHAPES to R.string.settings_sunset_animation_material_shapes,
-                                        SunsetAnimation.SNOWFLAKES to R.string.settings_sunset_animation_snowflakes,
-                                        SunsetAnimation.OFF to R.string.settings_sunset_animation_off
-                                    ).forEach { (anim, stringRes) ->
-                                        androidx.compose.material3.DropdownMenuItem(
-                                            text = { Text(stringResource(stringRes)) },
-                                            onClick = {
-                                                isAnimationMenuExpanded = false
-                                                timerViewModel.setSunsetAnimation(anim)
-                                            }
+                                Box {
+                                    androidx.compose.material3.Surface(
+                                        onClick = {
+                                            if (!timerIsRunning) isAnimationMenuExpanded = true
+                                        },
+                                        interactionSource = animationInteractionSource,
+                                        shape = RoundedCornerShape(percent = animationCornerPercent),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    ) {
+                                        val currentText = when (sunsetAnimation) {
+                                            SunsetAnimation.FLUID_LIQUID -> stringResource(R.string.settings_sunset_animation_fluid_liquid)
+                                            SunsetAnimation.CLASSIC_WAVE -> stringResource(R.string.settings_sunset_animation_classic_wave)
+                                            SunsetAnimation.MATERIAL_SHAPES -> stringResource(R.string.settings_sunset_animation_material_shapes)
+                                            SunsetAnimation.SNOWFLAKES -> stringResource(R.string.settings_sunset_animation_snowflakes)
+                                            SunsetAnimation.OFF -> stringResource(R.string.settings_sunset_animation_off)
+                                        }
+                                        Text(
+                                            text = currentText,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            modifier = Modifier.padding(
+                                                horizontal = 12.dp,
+                                                vertical = 8.dp
+                                            )
                                         )
+                                    }
+
+                                    androidx.compose.material3.DropdownMenu(
+                                        expanded = isAnimationMenuExpanded,
+                                        onDismissRequest = { isAnimationMenuExpanded = false }
+                                    ) {
+                                        listOf(
+                                            SunsetAnimation.FLUID_LIQUID to R.string.settings_sunset_animation_fluid_liquid,
+                                            SunsetAnimation.MATERIAL_SHAPES to R.string.settings_sunset_animation_material_shapes,
+                                            SunsetAnimation.SNOWFLAKES to R.string.settings_sunset_animation_snowflakes,
+                                            SunsetAnimation.CLASSIC_WAVE to R.string.settings_sunset_animation_classic_wave,
+                                            SunsetAnimation.OFF to R.string.settings_sunset_animation_off
+                                        ).forEach { (anim, stringRes) ->
+                                            androidx.compose.material3.DropdownMenuItem(
+                                                text = { Text(stringResource(stringRes)) },
+                                                onClick = {
+                                                    isAnimationMenuExpanded = false
+                                                    timerViewModel.setSunsetAnimation(anim)
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1048,6 +1073,14 @@ fun SettingsScreen(
                     Text(stringResource(android.R.string.cancel))
                 }
             }
+        )
+    }
+
+    if (showAnimationPreview) {
+        SunsetAnimationPreviewDialog(
+            currentAnimation = sunsetAnimation,
+            onAnimationSelected = { timerViewModel.setSunsetAnimation(it) },
+            onDismiss = { showAnimationPreview = false }
         )
     }
 }

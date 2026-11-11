@@ -105,12 +105,16 @@
     <!-- Sunset Mode -->
     <string name="settings_sunset_mode_title">Solnedgångsvarning</string>
     <string name="settings_sunset_mode_desc">Täcker gradvis skärmen med en animering innan låsning</string>
-    <string name="settings_sunset_animation_title">Animationsstil</string>
+    <string name="settings_sunset_animation_title">Varningsanimation för solnedgång</string>
     <string name="settings_sunset_animation_fluid_liquid">Flytande vätska (Standard)</string>
     <string name="settings_sunset_animation_classic_wave">Klassisk våg</string>
     <string name="settings_sunset_animation_material_shapes">Materialformer</string>
     <string name="settings_sunset_animation_snowflakes">Snöflingor</string>
     <string name="settings_sunset_animation_off">Av</string>
+    <string name="settings_sunset_animation_preview">Förhandsgranska</string>
+    <string name="settings_sunset_animation_preview_cd">Förhandsgranska varningsanimation</string>
+    <string name="settings_sunset_animation_preview_close">Stäng</string>
+    <string name="settings_sunset_animation_preview_off_desc">Varningsanimation för solnedgång är avstängd.\nSkärmen låses direkt när timern är slut.</string>
     <string name="settings_sunset_duration_title">Varningstid</string>
     <string name="settings_sunset_duration_format">%1$d sekunder</string>
     <string name="settings_sunset_audio_title">Ljudsignal för solnedgång</string>
