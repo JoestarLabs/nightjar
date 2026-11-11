@@ -1,8 +1,6 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -54,12 +52,13 @@ private data class PhysicalM3Shape(
 
 /**
  * Material 3 Expressive sunset overlay.
- * Features ALL 35 official native [MaterialShapes] from the Material 3 Expressive API.
+ * Features ALL 35 official native [MaterialShapes] from the Material 3 Expressive API,
+ * powered by the native Material 3 Expressive Motion System ([MaterialTheme.motionScheme]).
  *
- * Uses a single unified physics system: each shape falls smoothly under gravity from the top
- * of the screen and lands directly into its non-overlapping resting slot with an expressive
- * squash-and-stretch impact, building up the pile row-by-row from bottom to top at a steady,
- * constant pace throughout the countdown.
+ * Each shape falls smoothly under gravity from the top of the screen and lands directly into
+ * its non-overlapping resting slot with an expressive squash-and-stretch impact, building up
+ * the pile row-by-row from bottom to top at a steady pace that finishes cleanly ~0.5s before
+ * the timer expires.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -101,22 +100,20 @@ fun MaterialShapesOverlay(
     val animatedProgress = continuousProgress.floatValue
     val shownRemaining = if (startedAtMillis != null) displayRemaining.longValue else remainingSeconds
 
-    // Pulse animation for text
+    // Native Material 3 Expressive Motion Scheme for snappy spatial pulse
+    val motionScheme = MaterialTheme.motionScheme
+    val fastSpatial = motionScheme.fastSpatialSpec<Float>()
+    val defaultSpatial = motionScheme.defaultSpatialSpec<Float>()
+
     val textScale = remember { Animatable(1f) }
     LaunchedEffect(shownRemaining) {
         textScale.animateTo(
             targetValue = 1.2f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessHigh
-            )
+            animationSpec = fastSpatial
         )
         textScale.animateTo(
             targetValue = 1.0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
+            animationSpec = defaultSpatial
         )
     }
 
@@ -176,28 +173,32 @@ fun MaterialShapesOverlay(
     )
 
     // Grid layout: 6 columns x 13 rows = 78 shapes.
-    // Each shape has an assigned target slot, drop time, and land time.
-    val physicalShapes = remember {
+    // Calibrated so the final row finishes landing exactly ~0.5s before timer expiry.
+    val physicalShapes = remember(totalSeconds) {
         val rng = Random(999)
         val list = mutableListOf<PhysicalM3Shape>()
         val cols = 6
         val rows = 13
-        val fallDurationProgress = 0.045f // Constant fall duration across all rows
+        val totalSecF = totalSeconds.toFloat().coerceAtLeast(5f)
+
+        // 0.5s pause before the screen locks
+        val endBufferProgress = (0.5f / totalSecF).coerceIn(0.008f, 0.05f)
+        val fallDurationProgress = (1.2f / totalSecF).coerceIn(0.02f, 0.08f)
+        val startLandP = 0.04f
+        val maxLandP = (1.0f - endBufferProgress - 0.015f).coerceAtLeast(startLandP + 0.1f)
         var shapeSequence = 0
 
         // Build from bottom row (row 12) to top row (row 0)
         for (r in 0 until rows) {
-            // Rows pile up from bottom to top
-            val rowFromBottom = (rows - 1) - r // 0 for bottom row, 12 for top row
-            val baseLandP = 0.06f + (rowFromBottom.toFloat() / (rows - 1)) * 0.84f
+            val rowFromBottom = (rows - 1) - r
+            val baseLandP = startLandP + (rowFromBottom.toFloat() / (rows - 1)) * (maxLandP - startLandP)
 
             for (c in 0 until cols) {
                 val relX = (c + 0.5f) / cols
                 val relY = (r + 0.5f) / rows
 
-                // Slight stagger within each row so shapes don't hit at the exact same millisecond
-                val colStagger = (rng.nextFloat() * 0.025f)
-                val landP = (baseLandP + colStagger).coerceAtMost(0.98f)
+                val colStagger = rng.nextFloat() * 0.015f
+                val landP = (baseLandP + colStagger).coerceAtMost(maxLandP + 0.01f)
                 val dropP = (landP - fallDurationProgress).coerceAtLeast(0f)
 
                 val shapeIdx = (shapeSequence++) % nativeShapePaths.size
@@ -243,7 +244,6 @@ fun MaterialShapesOverlay(
             val spawnY = -maxShapeSize * 1.5f
 
             for (shape in physicalShapes) {
-                // If shape hasn't started its drop yet, do not draw
                 if (animatedProgress < shape.dropProgress) continue
 
                 val targetX = shape.relX * width
@@ -262,7 +262,6 @@ fun MaterialShapesOverlay(
                     // ── In flight: Smooth gravitational acceleration from top of screen ──
                     val fallProgress = ((animatedProgress - shape.dropProgress) /
                             (shape.landProgress - shape.dropProgress)).coerceIn(0f, 1f)
-                    // Quadratic ease-in acceleration (gravity physics)
                     val gravityT = fallProgress * fallProgress
 
                     currentX = targetX
@@ -276,10 +275,8 @@ fun MaterialShapesOverlay(
                     currentY = targetY
                     currentRot = shape.restingRotation
 
-                    // Time elapsed since touchdown (lasts 0.02 progress units)
                     val impactT = ((animatedProgress - shape.landProgress) / 0.022f).coerceIn(0f, 1f)
                     if (impactT < 1f) {
-                        // Dampened harmonic squash on impact: wide & short, then settles to 1.0
                         val squash = sin(impactT * PI.toFloat()) * (1f - impactT) * 0.22f
                         scaleX = 1f + squash
                         scaleY = 1f - squash
