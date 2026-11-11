@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,8 @@ private const val DefaultAmplitude = 1f
  * @param color Active indicator wave color.
  * @param trackColor Color for the remaining track. Pass [Color.Transparent] to hide track.
  * @param gapSize Spacing between the active wave and inactive track.
+ * @param invertWaveMotion If true, inverts the ripple travel direction so waves flow clockwise
+ *                         while preserving the clockwise start-to-end arc span.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -57,16 +60,26 @@ fun WavyProgressRing(
     color: Color = MaterialTheme.colorScheme.primary,
     trackColor: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
     gapSize: Dp = WavyProgressIndicatorDefaults.CircularIndicatorTrackGapSize,
+    invertWaveMotion: Boolean = true,
 ) {
     val density = LocalDensity.current
     val stroke = remember(density, strokeWidth) {
         Stroke(width = with(density) { strokeWidth.toPx() }, cap = StrokeCap.Round)
     }
 
+    val motionModifier = if (invertWaveMotion && progress != null) {
+        modifier.graphicsLayer {
+            scaleX = -1f
+            rotationZ = (progress() * 360f).coerceIn(0f, 360f)
+        }
+    } else {
+        modifier
+    }
+
     if (progress != null) {
         CircularWavyProgressIndicator(
             progress = progress,
-            modifier = modifier,
+            modifier = motionModifier,
             color = color,
             trackColor = trackColor,
             stroke = stroke,
@@ -77,7 +90,7 @@ fun WavyProgressRing(
         )
     } else {
         CircularWavyProgressIndicator(
-            modifier = modifier,
+            modifier = motionModifier,
             color = color,
             trackColor = trackColor,
             stroke = stroke,
