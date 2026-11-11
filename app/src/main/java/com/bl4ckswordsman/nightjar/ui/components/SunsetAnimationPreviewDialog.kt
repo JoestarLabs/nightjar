@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,7 +87,7 @@ fun SunsetAnimationPreviewDialog(
 
     var currentTilt by remember { mutableFloatStateOf(0f) }
     var currentGravityAngleRad by remember { mutableFloatStateOf(0f) }
-    var previewAnimation by remember { mutableStateOf(initialAnimation) }
+    var previewAnimation by rememberSaveable { mutableStateOf(initialAnimation) }
 
     // Accelerometer sensor lifecycle bound strictly to preview visibility
     DisposableEffect(sensorManager, accelerometer) {
