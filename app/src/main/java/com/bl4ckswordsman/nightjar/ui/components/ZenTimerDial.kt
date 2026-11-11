@@ -1,15 +1,9 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -33,7 +27,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -46,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.withFrameMillis
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 import kotlinx.coroutines.launch
-import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -83,17 +75,6 @@ fun ZenTimerDial(
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
-
-    val infiniteTransition = rememberInfiniteTransition(label = "dial_wave")
-    val wavePhase by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = (2 * PI).toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "wave_phase"
-    )
 
     // Wall-clock remaining seconds for the centre text — same floor((end-now)/1000) formula
     // as the Chronometer, so all three displays tick in unison.
@@ -188,7 +169,18 @@ fun ZenTimerDial(
         label = "handle_radius"
     )
 
-    val squigglyPath = remember { Path() }
+    val wavyStrokeWidth = 16.dp
+    val dialRingSize = (size - 40.dp) + wavyStrokeWidth
+
+    val remainingFraction: () -> Float = {
+        if (startedAtMillis != null) {
+            (continuousSweep.floatValue / 360f).coerceIn(0f, 1f)
+        } else {
+            val rem = runningSeconds ?: 0L
+            val tot = total.takeIf { it > 0L } ?: 1L
+            (rem.toFloat() / tot.toFloat()).coerceIn(0f, 1f)
+        }
+    }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -196,71 +188,75 @@ fun ZenTimerDial(
             .size(size)
             .semantics { contentDescription = contentDesc }
     ) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(maxSeconds, runningSeconds) {
-                    // Disable drag interaction while the timer is running
-                    if (runningSeconds != null) return@pointerInput
+        if (runningSeconds != null) {
+            // Running state: quarter tick marks and Morphe-inspired reverse circular wavy progress indicator
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawTickMarks(onSurface)
+            }
+            WavyProgressRing(
+                progress = remainingFraction,
+                modifier = Modifier.size(dialRingSize),
+                strokeWidth = wavyStrokeWidth,
+                wavelength = 32.dp,
+                amplitude = 0.65f,
+                color = primary,
+                trackColor = surfaceVariant.copy(alpha = 0.35f),
+            )
+        } else {
+            // Idle state: interactive drag dial with spring physics
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(maxSeconds) {
+                        detectDragGestures(
+                            onDragStart = { offset ->
+                                dragCenter = size.toPx() / 2f
+                                isDragging = true
+                            },
+                            onDrag = { change, _ ->
+                                change.consume()
+                                val center = dragCenter
+                                val dx = change.position.x - center
+                                val dy = change.position.y - center
+                                // atan2 gives angle from positive-x axis; shift so 0 = top
+                                var angle =
+                                    (atan2(dy, dx) * (180f / Math.PI.toFloat())) + 90f
+                                if (angle < 0f) angle += 360f
 
-                    detectDragGestures(
-                        onDragStart = { offset ->
-                            dragCenter = size.toPx() / 2f
-                            isDragging = true
-                        },
-                        onDrag = { change, _ ->
-                            change.consume()
-                            val center = dragCenter
-                            val dx = change.position.x - center
-                            val dy = change.position.y - center
-                            // atan2 gives angle from positive-x axis; shift so 0 = top
-                            var angle =
-                                (atan2(dy, dx) * (180f / Math.PI.toFloat())) + 90f
-                            if (angle < 0f) angle += 360f
+                                val newSeconds = ((angle / 360f) * maxSeconds).toLong()
+                                    .coerceIn(0L, maxSeconds)
 
-                            val newSeconds = ((angle / 360f) * maxSeconds).toLong()
-                                .coerceIn(0L, maxSeconds)
-
-                            scope.launch {
-                                sweepAnim.snapTo(angle)
-                            }
-                            onSecondsChanged(newSeconds)
-                        },
-                        onDragEnd = {
-                            isDragging = false
-                            // Spring-snap to the nearest second boundary
-                            scope.launch {
-                                val snapped = sweepAnim.value
-                                sweepAnim.animateTo(
-                                    targetValue = snapped,
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessMedium,
+                                scope.launch {
+                                    sweepAnim.snapTo(angle)
+                                }
+                                onSecondsChanged(newSeconds)
+                            },
+                            onDragEnd = {
+                                isDragging = false
+                                // Spring-snap to the nearest second boundary
+                                scope.launch {
+                                    val snapped = sweepAnim.value
+                                    sweepAnim.animateTo(
+                                        targetValue = snapped,
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessMedium,
+                                        )
                                     )
-                                )
+                                }
+                            },
+                            onDragCancel = {
+                                isDragging = false
                             }
-                        },
-                        onDragCancel = {
-                            isDragging = false
-                        }
-                    )
-                }
-        ) {
-            // Use wall-clock-accurate sweep while running; fall back to sweepAnim for
-            // drag interaction and the idle/transition states.
-            val sweep = if (runningSeconds != null && startedAtMillis != null) {
-                continuousSweep.floatValue
-            } else {
-                sweepAnim.value
-            }
-            drawDialTrack(surfaceVariant, strokeWidth.toPx())
-            if (runningSeconds != null) {
-                drawSquigglyDialArc(sweep, primary, secondary, strokeWidth.toPx(), wavePhase, squigglyPath)
-            } else {
+                        )
+                    }
+            ) {
+                val sweep = sweepAnim.value
+                drawDialTrack(surfaceVariant, strokeWidth.toPx())
                 drawDialArc(sweep, primary, secondary, strokeWidth.toPx())
+                drawTickMarks(onSurface)
+                drawDragHandle(sweep, primary, onSurface, handleRadius.toPx())
             }
-            drawTickMarks(onSurface)
-            drawDragHandle(sweep, primary, onSurface, handleRadius.toPx())
         }
 
         val dialClickableModifier = if (runningSeconds == null && onDialClicked != null) {
@@ -318,61 +314,6 @@ private fun DrawScope.drawDialArc(
     )
 }
 
-private fun DrawScope.drawSquigglyDialArc(
-    sweep: Float,
-    primary: Color,
-    secondary: Color,
-    strokeWidthPx: Float,
-    wavePhase: Float,
-    path: Path
-) {
-    if (sweep <= 0f) return
-    val cx = size.width / 2f
-    val cy = size.height / 2f
-    val baseRadius = (size.width - 40.dp.toPx()) / 2f
-
-    // Wave parameters: amplitude of 3dp, 12 waves around the circle
-    val waveAmplitude = 3.dp.toPx()
-    val waveFrequency = 12f
-
-    path.reset()
-    val stepDeg = 2f
-    val startAngleDeg = -90f
-    val endAngleDeg = -90f + sweep
-
-    var isFirst = true
-    var currentAngleDeg = startAngleDeg
-    while (currentAngleDeg <= endAngleDeg) {
-        val angleRad = (currentAngleDeg * (Math.PI / 180.0)).toFloat()
-        val offset = waveAmplitude * sin(angleRad * waveFrequency - wavePhase)
-        val r = baseRadius + offset
-
-        val x = cx + r * cos(angleRad)
-        val y = cy + r * sin(angleRad)
-
-        if (isFirst) {
-            path.moveTo(x, y)
-            isFirst = false
-        } else {
-            path.lineTo(x, y)
-        }
-
-        if (currentAngleDeg == endAngleDeg) break
-        currentAngleDeg = (currentAngleDeg + stepDeg).coerceAtMost(endAngleDeg)
-    }
-
-    val gradient = Brush.sweepGradient(
-        0f to secondary.copy(alpha = 0.6f),
-        0.5f to primary,
-        1f to primary,
-    )
-
-    drawPath(
-        path = path,
-        brush = gradient,
-        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
-    )
-}
 
 private fun DrawScope.drawTickMarks(color: Color) {
     val cx = size.width / 2f
@@ -436,6 +377,19 @@ private fun ZenTimerDialPreview() {
         ZenTimerDial(
             selectedSeconds = 1800L,
             runningSeconds = null,
+            onSecondsChanged = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ZenTimerDialRunningPreview() {
+    NightjarTheme {
+        ZenTimerDial(
+            selectedSeconds = 1800L,
+            runningSeconds = 1200L,
+            runningTotalSeconds = 1800L,
             onSecondsChanged = {},
         )
     }
