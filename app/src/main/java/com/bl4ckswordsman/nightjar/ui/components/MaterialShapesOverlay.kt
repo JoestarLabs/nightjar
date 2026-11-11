@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.toPath
 import com.bl4ckswordsman.nightjar.R
+import kotlin.math.min
 import kotlin.random.Random
 
 private data class SettledM3Shape(
@@ -49,16 +50,21 @@ private data class FallingM3Shape(
     val initialRelY: Float,
     val speedPxPerSec: Float,
     val shapeIndex: Int,
-    val sizePx: Float,
+    val scaleFactor: Float,
     val rotationSpeed: Float,
     val colorIndex: Int
 )
 
 /**
  * Material 3 Expressive sunset overlay.
- * Uses official native [MaterialShapes] (4-sided cookie, 6-sided cookie, bun, heart,
- * ghostish, fan, very sunny, slanted, arch, flower, clamshell, boom, clover, pill, sunny)
- * that tumble from the sky and stack up to fill the screen without any separate rectangular layer.
+ * Features ALL 35 official native [MaterialShapes] from the Material 3 Expressive API:
+ * (Arch, Arrow, Boom, SoftBoom, Bun, Burst, SoftBurst, Circle, ClamShell, Clover4Leaf,
+ * Clover8Leaf, Cookie4Sided, Cookie6Sided, Cookie7Sided, Cookie9Sided, Cookie12Sided,
+ * Diamond, Fan, Flower, Gem, Ghostish, Heart, Oval, Pentagon, Pill, PixelCircle,
+ * PixelTriangle, Puffy, PuffyDiamond, SemiCircle, Slanted, Square, Sunny, Triangle, VerySunny).
+ *
+ * Shapes pile up neatly without overlapping into each other, letting each distinct shape
+ * remain fully visible as the screen fills up from the bottom.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -121,26 +127,44 @@ fun MaterialShapesOverlay(
         )
     }
 
-    // Official native Material 3 Expressive shapes paths (converted once to Compose Path)
+    // ALL 35 official native Material 3 Expressive shapes paths (converted once to Compose Path)
     val nativeShapePaths = remember {
         listOf(
-            MaterialShapes.Cookie4Sided,
-            MaterialShapes.Cookie6Sided,
-            MaterialShapes.Cookie9Sided,
-            MaterialShapes.Bun,
-            MaterialShapes.Heart,
-            MaterialShapes.Ghostish,
-            MaterialShapes.Fan,
-            MaterialShapes.VerySunny,
-            MaterialShapes.Slanted,
             MaterialShapes.Arch,
-            MaterialShapes.Flower,
-            MaterialShapes.ClamShell,
+            MaterialShapes.Arrow,
             MaterialShapes.Boom,
             MaterialShapes.SoftBoom,
+            MaterialShapes.Bun,
+            MaterialShapes.Burst,
+            MaterialShapes.SoftBurst,
+            MaterialShapes.Circle,
+            MaterialShapes.ClamShell,
             MaterialShapes.Clover4Leaf,
+            MaterialShapes.Clover8Leaf,
+            MaterialShapes.Cookie4Sided,
+            MaterialShapes.Cookie6Sided,
+            MaterialShapes.Cookie7Sided,
+            MaterialShapes.Cookie9Sided,
+            MaterialShapes.Cookie12Sided,
+            MaterialShapes.Diamond,
+            MaterialShapes.Fan,
+            MaterialShapes.Flower,
+            MaterialShapes.Gem,
+            MaterialShapes.Ghostish,
+            MaterialShapes.Heart,
+            MaterialShapes.Oval,
+            MaterialShapes.Pentagon,
             MaterialShapes.Pill,
-            MaterialShapes.Sunny
+            MaterialShapes.PixelCircle,
+            MaterialShapes.PixelTriangle,
+            MaterialShapes.Puffy,
+            MaterialShapes.PuffyDiamond,
+            MaterialShapes.SemiCircle,
+            MaterialShapes.Slanted,
+            MaterialShapes.Square,
+            MaterialShapes.Sunny,
+            MaterialShapes.Triangle,
+            MaterialShapes.VerySunny
         ).map { polygon ->
             polygon.toPath().asComposePath()
         }
@@ -158,23 +182,25 @@ fun MaterialShapesOverlay(
         MaterialTheme.colorScheme.errorContainer
     )
 
-    // Staggered tessellation of shapes that stack and fill the entire screen
+    // Grid layout with non-overlapping cells: 6 columns x 13 rows
     val settledShapes = remember {
-        val rng = Random(888)
+        val rng = Random(777)
         val list = mutableListOf<SettledM3Shape>()
-        val cols = 7
-        val rows = 14
-        for (r in 0 until rows) {
-            val isStaggered = (r % 2 == 1)
-            val rowCols = if (isStaggered) cols + 1 else cols
-            for (c in 0 until rowCols) {
-                val baseX = if (isStaggered) (c - 0.5f) / cols else c.toFloat() / cols
-                val relX = (baseX + (0.5f / cols) + (rng.nextFloat() * 0.3f - 0.15f) / cols).coerceIn(0f, 1f)
-                val relY = (r.toFloat() / rows + (0.5f / rows) + (rng.nextFloat() * 0.3f - 0.15f) / rows).coerceIn(0f, 1f)
+        val cols = 6
+        val rows = 13
+        var shapeSequence = 0
 
-                val shapeIdx = rng.nextInt(nativeShapePaths.size)
-                val scale = 1.35f + rng.nextFloat() * 0.25f // overlap cells to pack seamlessly
-                val rot = (rng.nextFloat() * 60f) - 30f
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
+                // Exact cell center with minimal jitter (keeps shapes neatly separated without overlapping)
+                val relX = (c + 0.5f + (rng.nextFloat() * 0.12f - 0.06f)) / cols
+                val relY = (r + 0.5f + (rng.nextFloat() * 0.12f - 0.06f)) / rows
+
+                // Cycle through all shapes so every single M3 shape appears prominently
+                val shapeIdx = (shapeSequence++) % nativeShapePaths.size
+                // Scale factor between 0.86 and 0.94 to guarantee no overlap with neighbors
+                val scale = 0.86f + rng.nextFloat() * 0.08f
+                val rot = (rng.nextFloat() * 16f) - 8f
                 val colorIdx = rng.nextInt(colors.size)
                 list.add(SettledM3Shape(relX, relY, shapeIdx, scale, rot, colorIdx))
             }
@@ -184,15 +210,15 @@ fun MaterialShapesOverlay(
 
     // Shower of falling shapes tumbling down towards the fill line
     val fallingShapes = remember {
-        val rng = Random(555)
-        List(30) {
+        val rng = Random(333)
+        List(25) {
             FallingM3Shape(
-                relX = rng.nextFloat(),
+                relX = (it + 0.5f + (rng.nextFloat() * 0.4f - 0.2f)) / 25f,
                 initialRelY = rng.nextFloat(),
-                speedPxPerSec = 220f + rng.nextFloat() * 200f,
+                speedPxPerSec = 220f + rng.nextFloat() * 180f,
                 shapeIndex = rng.nextInt(nativeShapePaths.size),
-                sizePx = 42f + rng.nextFloat() * 22f,
-                rotationSpeed = (rng.nextFloat() - 0.5f) * 180f,
+                scaleFactor = 0.82f + rng.nextFloat() * 0.12f,
+                rotationSpeed = (rng.nextFloat() - 0.5f) * 140f,
                 colorIndex = rng.nextInt(colors.size)
             )
         }
@@ -201,7 +227,7 @@ fun MaterialShapesOverlay(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.45f * animatedProgress))
+            .background(Color.Black.copy(alpha = 0.60f * animatedProgress))
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width
@@ -209,19 +235,24 @@ fun MaterialShapesOverlay(
 
             // The fill line rises from bottom (height) to top (0)
             val fillLineY = height * (1f - animatedProgress)
-            val cellBaseSize = width / 6.5f
+            val cols = 6f
+            val rows = 13f
+            val cellWidth = width / cols
+            val cellHeight = height / rows
+            // Sized to fit cleanly inside cell bounds without overlapping neighbors
+            val maxShapeSize = min(cellWidth, cellHeight)
 
-            // ── 1. Draw settled M3 expressive shapes (mosaic stacking from bottom up) ──
+            // ── 1. Draw settled M3 expressive shapes (mosaic stacking from bottom up without overlap) ──
             for (shape in settledShapes) {
                 val shapeX = shape.relX * width
                 val shapeY = shape.relY * height
 
                 // If the fill line has reached this shape's position
-                if (shapeY >= fillLineY - 30f) {
-                    val popProgress = ((shapeY - fillLineY + 30f) / (height / 10f)).coerceIn(0f, 1f)
-                    // Bouncy overshoot spring scale as each shape appears into place
-                    val springScale = popProgress * (1f + 0.18f * (1f - popProgress))
-                    val drawSize = cellBaseSize * shape.scaleFactor * springScale
+                if (shapeY >= fillLineY - cellHeight * 0.5f) {
+                    val popProgress = ((shapeY - fillLineY + cellHeight * 0.5f) / cellHeight).coerceIn(0f, 1f)
+                    // Joyful M3 spring overshoot scaling into its spot
+                    val springScale = popProgress * (1f + 0.14f * (1f - popProgress))
+                    val drawSize = maxShapeSize * shape.scaleFactor * springScale
                     val color = colors[shape.colorIndex % colors.size]
                     val path = nativeShapePaths[shape.shapeIndex % nativeShapePaths.size]
 
@@ -240,18 +271,19 @@ fun MaterialShapesOverlay(
             val elapsedSec = (frameTimeMillis.longValue - (startedAtMillis ?: frameTimeMillis.longValue)) / 1000f
             for (falling in fallingShapes) {
                 val totalDistance = (falling.initialRelY * height + falling.speedPxPerSec * elapsedSec)
-                val currentY = if (fillLineY > 0f) totalDistance % (fillLineY + 40f) else -100f
+                val currentY = if (fillLineY > 0f) totalDistance % (fillLineY + cellHeight) else -100f
 
                 if (currentY < fillLineY && currentY > -50f) {
-                    val currentX = falling.relX * width
+                    val currentX = (falling.relX * width).coerceIn(0f, width)
                     val rotation = falling.rotationSpeed * elapsedSec
                     val color = colors[falling.colorIndex % colors.size].copy(alpha = 0.92f)
                     val path = nativeShapePaths[falling.shapeIndex % nativeShapePaths.size]
+                    val drawSize = maxShapeSize * falling.scaleFactor
 
                     withTransform({
                         translate(currentX, currentY)
                         rotate(rotation, Offset.Zero)
-                        scale(falling.sizePx, falling.sizePx, Offset.Zero)
+                        scale(drawSize, drawSize, Offset.Zero)
                         translate(-0.5f, -0.5f)
                     }) {
                         drawPath(path, color)
