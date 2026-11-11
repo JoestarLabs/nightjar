@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -195,6 +196,7 @@ private fun buildFluidCrestLinePath(
  * dynamic inertial slosh response, rising micro-bubbles, and cardinal orientation tracking
  * for the countdown timer.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FluidLiquidOverlay(
     remainingSeconds: Long,
@@ -309,22 +311,20 @@ fun FluidLiquidOverlay(
         label = "text_orientation"
     )
 
-    // ── Pulse animation for text ──
+    // Native Material 3 Expressive Motion System for snappy text pulse
+    val motionScheme = MaterialTheme.motionScheme
+    val textFastSpatial = motionScheme.fastSpatialSpec<Float>()
+    val textDefaultSpatial = motionScheme.defaultSpatialSpec<Float>()
+
     val textScale = remember { Animatable(1f) }
     LaunchedEffect(shownRemaining) {
         textScale.animateTo(
             targetValue = 1.2f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessHigh
-            )
+            animationSpec = textFastSpatial
         )
         textScale.animateTo(
             targetValue = 1.0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
+            animationSpec = textDefaultSpatial
         )
     }
 
