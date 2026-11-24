@@ -30,4 +30,16 @@ class TiltGravityTrackerTest {
         repeat(80) { tracker.update(x = 0.1f, y = -9.8f) }
         assertTrue(kotlin.math.abs(tracker.gravityAngleRad) > (PI.toFloat() * 0.9f))
     }
+
+    @Test
+    fun `step acceleration produces high-passed linearAccel that decays to zero`() {
+        val tracker = TiltGravityTracker()
+        tracker.update(x = 10f, y = 9.8f)
+        val initialLinearX = tracker.linearAccelX
+        assertTrue("Initial step should yield positive linearAccelX", initialLinearX > 5f)
+
+        repeat(80) { tracker.update(x = 10f, y = 9.8f) }
+        assertEquals(0f, tracker.linearAccelX, 0.05f)
+        assertEquals(0f, tracker.linearAccelY, 0.05f)
+    }
 }
