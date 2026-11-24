@@ -1,6 +1,8 @@
 package com.bl4ckswordsman.nightjar.ui.screen
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -112,8 +113,7 @@ fun DependenciesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-                    .navigationBarsPadding(),
+                    .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
@@ -121,16 +121,21 @@ fun DependenciesScreen(
                 }
 
                 items(librariesList, key = { it.uniqueId }) { library ->
+                    val url = library.website ?: library.licenses.firstOrNull()?.url
+                    val uri = url?.takeIf { it.isNotBlank() }?.toUri()
+                    val safeUri = uri?.takeIf {
+                        it.scheme.equals("http", ignoreCase = true) ||
+                            it.scheme.equals("https", ignoreCase = true)
+                    }
                     DependencyItemCard(
                         library = library,
+                        enabled = safeUri != null,
                         onClick = {
-                            val url = library.website ?: library.licenses.firstOrNull()?.url
-                            if (!url.isNullOrBlank()) {
+                            if (safeUri != null) {
                                 try {
-                                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    // Fallback if browser is missing or URI invalid
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, safeUri))
+                                } catch (e: ActivityNotFoundException) {
+                                    Log.w("DependenciesScreen", "No browser found for $safeUri", e)
                                 }
                             }
                         }
@@ -149,11 +154,13 @@ fun DependenciesScreen(
 @Composable
 private fun DependencyItemCard(
     library: Library,
+    enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
         onClick = onClick,
+        enabled = enabled,
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceBright,
         tonalElevation = 2.dp,

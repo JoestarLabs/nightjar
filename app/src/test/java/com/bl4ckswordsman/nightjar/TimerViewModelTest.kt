@@ -97,20 +97,31 @@ class TimerViewModelTest {
     }
 
     @Test
-    fun `stopTimer updates state expectation via repository`() {
-        // Manually set running state and verify stopTimer resets it
-        repository.updateState(
+    fun `stopTimer respects commitmentMode unless force is true`() = runTest {
+        val prefsFlow = MutableStateFlow(TimerPreferences(lastDurationSeconds = 300L, commitmentMode = true))
+        whenever(mockDataSource.preferences).thenReturn(prefsFlow)
+        val committedRepo = TimerRepository(mockDataSource)
+        val committedVm = TimerViewModel(mockContext, committedRepo)
+        advanceTimeBy(100)
+
+        committedRepo.updateState(
             TimerState.Running(
                 totalSeconds = 60L,
                 remainingSeconds = 30L,
                 startedAtMillis = System.currentTimeMillis(),
             )
         )
-        assertTrue(repository.currentState is TimerState.Running)
 
-        // Simulate what the service does when stopTimer is called
-        repository.updateState(TimerState.Idle)
-        assertTrue(repository.currentState is TimerState.Idle)
+        // Non-forced stop should be blocked when commitmentMode is true
+        committedVm.stopTimer(force = false)
+        org.mockito.kotlin.verify(mockContext, org.mockito.kotlin.never()).startService(org.mockito.kotlin.any())
+
+        // Forced stop should dispatch ACTION_STOP
+        committedVm.stopTimer(force = true)
+        org.mockito.kotlin.verify(mockContext).startService(org.mockito.kotlin.argThat {
+            action == com.bl4ckswordsman.nightjar.service.LockTimerService.ACTION_STOP &&
+                getBooleanExtra(com.bl4ckswordsman.nightjar.service.LockTimerService.EXTRA_FORCE_STOP, false)
+        })
     }
 
     @Test

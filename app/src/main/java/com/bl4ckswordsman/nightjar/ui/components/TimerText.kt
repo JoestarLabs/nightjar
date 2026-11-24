@@ -62,7 +62,7 @@ fun TimerText(
     // Baseline condensed master (78f) naturally widens to 94f as urgency swells
     val targetBaseWidth = 78f + (16f * urgencyProgress)
     val tickWidth = remember { Animatable(78f) }
-    LaunchedEffect(seconds) {
+    LaunchedEffect(seconds, isRunning) {
         if (isRunning && seconds > 0) {
             val pulseSnap = targetBaseWidth + 30f // Noticeable pulse bounce on every second
             tickWidth.snapTo(pulseSnap)

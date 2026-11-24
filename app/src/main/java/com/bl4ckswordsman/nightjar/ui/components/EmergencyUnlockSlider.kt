@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,6 +71,7 @@ fun EmergencyUnlockSlider(
 
     val dragOffset = remember { Animatable(0f) }
     var lastHapticMilestone by remember { mutableIntStateOf(0) }
+    val currentOnConfirmUnlock by rememberUpdatedState(onConfirmUnlock)
 
     BoxWithConstraints(
         modifier = modifier
@@ -138,13 +140,15 @@ fun EmergencyUnlockSlider(
                 modifier = Modifier
                     .fillMaxSize()
                     .pointerInput(maxPx) {
+                        var currentDrag = 0f
                         detectHorizontalDragGestures(
                             onDragStart = {
                                 lastHapticMilestone = 0
+                                currentDrag = dragOffset.value
                             },
                             onDragEnd = {
                                 scope.launch {
-                                    if (dragOffset.value >= maxPx * 0.85f) {
+                                    if (currentDrag >= maxPx * 0.85f) {
                                         dragOffset.animateTo(
                                             targetValue = maxPx,
                                             animationSpec = spring(
@@ -152,7 +156,7 @@ fun EmergencyUnlockSlider(
                                                 stiffness = Spring.StiffnessHigh
                                             )
                                         )
-                                        onConfirmUnlock()
+                                        currentOnConfirmUnlock()
                                     } else {
                                         dragOffset.animateTo(
                                             targetValue = 0f,
@@ -161,7 +165,6 @@ fun EmergencyUnlockSlider(
                                                 stiffness = Spring.StiffnessMedium
                                             )
                                         )
-                                        onCancel()
                                     }
                                 }
                             },
@@ -174,16 +177,16 @@ fun EmergencyUnlockSlider(
                                             stiffness = Spring.StiffnessMedium
                                         )
                                     )
-                                    onCancel()
                                 }
                             },
                             onHorizontalDrag = { change, dragAmount ->
                                 change.consume()
-                                val newOffset = (dragOffset.value + dragAmount).coerceIn(0f, maxPx)
+                                currentDrag = (currentDrag + dragAmount).coerceIn(0f, maxPx)
+                                val target = currentDrag
                                 scope.launch {
-                                    dragOffset.snapTo(newOffset)
+                                    dragOffset.snapTo(target)
                                 }
-                                checkHapticMilestone(newOffset / maxPx)
+                                checkHapticMilestone(target / maxPx)
                             }
                         )
                     }
@@ -224,7 +227,8 @@ fun EmergencyUnlockSlider(
                 Surface(
                     shape = CircleShape,
                     color = thumbColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = if (fraction > 0.5f) MaterialTheme.colorScheme.onError
+                    else MaterialTheme.colorScheme.onPrimary,
                     shadowElevation = 4.dp,
                     modifier = Modifier
                         .align(Alignment.CenterStart)

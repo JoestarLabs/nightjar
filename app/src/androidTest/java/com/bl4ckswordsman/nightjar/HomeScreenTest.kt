@@ -1,66 +1,30 @@
 package com.bl4ckswordsman.nightjar
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import com.bl4ckswordsman.nightjar.data.TimerPreferences
-import com.bl4ckswordsman.nightjar.data.TimerPreferencesDataSource
-import com.bl4ckswordsman.nightjar.data.TimerRepository
-import com.bl4ckswordsman.nightjar.ui.screen.HomeScreen
+import com.bl4ckswordsman.nightjar.ui.components.LockButton
+import com.bl4ckswordsman.nightjar.ui.components.PresetChips
+import com.bl4ckswordsman.nightjar.ui.components.StatusChip
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
-import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 
 /**
- * Compose UI tests for [HomeScreen].
+ * Compose UI tests for Nightjar home screen components.
  *
  * Note: These run on an Android emulator / device via [createComposeRule].
- * The [TimerViewModel] is provided with mock dependencies so no real
- * ForegroundService or DataStore is needed.
  */
 class HomeScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private lateinit var mockDataSource: TimerPreferencesDataSource
-    private lateinit var repository: TimerRepository
-    private lateinit var viewModel: TimerViewModel
-
-    @Before
-    fun setup() {
-        mockDataSource = mock()
-        whenever(mockDataSource.preferences).thenReturn(
-            MutableStateFlow(TimerPreferences(lastDurationSeconds = 300L))
-        )
-        repository = TimerRepository(mockDataSource)
-        // Note: Context mock is needed for TimerViewModel — in instrumented tests
-        // use ApplicationProvider.getApplicationContext() instead.
-    }
-
-    @Test
-    fun homeScreen_showsAppName() {
-        composeTestRule.setContent {
-            NightjarTheme {
-                // Minimal check: just ensure Nightjar title is visible
-                androidx.compose.material3.Text("Nightjar")
-            }
-        }
-        composeTestRule
-            .onNodeWithText("Nightjar")
-            .assertIsDisplayed()
-    }
-
     @Test
     fun homeScreen_idleState_showsStartButton() {
         composeTestRule.setContent {
             NightjarTheme {
-                com.bl4ckswordsman.nightjar.ui.components.LockButton(
+                LockButton(
                     isRunning = false,
                     onClick = {}
                 )
@@ -75,7 +39,7 @@ class HomeScreenTest {
     fun homeScreen_runningState_showsStopButton() {
         composeTestRule.setContent {
             NightjarTheme {
-                com.bl4ckswordsman.nightjar.ui.components.LockButton(
+                LockButton(
                     isRunning = true,
                     onClick = {}
                 )
@@ -90,7 +54,7 @@ class HomeScreenTest {
     fun homeScreen_lockedState_showsTimerLocked() {
         composeTestRule.setContent {
             NightjarTheme {
-                com.bl4ckswordsman.nightjar.ui.components.LockButton(
+                LockButton(
                     isRunning = true,
                     isLocked = true,
                     onClick = {}
@@ -106,7 +70,7 @@ class HomeScreenTest {
     fun statusChip_idleState_showsReadyLabel() {
         composeTestRule.setContent {
             NightjarTheme {
-                com.bl4ckswordsman.nightjar.ui.components.StatusChip(isRunning = false)
+                StatusChip(isRunning = false)
             }
         }
         composeTestRule
@@ -118,7 +82,7 @@ class HomeScreenTest {
     fun statusChip_runningState_showsRunningLabel() {
         composeTestRule.setContent {
             NightjarTheme {
-                com.bl4ckswordsman.nightjar.ui.components.StatusChip(isRunning = true)
+                StatusChip(isRunning = true)
             }
         }
         composeTestRule
@@ -130,7 +94,7 @@ class HomeScreenTest {
     fun presetChips_rendersAllPresets() {
         composeTestRule.setContent {
             NightjarTheme {
-                com.bl4ckswordsman.nightjar.ui.components.PresetChips(
+                PresetChips(
                     selectedSeconds = 300L,
                     onPresetSelected = {},
                 )
