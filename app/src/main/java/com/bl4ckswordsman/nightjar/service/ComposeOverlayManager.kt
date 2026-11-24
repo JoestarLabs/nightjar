@@ -73,6 +73,8 @@ class ComposeOverlayManager(private val context: Context) {
     private val gravityAngleRadState = mutableFloatStateOf(0f)
     private val linearAccelXState = mutableFloatStateOf(0f)
     private val linearAccelYState = mutableFloatStateOf(0f)
+    private val rawAccelXState = mutableFloatStateOf(0f)
+    private val rawAccelYState = mutableFloatStateOf(9.8f)
     private val animationState = mutableStateOf(SunsetAnimation.FLUID_LIQUID)
     private val startedAtMillisState = mutableLongStateOf(0L)
 
@@ -142,8 +144,8 @@ class ComposeOverlayManager(private val context: Context) {
                                 remainingSeconds = remainingSecondsState.longValue,
                                 totalSeconds = totalSecondsState.longValue,
                                 gravityAngleRad = { gravityAngleRadState.floatValue },
-                                linearAccelX = { linearAccelXState.floatValue },
-                                linearAccelY = { linearAccelYState.floatValue },
+                                rawAccelX = { rawAccelXState.floatValue },
+                                rawAccelY = { rawAccelYState.floatValue },
                                 startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
                             )
                         }
@@ -200,17 +202,21 @@ class ComposeOverlayManager(private val context: Context) {
         remainingSecondsState.longValue = remainingSeconds
     }
 
-    /** Updates sensor values for physical gravity alignment and linear acceleration across 360 degrees. */
+    /** Updates sensor values for physical gravity alignment and acceleration across 360 degrees. */
     fun updateSensors(
         tilt: Float,
         gravityAngleRad: Float,
         linearAccelX: Float = 0f,
         linearAccelY: Float = 0f,
+        rawAccelX: Float = 0f,
+        rawAccelY: Float = 9.8f,
     ) {
         tiltState.floatValue = tilt
         gravityAngleRadState.floatValue = gravityAngleRad
         linearAccelXState.floatValue = linearAccelX
         linearAccelYState.floatValue = linearAccelY
+        rawAccelXState.floatValue = rawAccelX
+        rawAccelYState.floatValue = rawAccelY
     }
 
     /** Dismisses and removes the overlay window from the window manager. */

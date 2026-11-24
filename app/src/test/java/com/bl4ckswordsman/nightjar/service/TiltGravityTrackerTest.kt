@@ -42,4 +42,16 @@ class TiltGravityTrackerTest {
         assertEquals(0f, tracker.linearAccelX, 0.05f)
         assertEquals(0f, tracker.linearAccelY, 0.05f)
     }
+
+    @Test
+    fun `rawAccel tracks input and clamps extreme sensor spikes`() {
+        val tracker = TiltGravityTracker()
+        tracker.update(x = 12f, y = -8f)
+        assertEquals(12f, tracker.rawAccelX, 0.001f)
+        assertEquals(-8f, tracker.rawAccelY, 0.001f)
+
+        tracker.update(x = 100f, y = -100f)
+        assertEquals(35f, tracker.rawAccelX, 0.001f)
+        assertEquals(-35f, tracker.rawAccelY, 0.001f)
+    }
 }

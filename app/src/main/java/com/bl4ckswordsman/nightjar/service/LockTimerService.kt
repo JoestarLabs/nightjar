@@ -85,6 +85,8 @@ class LockTimerService : Service() {
                     gravityAngleRad = tiltTracker.gravityAngleRad,
                     linearAccelX = tiltTracker.linearAccelX,
                     linearAccelY = tiltTracker.linearAccelY,
+                    rawAccelX = tiltTracker.rawAccelX,
+                    rawAccelY = tiltTracker.rawAccelY,
                 )
             }
         }

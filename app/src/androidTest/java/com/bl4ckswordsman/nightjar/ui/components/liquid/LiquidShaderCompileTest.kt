@@ -10,8 +10,8 @@ import org.junit.runner.RunWith
 class LiquidShaderCompileTest {
 
     @Test
-    fun liquidCausticsAgslCompiles() {
-        val shader = RuntimeShader(LIQUID_CAUSTICS_AGSL)
+    fun liquidMetaballAgslCompiles() {
+        val shader = RuntimeShader(LIQUID_METABALL_AGSL)
         assertNotNull(shader)
     }
 }
