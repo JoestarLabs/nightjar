@@ -117,8 +117,10 @@ fun ZenTimerDial(
     // This eliminates the up-to-1-second lag of chasing integer ticks with tween(1000).
     val continuousSweep = remember { mutableFloatStateOf(targetAngle) }
 
-    LaunchedEffect(startedAtMillis, total, runningSeconds) {
-        if (startedAtMillis == null || runningSeconds == null || total <= 0L) return@LaunchedEffect
+    val isRunning = runningSeconds != null
+
+    LaunchedEffect(startedAtMillis, total, isRunning) {
+        if (startedAtMillis == null || !isRunning || total <= 0L) return@LaunchedEffect
         while (true) {
             // withFrameMillis is from System.nanoTime() — cannot be subtracted from wall-clock
             // startedAtMillis. Use it only as a vsync sync point; read currentTimeMillis() instead.
@@ -160,6 +162,13 @@ fun ZenTimerDial(
     val secondary = MaterialTheme.colorScheme.secondary
     val onSurface = MaterialTheme.colorScheme.onSurface
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val dialArcBrush = remember(primary, secondary) {
+        Brush.sweepGradient(
+            0f to secondary.copy(alpha = 0.6f),
+            0.5f to primary,
+            1f to primary,
+        )
+    }
 
     var dragCenter by remember { mutableStateOf(Offset.Zero) }
 
@@ -265,7 +274,7 @@ fun ZenTimerDial(
             ) {
                 val sweep = sweepAnim.value
                 drawDialTrack(surfaceVariant, strokeWidth.toPx())
-                drawDialArc(sweep, primary, secondary, strokeWidth.toPx())
+                drawDialArc(sweep, dialArcBrush, strokeWidth.toPx())
                 drawTickMarks(onSurface)
                 drawDragHandle(sweep, primary, onSurface, handleRadius.toPx())
             }
@@ -307,18 +316,12 @@ private fun DrawScope.drawDialTrack(color: Color, strokeWidthPx: Float) {
 /** Draws the active swept gradient arc showing selected or running timer duration. */
 private fun DrawScope.drawDialArc(
     sweep: Float,
-    primary: Color,
-    secondary: Color,
+    brush: Brush,
     strokeWidthPx: Float
 ) {
     if (sweep <= 0f) return
-    val gradient = Brush.sweepGradient(
-        0f to secondary.copy(alpha = 0.6f),
-        0.5f to primary,
-        1f to primary,
-    )
     drawArc(
-        brush = gradient,
+        brush = brush,
         startAngle = -90f,
         sweepAngle = sweep.coerceIn(0f, 360f),
         useCenter = false,

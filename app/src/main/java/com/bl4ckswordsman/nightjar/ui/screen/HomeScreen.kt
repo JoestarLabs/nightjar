@@ -310,7 +310,10 @@ fun HomeScreen(
     if (showEmergencySheet) {
         androidx.compose.material3.ModalBottomSheet(
             onDismissRequest = { showEmergencySheet = false },
-            sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            sheetState = androidx.compose.material3.rememberBottomSheetState(
+                initialValue = androidx.compose.material3.SheetValue.Hidden,
+                confirmValueChange = { it != androidx.compose.material3.SheetValue.PartiallyExpanded },
+            ),
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Column(
