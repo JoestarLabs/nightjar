@@ -136,10 +136,10 @@ fun RisingWaveOverlay(
     remainingSeconds: Long,
     totalSeconds: Long,
     tilt: Float,
+    modifier: Modifier = Modifier,
     /** Epoch-ms when the timer started. When non-null, progress is computed from the
      *  wall clock every frame so the wave height is always perfectly in sync. */
     startedAtMillis: Long? = null,
-    modifier: Modifier = Modifier
 ) {
     // Phase for wave ripple animation
     val infiniteTransition = rememberInfiniteTransition(label = "wave_oscillation")

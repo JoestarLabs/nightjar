@@ -61,7 +61,7 @@ private data class SnowflakeParticle(
 /**
  * Fullscreen seasonal snowflakes sunset warning animation overlay.
  *
- * Renders drifting crystal snowflakes with dynamic physics and accumulating drifts aligned to device gravity.
+ * Renders drifting crystal snowflakes with wind oscillation and a rising snowbank at the bottom of the screen.
  *
  * @param remainingSeconds Seconds remaining until the timer expires.
  * @param totalSeconds Total duration of the sunset warning window.
@@ -73,9 +73,9 @@ private data class SnowflakeParticle(
 fun SnowflakesOverlay(
     remainingSeconds: Long,
     totalSeconds: Long,
+    modifier: Modifier = Modifier,
     gravityAngleRad: Float = 0f,
     startedAtMillis: Long? = null,
-    modifier: Modifier = Modifier
 ) {
     // ── Wall-clock continuous progress ──
     val continuousProgress = remember {

@@ -1,7 +1,7 @@
 package com.bl4ckswordsman.nightjar.viewmodel
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,8 +35,8 @@ class TimerViewModel @Inject constructor(
     /** Live timer state — collect in composables with [androidx.lifecycle.compose.collectAsStateWithLifecycle]. */
     val timerState: StateFlow<TimerState> = repository.timerState
 
-    private val _selectedSeconds = mutableStateOf(300L)
-    val selectedSeconds: Long get() = _selectedSeconds.value
+    private val _selectedSeconds = mutableLongStateOf(300L)
+    val selectedSeconds: Long get() = _selectedSeconds.longValue
 
     private val _commitmentMode = MutableStateFlow(false)
 
@@ -70,7 +70,7 @@ class TimerViewModel @Inject constructor(
 
     /** Sets the idle dial duration in seconds, clamped between minimum and maximum bounds. */
     fun setSelectedSeconds(seconds: Long) {
-        _selectedSeconds.value = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
+        _selectedSeconds.longValue = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
     }
 
     /** Enables or disables commitment mode preventing timer cancellation. */

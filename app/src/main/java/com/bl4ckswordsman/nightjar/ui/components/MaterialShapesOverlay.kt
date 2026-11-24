@@ -65,9 +65,9 @@ private data class PhysicalM3Shape(
 fun MaterialShapesOverlay(
     remainingSeconds: Long,
     totalSeconds: Long,
+    modifier: Modifier = Modifier,
     gravityAngleRad: Float = 0f,
     startedAtMillis: Long? = null,
-    modifier: Modifier = Modifier
 ) {
     // ── Wall-clock continuous progress ──
     val continuousProgress = remember {

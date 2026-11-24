@@ -37,6 +37,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -114,7 +116,7 @@ fun HomeScreen(
     }
 
     // ── Settings gear spin & shape morphing ────────────────────────────────────
-    var gearRotation by remember { mutableStateOf(0f) }
+    var gearRotation by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(Unit) {
         // Spin the gear on entry to look playful
         androidx.compose.animation.core.animate(
@@ -128,7 +130,7 @@ fun HomeScreen(
     }
 
     // ── Liquid ripple effect on start (sameerasw/essentials v19.0) ───────────
-    var rippleTrigger by remember { mutableStateOf(0) }
+    var rippleTrigger by remember { mutableIntStateOf(0) }
     var buttonCenterInRoot by remember { mutableStateOf(Offset.Zero) }
 
 

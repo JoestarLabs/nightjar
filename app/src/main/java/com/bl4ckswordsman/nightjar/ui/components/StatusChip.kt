@@ -37,8 +37,8 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 @Composable
 fun StatusChip(
     isRunning: Boolean,
-    isFinishing: Boolean = false,
     modifier: Modifier = Modifier,
+    isFinishing: Boolean = false,
 ) {
     val label = when {
         isFinishing -> stringResource(R.string.status_finished)

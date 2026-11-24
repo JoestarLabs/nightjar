@@ -54,12 +54,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun LockButton(
     isRunning: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     isFinishing: Boolean = false,
     isLocked: Boolean = false,
-    onClick: () -> Unit,
     onRevealSlider: (() -> Unit)? = null,
     onLockedShortTap: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
