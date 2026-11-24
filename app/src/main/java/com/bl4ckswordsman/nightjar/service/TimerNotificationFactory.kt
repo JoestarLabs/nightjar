@@ -45,6 +45,10 @@ internal class TimerNotificationFactory(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val smallIconRes = LockTimerService.resolveSmallIconRes(isUrgent)
+        val safeTotal = durationSeconds.coerceAtLeast(1L).toInt()
+        val clampedProgress = (durationSeconds - remainingSeconds)
+            .coerceIn(0L, durationSeconds.coerceAtLeast(0L))
+            .toInt()
 
         if (Build.VERSION.SDK_INT >= 36) {
             val segmentColor = ContextCompat.getColor(
@@ -56,9 +60,9 @@ internal class TimerNotificationFactory(private val context: Context) {
                 if (isUrgent) R.color.notification_alert_color else R.color.notification_icon_tint
             )
             val progressStyle = Notification.ProgressStyle()
-                .setProgress((durationSeconds - remainingSeconds).toInt())
+                .setProgress(clampedProgress)
                 .addProgressSegment(
-                    Notification.ProgressStyle.Segment(durationSeconds.toInt())
+                    Notification.ProgressStyle.Segment(safeTotal)
                         .setColor(segmentColor)
                 )
                 .setProgressEndIcon(
@@ -103,8 +107,8 @@ internal class TimerNotificationFactory(private val context: Context) {
                 .setShowWhen(true)
                 .setContentIntent(tapIntent)
                 .setProgress(
-                    durationSeconds.toInt(),
-                    (durationSeconds - remainingSeconds).toInt(),
+                    safeTotal,
+                    clampedProgress,
                     false
                 )
                 .setLargeIcon(getLockBitmap(localizedContext))
