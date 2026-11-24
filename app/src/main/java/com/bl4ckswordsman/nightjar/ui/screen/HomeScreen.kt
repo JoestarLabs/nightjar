@@ -59,6 +59,8 @@ import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
 import com.bl4ckswordsman.nightjar.ui.animation.liquidRipple
+import com.bl4ckswordsman.nightjar.ui.effects.EffectsQuality
+import com.bl4ckswordsman.nightjar.ui.effects.rememberEffectsQuality
 import com.bl4ckswordsman.nightjar.ui.components.AnimatedAppTitle
 import com.bl4ckswordsman.nightjar.ui.components.DeviceAdminPermissionDialog
 import com.bl4ckswordsman.nightjar.ui.components.DurationPickerSheet
@@ -165,6 +167,8 @@ fun HomeScreen(
         )
     }
 
+    val effectsQuality by rememberEffectsQuality()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -213,6 +217,7 @@ fun HomeScreen(
             .liquidRipple(
                 trigger = rippleTrigger,
                 origin = buttonCenterInRoot,
+                enabled = effectsQuality != EffectsQuality.MINIMAL,
                 durationMillis = 2800,
                 amplitudeDp = 34f,
                 frequency = 12f,
