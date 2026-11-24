@@ -1,6 +1,5 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -11,23 +10,16 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameMillis
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -36,12 +28,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.bl4ckswordsman.nightjar.R
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -122,26 +109,7 @@ private fun buildFluidWavePath(
     )
 
     path.lineTo(xStart, waveY(xStart))
-
-    var currentX = xStart
-    while (currentX < xEnd) {
-        val nextX = (currentX + step).coerceAtMost(xEnd)
-        val midX = (currentX + nextX) / 2f
-
-        val yCurrent = waveY(currentX)
-        val yNext = waveY(nextX)
-        val yMid = waveY(midX)
-
-        val ctrl1Y = yCurrent + (4f / 3f) * (yMid - (yCurrent + yNext) / 2f)
-        val ctrl2Y = yNext + (4f / 3f) * (yMid - (yCurrent + yNext) / 2f)
-
-        val ctrl1X = currentX + (nextX - currentX) / 3f
-        val ctrl2X = currentX + 2f * (nextX - currentX) / 3f
-
-        path.cubicTo(ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, nextX, yNext)
-        currentX = nextX
-    }
-
+    buildCubicWaveCurve(path = path, xStart = xStart, xEnd = xEnd, step = step, waveY = ::waveY)
     path.lineTo(xEnd, bottomLimit)
     path.close()
 }
@@ -169,24 +137,7 @@ private fun buildFluidCrestLinePath(
     )
 
     path.moveTo(xStart, waveY(xStart))
-    var currentX = xStart
-    while (currentX < xEnd) {
-        val nextX = (currentX + step).coerceAtMost(xEnd)
-        val midX = (currentX + nextX) / 2f
-
-        val yCurrent = waveY(currentX)
-        val yNext = waveY(nextX)
-        val yMid = waveY(midX)
-
-        val ctrl1Y = yCurrent + (4f / 3f) * (yMid - (yCurrent + yNext) / 2f)
-        val ctrl2Y = yNext + (4f / 3f) * (yMid - (yCurrent + yNext) / 2f)
-
-        val ctrl1X = currentX + (nextX - currentX) / 3f
-        val ctrl2X = currentX + 2f * (nextX - currentX) / 3f
-
-        path.cubicTo(ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, nextX, yNext)
-        currentX = nextX
-    }
+    buildCubicWaveCurve(path = path, xStart = xStart, xEnd = xEnd, step = step, waveY = ::waveY)
 }
 
 /**
@@ -227,37 +178,8 @@ fun FluidLiquidOverlay(
     )
 
     // ── Wall-clock continuous progress ──
-    val continuousProgress = remember {
-        mutableFloatStateOf(
-            if (totalSeconds > 0L && startedAtMillis != null) {
-                val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1_000f
-                (elapsed / totalSeconds).coerceIn(0f, 1f)
-            } else if (totalSeconds > 0L) {
-                (totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()
-            } else 1f
-        )
-    }
-    val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
-    val frameTime = remember { mutableLongStateOf(System.currentTimeMillis()) }
-
-    LaunchedEffect(startedAtMillis, totalSeconds) {
-        if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
-        while (true) {
-            withFrameMillis {
-                val now = System.currentTimeMillis()
-                frameTime.longValue = now
-                val elapsed = (now - startedAtMillis).coerceAtLeast(0L)
-                continuousProgress.floatValue =
-                    (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
-                displayRemaining.longValue =
-                    ((totalSeconds * 1_000L - elapsed) / 1_000L).coerceAtLeast(0L)
-            }
-            if (continuousProgress.floatValue >= 1f) break
-        }
-    }
-
-    val animatedProgress = continuousProgress.floatValue
-    val shownRemaining = if (startedAtMillis != null) displayRemaining.longValue else remainingSeconds
+    val countdown = rememberSunsetCountdownState(remainingSeconds, totalSeconds, startedAtMillis)
+    val shownRemaining = if (startedAtMillis != null) countdown.displayRemaining.longValue else remainingSeconds
 
     // ── Smooth 360° gravity angle tracking without wrapping glitches ──
     var unwrappedGravityAngle by remember { mutableFloatStateOf(gravityAngleRad) }
@@ -316,18 +238,6 @@ fun FluidLiquidOverlay(
     val textFastSpatial = motionScheme.fastSpatialSpec<Float>()
     val textDefaultSpatial = motionScheme.defaultSpatialSpec<Float>()
 
-    val textScale = remember { Animatable(1f) }
-    LaunchedEffect(shownRemaining) {
-        textScale.animateTo(
-            targetValue = 1.2f,
-            animationSpec = textFastSpatial
-        )
-        textScale.animateTo(
-            targetValue = 1.0f,
-            animationSpec = textDefaultSpatial
-        )
-    }
-
     // ── Micro-bubbles pool ──
     val bubbles = remember {
         val rng = Random(42)
@@ -353,11 +263,12 @@ fun FluidLiquidOverlay(
     val crestPath = remember { Path() }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.45f * animatedProgress))
+        modifier = modifier.fillMaxSize()
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val animatedProgress = countdown.progress.floatValue
+            drawRect(Color.Black.copy(alpha = 0.45f * animatedProgress))
+
             val width = size.width
             val height = size.height
             val centerX = width / 2f
@@ -473,7 +384,7 @@ fun FluidLiquidOverlay(
 
                 // ── 4. Rising buoyant micro-bubbles ──
                 val fluidDepth = (r - baseLineY).coerceAtLeast(10f)
-                val timeSec = frameTime.longValue / 1000f
+                val timeSec = countdown.frameTimeMillis.longValue / 1000f
                 for (b in bubbles) {
                     val currentY = baseLineY + (1f - ((b.currentDepth + b.speed * timeSec) % 1f)) * fluidDepth
                     val currentX = b.relX * (r * 0.7f) + sin(timeSec * b.wobbleFrequency + b.wobblePhase) * 8f
@@ -495,43 +406,12 @@ fun FluidLiquidOverlay(
             }
         }
 
-        // Center visual indicator with animated orientation
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.graphicsLayer {
-                    rotationZ = animatedTextRotation
-                }
-            ) {
-                OutlinedText(
-                    text = shownRemaining.toString(),
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 120.sp,
-                        lineHeight = 120.sp
-                    ),
-                    outlineColor = Color.Black.copy(alpha = 0.85f),
-                    fillColor = Color.White,
-                    outlineWidth = 14f,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = textScale.value
-                        scaleY = textScale.value
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedText(
-                    text = stringResource(R.string.sunset_warning_text),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    outlineColor = Color.Black.copy(alpha = 0.85f),
-                    fillColor = Color.White,
-                    outlineWidth = 8f
-                )
-            }
-        }
+        SunsetCountdownOverlayText(
+            shownRemaining = shownRemaining,
+            outlineColor = Color.Black.copy(alpha = 0.85f),
+            rotationDegrees = { animatedTextRotation },
+            expandSpec = textFastSpatial,
+            settleSpec = textDefaultSpatial,
+        )
     }
 }
