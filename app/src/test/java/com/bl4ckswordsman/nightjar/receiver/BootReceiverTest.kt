@@ -169,4 +169,44 @@ class BootReceiverTest {
         // onReceive should early-return without attempting Hilt resolution or service launch
         receiver.onReceive(context, irrelevantIntent)
     }
+
+    @Test
+    fun `clears active timer when clock skewed backwards before startedAt`() = runTest {
+        val now = 500_000L
+        val prefs = TimerPreferences(
+            lastDurationSeconds = 300L,
+            startedAtMillis = 1_000_000L,
+            commitmentMode = true
+        )
+        whenever(mockDataSource.preferences).thenReturn(MutableStateFlow(prefs))
+
+        var serviceStarted = false
+        receiver.handleBoot(
+            context = context,
+            preferencesDataSource = mockDataSource,
+            currentTimeMillis = now,
+            startService = { _, _ -> serviceStarted = true }
+        )
+
+        assertFalse(serviceStarted)
+        org.mockito.kotlin.verify(mockDataSource).clearActiveTimer()
+    }
+
+    @Test
+    fun `handles startService SecurityException without throwing`() = runTest {
+        val now = 1_000_000L
+        val prefs = TimerPreferences(
+            lastDurationSeconds = 300L,
+            startedAtMillis = now - 60_000L,
+            commitmentMode = false
+        )
+        whenever(mockDataSource.preferences).thenReturn(MutableStateFlow(prefs))
+
+        receiver.handleBoot(
+            context = context,
+            preferencesDataSource = mockDataSource,
+            currentTimeMillis = now,
+            startService = { _, _ -> throw SecurityException("Boot FGS blocked") }
+        )
+    }
 }

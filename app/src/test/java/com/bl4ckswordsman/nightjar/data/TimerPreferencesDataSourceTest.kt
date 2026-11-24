@@ -156,4 +156,13 @@ class TimerPreferencesDataSourceTest {
         // Should fallback to default custom presets: listOf(300L, 900L, 1800L, 3600L)
         assertEquals(listOf(300L, 900L, 1800L, 3600L), prefs.customPresets)
     }
+
+    @Test
+    fun testOutOfRangeCustomPresetsFallback() = runTest(testDispatcher) {
+        dataStore.edit { prefs ->
+            prefs[TimerPreferenceKeys.CUSTOM_PRESETS] = "0,-5,200,10"
+        }
+        val prefs = dataSource.preferences.first()
+        assertEquals(listOf(300L, 900L, 1800L, 3600L), prefs.customPresets)
+    }
 }

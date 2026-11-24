@@ -1,16 +1,20 @@
 package com.bl4ckswordsman.nightjar.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -71,13 +75,29 @@ class TimerPreferencesDataSource(
         @ApplicationContext context: Context
     ) : this(context.dataStore)
 
-    val preferences: Flow<TimerPreferences> = dataStore.data.map { prefs ->
-        val presetsStr = prefs[TimerPreferenceKeys.CUSTOM_PRESETS] ?: "5,15,30,60"
-        val presetsList = try {
-            presetsStr.split(",").map { it.trim().toLong() * 60L }
-        } catch (e: Exception) {
-            listOf(300L, 900L, 1800L, 3600L)
+    val preferences: Flow<TimerPreferences> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                runCatching {
+                    Log.w(TAG, "Error reading DataStore preferences; falling back to defaults", exception)
+                }
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
         }
+        .map { prefs ->
+            val presetsStr = prefs[TimerPreferenceKeys.CUSTOM_PRESETS] ?: "5,15,30,60"
+            val parts = presetsStr.split(",")
+            val parsedMinutes = parts.mapNotNull { it.trim().toLongOrNull() }
+            val presetsList = if (parsedMinutes.isNotEmpty() &&
+                parsedMinutes.size == parts.size &&
+                parsedMinutes.all { it in 1L..120L }
+            ) {
+                parsedMinutes.map { it * 60L }
+            } else {
+                DEFAULT_PRESETS_SECONDS
+            }
         val sunsetEnabled = prefs[TimerPreferenceKeys.SUNSET_MODE_ENABLED] ?: true
         val animStr = prefs[TimerPreferenceKeys.SUNSET_ANIMATION]
         val animation = when {
@@ -168,5 +188,10 @@ class TimerPreferencesDataSource(
         dataStore.edit { prefs ->
             prefs[TimerPreferenceKeys.SUNSET_AUDIO_ENABLED] = enabled
         }
+    }
+
+    private companion object {
+        const val TAG = "TimerPreferences"
+        val DEFAULT_PRESETS_SECONDS = listOf(300L, 900L, 1800L, 3600L)
     }
 }

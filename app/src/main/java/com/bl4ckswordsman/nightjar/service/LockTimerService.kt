@@ -11,6 +11,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.getSystemService
@@ -23,11 +24,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -115,7 +119,13 @@ class LockTimerService : Service() {
             ACTION_START -> {
                 val durationSeconds = intent.getLongExtra(EXTRA_DURATION_SECONDS, 0L)
                 commitmentMode = intent.getBooleanExtra(EXTRA_COMMITMENT_MODE, false)
-                if (durationSeconds > 0) startTimer(durationSeconds)
+                if (durationSeconds > 0) {
+                    startTimer(durationSeconds)
+                } else {
+                    startForeground(NOTIFICATION_ID, notificationFactory.buildFinishedNotification())
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
             }
 
             ACTION_STOP -> {
@@ -131,6 +141,7 @@ class LockTimerService : Service() {
         unregisterSensor()
         overlayManager?.dismiss()
         overlayManager = null
+        serviceScope.cancel()
         super.onDestroy()
     }
 
@@ -139,6 +150,8 @@ class LockTimerService : Service() {
     /** Starts the timer countdown for [durationSeconds] and posts the foreground notification. */
     private fun startTimer(durationSeconds: Long) {
         timerJob?.cancel()
+        unregisterSensor()
+        overlayManager?.dismiss()
         val startedAt = System.currentTimeMillis()
 
         persistTimerStart(durationSeconds, startedAt)
@@ -280,12 +293,15 @@ class LockTimerService : Service() {
         timerJob = null
         unregisterSensor()
         overlayManager?.dismiss()
-        serviceScope.launch {
-            timerRepository.preferencesDataSource.clearActiveTimer()
-        }
+        nm.cancel(NOTIFICATION_ALERT_ID)
         timerRepository.updateState(TimerState.Idle)
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+        serviceScope.launch {
+            withContext(NonCancellable) {
+                timerRepository.preferencesDataSource.clearActiveTimer()
+            }
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
     }
 
     /** Invoked upon countdown expiry to lock device screen and update completion state. */
@@ -297,13 +313,19 @@ class LockTimerService : Service() {
             overlayManager?.dismiss()
         }
 
+        nm.cancel(NOTIFICATION_ALERT_ID)
         // Update notification to "Locking screen now" briefly
         nm.notify(NOTIFICATION_ID, notificationFactory.buildFinishedNotification())
 
         val locked = LockDeviceAdminReceiver.requestLock(this)
+        if (!locked) {
+            Log.w(TAG, "Failed to lock screen: Device Admin is inactive or lockNow threw")
+        }
 
         serviceScope.launch {
-            timerRepository.preferencesDataSource.clearActiveTimer()
+            withContext(NonCancellable) {
+                timerRepository.preferencesDataSource.clearActiveTimer()
+            }
             // Small grace period to ensure lock action is dispatched
             delay(800)
             timerRepository.updateState(TimerState.Idle)
@@ -372,6 +394,7 @@ class LockTimerService : Service() {
     // ── Static helpers ────────────────────────────────────────────────────────
 
     companion object {
+        private const val TAG = "LockTimerService"
         const val ACTION_START = "com.bl4ckswordsman.nightjar.action.START_TIMER"
         const val ACTION_STOP = "com.bl4ckswordsman.nightjar.action.STOP_TIMER"
         const val EXTRA_DURATION_SECONDS = "extra_duration_seconds"
