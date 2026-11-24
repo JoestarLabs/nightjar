@@ -2,7 +2,7 @@ Nightjar är en skärmlåstimer-app i Material 3 Expressive för Android som hj�
 
 Funktioner:
 
-- Interaktiv timerurtavla: En ren, cirkulär urtavla för att enkelt ställa in och följa aktiva nedräkningar.
+- Interaktiv timerurtavla: En ren, cirkulär urtavla med vågformad förloppsring för att enkelt ställa in och följa aktiva nedräkningar.
 - Snabbvalsmeny: En lekfull bottenmeny för exakta inställningar av timmar, minuter och sekunder.
-- Solnedgångsvarning (Stigande våg): En helskärmsvåg som stiger från botten för att på ett skonsamt och lekfullt sätt varna barn när tiden nästan är slut.
-- Åtagandeläge: En inställning som låser timern så att den inte kan stoppas när den väl har startats.
+- Solnedgångsvarning: Helskärmsanimationer (Flytande vätska, Materialformer, Snöflingor och Klassisk våg) med valfri ljudsignal för att på ett skonsamt sätt varna när tiden nästan är slut.
+- Åtagandeläge: En inställning som låser timern så att den inte kan stoppas av misstag när den väl har startats, med nödstopp via svepreglage.

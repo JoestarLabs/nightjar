@@ -29,7 +29,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Expressive Material 3 Title component that performs a stretchy width & weight
- * variable font animation on entry. Tapping on the title triggers the animation again.
+ * variable font animation on entry. Pressing or dragging the title dynamically
+ * stretches its width and weight.
  */
 @Composable
 fun AnimatedAppTitle(

@@ -49,8 +49,7 @@ enum class SunsetAnimation(val id: String) {
 }
 
 /**
- * Data access object for timer preferences stored in DataStore.
- * Provides a [Flow] of the persisted [TimerPreferences] data class.
+ * Immutable snapshot of persisted timer preferences stored in DataStore.
  */
 data class TimerPreferences(
     val lastDurationSeconds: Long = 300L,  // default: 5 minutes

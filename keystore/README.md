@@ -31,7 +31,7 @@ Losing it means you can never publish updates to the same Play Store / IzzyOnDro
 2. **Add the following secrets to your GitHub repository** (`Settings → Secrets → Actions`):
 
    | Secret name                 | Value                                    |
-      |-----------------------------|------------------------------------------|
+   |-----------------------------|------------------------------------------|
    | `SIGNING_KEYSTORE`          | Contents of `nightjar-release.keystore.b64` |
    | `SIGNING_KEYSTORE_PASSWORD` | The keystore password you chose above    |
    | `SIGNING_KEY_ALIAS`         | `nightjar` (or whatever alias you used)  |

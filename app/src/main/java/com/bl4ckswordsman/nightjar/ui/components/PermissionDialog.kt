@@ -17,7 +17,7 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
  * Two-step permission disclosure dialogs.
  *
  * Step 1: [NotificationPermissionDialog] — request POST_NOTIFICATIONS.
- * Step 2: [AccessibilityPermissionDialog] — explain and redirect to System Settings.
+ * Step 2: [DeviceAdminPermissionDialog] — explain and redirect to System Settings.
  *
  * Both dialogs follow Material 3 AlertDialog styling and include plain-language
  * disclosures as required by Google Play policy for sensitive permissions.

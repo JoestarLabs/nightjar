@@ -28,7 +28,7 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 
 /**
  * Formats [seconds] as HH:MM:SS or MM:SS and displays it as a large
- * serif time string. Used in the centre of [ZenTimerDial].
+ * tabular time string. Used in the centre of [ZenTimerDial].
  *
  * System font scaling is applied directly through sp units, while base font sizing
  * gracefully adapts to prevent clipping at high accessibility font scales (up to 2.0x).
