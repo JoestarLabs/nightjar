@@ -3,11 +3,10 @@
     <!--
         Base theme for Nightjar.
         Parent: Theme.AppCompat.DayNight.NoActionBar
-          → Enables AppCompatDelegate.setApplicationLocales() for per-app language.
-          → DayNight ensures correct fallback colors on pre-12 devices.
+          → Required by AppCompat DayNight window chrome and per-app locale support.
           → NoActionBar because Compose owns the entire window.
 
-        All Material 3 / Compose theming is handled by NightjarTheme.kt.
+        All Material 3 / Compose theming is handled by Theme.kt (NightjarTheme).
         This XML theme is minimal — it only configures the window chrome.
     -->
     <style name="Theme.Nightjar" parent="Theme.AppCompat.DayNight.NoActionBar">
