@@ -50,8 +50,8 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Run lint & unit tests
-        run: ./gradlew lintDebug testDebugUnitTest
+      - name: Run lint, unit tests, and instrumented test compile
+        run: ./gradlew lintDebug testDebugUnitTest compileDebugAndroidTestKotlin
 
       - name: Upload lint results
         if: always()
