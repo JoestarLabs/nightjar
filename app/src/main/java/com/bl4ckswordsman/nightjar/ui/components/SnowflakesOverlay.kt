@@ -98,12 +98,13 @@ fun SnowflakesOverlay(
         modifier = modifier.fillMaxSize()
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val animatedProgress = countdown.progress.floatValue
-            val frameNowMs = countdown.frameTimeMillis.longValue
-            drawRect(Color(0xFF0F172A).copy(alpha = 0.55f * animatedProgress))
-
             val width = size.width
             val height = size.height
+            if (width <= 0f || height <= 0f) return@Canvas
+
+            val animatedProgress = countdown.progress.floatValue
+            val elapsedSec = countdown.elapsedSeconds.floatValue
+            drawRect(Color(0xFF0F172A).copy(alpha = 0.55f * animatedProgress))
 
             // ── 1. Rising snowbank at the bottom ──
             val maxSnowHeight = height + 40.dp.toPx()
@@ -116,7 +117,7 @@ fun SnowflakesOverlay(
             // Build undulating snow dune surface across width
             val duneAmp = 18.dp.toPx()
             val duneFreq = 0.005f
-            val dunePhase = (frameNowMs / 1000f) * 0.4f
+            val dunePhase = elapsedSec * 0.4f
 
             fun duneY(x: Float): Float =
                 snowTopBaseY + sin(x * duneFreq + dunePhase) * duneAmp + cos(x * 0.01f) * (duneAmp * 0.4f)
@@ -158,7 +159,6 @@ fun SnowflakesOverlay(
             )
 
             // ── 2. Falling snowflakes ──
-            val elapsedSec = (frameNowMs - (startedAtMillis ?: frameNowMs)) / 1000f
             for (flake in snowflakes) {
                 val totalFall = flake.initialRelY * height + flake.speedPxPerSec * elapsedSec
                 val currentY = if (snowTopBaseY > 0f) totalFall % (snowTopBaseY + 30f) else -100f

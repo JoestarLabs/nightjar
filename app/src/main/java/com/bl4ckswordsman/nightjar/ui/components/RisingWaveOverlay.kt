@@ -99,7 +99,7 @@ private fun yAtX(
     phase: Float,
     useCosine: Boolean
 ): Float {
-    val currentLineY = baseLineY + (1f - 2f * x / width) * tiltOffset
+    val currentLineY = baseLineY + (1f - 2f * x / width.coerceAtLeast(1f)) * tiltOffset
     val angle = x * frequency + phase
     return currentLineY + if (useCosine) kotlin.math.cos(angle) * amplitude
                           else           kotlin.math.sin(angle) * (amplitude * 0.8f)
@@ -174,11 +174,12 @@ fun RisingWaveOverlay(
         modifier = modifier.fillMaxSize()
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val animatedProgress = countdown.progress.floatValue
-            drawRect(Color.Black.copy(alpha = 0.4f * animatedProgress))
-
             val width = size.width
             val height = size.height
+            if (width <= 0f || height <= 0f) return@Canvas
+
+            val animatedProgress = countdown.progress.floatValue
+            drawRect(Color.Black.copy(alpha = 0.4f * animatedProgress))
 
             // Calculate base Y position of the liquid wave
             val baseLineY = height - (animatedProgress * height)

@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 import kotlin.math.abs
@@ -201,8 +202,11 @@ fun FluidLiquidOverlay(
     )
 
     // Dynamic slosh tilt computed from angular lag (rotational inertia)
+    val density = LocalDensity.current
     val angularLag = unwrappedGravityAngle - animatedGravityAngle
-    val sloshTiltPx = (angularLag * 35.dp.value).coerceIn(-40f, 40f)
+    val sloshTiltPx = with(density) {
+        (angularLag * 35.dp.toPx()).coerceIn(-40.dp.toPx(), 40.dp.toPx())
+    }
 
     // ── Orientation tracking for countdown text ──
     // To counteract phone rotation and remain upright, text rotates in opposite direction (-deg)
@@ -384,7 +388,7 @@ fun FluidLiquidOverlay(
 
                 // ── 4. Rising buoyant micro-bubbles ──
                 val fluidDepth = (r - baseLineY).coerceAtLeast(10f)
-                val timeSec = countdown.frameTimeMillis.longValue / 1000f
+                val timeSec = countdown.elapsedSeconds.floatValue
                 for (b in bubbles) {
                     val currentY = baseLineY + (1f - ((b.currentDepth + b.speed * timeSec) % 1f)) * fluidDepth
                     val currentX = b.relX * (r * 0.7f) + sin(timeSec * b.wobbleFrequency + b.wobblePhase) * 8f
