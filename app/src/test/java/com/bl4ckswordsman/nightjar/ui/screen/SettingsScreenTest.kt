@@ -2,6 +2,7 @@ package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -14,6 +15,7 @@ import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerPreferences
 import com.bl4ckswordsman.nightjar.data.TimerPreferencesDataSource
 import com.bl4ckswordsman.nightjar.data.TimerRepository
+import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,8 +24,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
@@ -103,5 +107,110 @@ class SettingsScreenTest {
 
         // Verify that updated presets (10, 20, 30, 60) were saved
         verify(mockDataSource).saveCustomPresets(eq(listOf(10L, 20L, 30L, 60L)))
+    }
+
+    @Test
+    fun toggleRows_fullRowTap_persistsUpdatedPreferences() = runTest {
+        composeTestRule.setContent {
+            NightjarTheme {
+                SettingsScreen(
+                    onNavigateBack = {},
+                    timerViewModel = viewModel
+                )
+            }
+        }
+
+        // Commitment mode (default false -> true)
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_commitment_mode_title))
+            .performScrollTo()
+            .performClick()
+        composeTestRule.waitForIdle()
+        verify(mockDataSource).saveCommitmentMode(true)
+
+        // Sunset mode (default true -> false)
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_sunset_mode_title))
+            .performScrollTo()
+            .performClick()
+        composeTestRule.waitForIdle()
+        verify(mockDataSource).saveSunsetMode(false)
+
+        // Sunset audio alert (default true -> false)
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_sunset_audio_title))
+            .performScrollTo()
+            .performClick()
+        composeTestRule.waitForIdle()
+        verify(mockDataSource).saveSunsetAudioEnabled(false)
+    }
+
+    @Test
+    fun sunsetDurationDropdown_selectingOption_persistsDuration() = runTest {
+        composeTestRule.setContent {
+            NightjarTheme {
+                SettingsScreen(
+                    onNavigateBack = {},
+                    timerViewModel = viewModel
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_sunset_duration_title))
+            .performScrollTo()
+            .performClick()
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_sunset_duration_format, 45L))
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        verify(mockDataSource).saveSunsetDuration(45L)
+    }
+
+    @Test
+    fun runningTimer_disablesToggleRows() = runTest {
+        repository.updateState(
+            TimerState.Running(
+                totalSeconds = 300L,
+                remainingSeconds = 250L,
+                startedAtMillis = 1_000L
+            )
+        )
+
+        composeTestRule.setContent {
+            NightjarTheme {
+                SettingsScreen(
+                    onNavigateBack = {},
+                    timerViewModel = viewModel
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_commitment_mode_title))
+            .performScrollTo()
+            .assertIsNotEnabled()
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        verify(mockDataSource, never()).saveCommitmentMode(any())
+    }
+
+    @Test
+    fun presetDialog_invalidInput_showsErrorAndDoesNotSave() = runTest {
+        composeTestRule.setContent {
+            NightjarTheme {
+                SettingsScreen(
+                    onNavigateBack = {},
+                    timerViewModel = viewModel
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_custom_presets_title))
+            .performScrollTo()
+            .performClick()
+
+        composeTestRule.onNode(hasText("5") and hasSetTextAction()).performTextReplacement("999")
+        composeTestRule.onNodeWithText(context.getString(R.string.dialog_btn_save)).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText(context.getString(R.string.dialog_invalid_input)).assertExists()
+        verify(mockDataSource, never()).saveCustomPresets(any())
     }
 }
