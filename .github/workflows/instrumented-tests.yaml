@@ -1,5 +1,8 @@
 name: Instrumented UI Tests
 
+permissions:
+  contents: read
+
 run-name: "${{ github.event_name == 'workflow_dispatch' && format('Manual UI Run ({0})', github.ref_name) || 'Scheduled UI Test Run' }}"
 
 on:
