@@ -77,7 +77,7 @@ fun DurationPickerSheet(
 ) {
     val sheetState = rememberBottomSheetState(
         initialValue = SheetValue.Hidden,
-        confirmValueChange = { it != SheetValue.PartiallyExpanded },
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
     )
 
     val maxHours = (maxSeconds / 3600L).toInt().coerceAtLeast(0)
