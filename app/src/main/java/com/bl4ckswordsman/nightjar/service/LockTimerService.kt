@@ -5,13 +5,16 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.os.Build
+import android.hardware.display.DisplayManager
 import android.os.IBinder
 import android.util.Log
+import android.view.Display
+import android.view.Surface
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.getSystemService
@@ -72,13 +75,17 @@ class LockTimerService : Service() {
 
     // Sensor-based tilt detection
     private val sensorManager by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
+    private val displayManager by lazy { getSystemService(DisplayManager::class.java) }
     private var accelerometer: Sensor? = null
     private val tiltTracker = TiltGravityTracker()
+
+    private fun currentDisplayRotation(): Int =
+        displayManager?.getDisplay(Display.DEFAULT_DISPLAY)?.rotation ?: Surface.ROTATION_0
 
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null || event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-            tiltTracker.update(event.values[0], event.values[1])
+            tiltTracker.update(event.values[0], event.values[1], currentDisplayRotation())
             if (overlayManager?.isShowing == true) {
                 overlayManager?.updateSensors(
                     tilt = tiltTracker.tilt,
@@ -96,6 +103,7 @@ class LockTimerService : Service() {
 
     /** Registers the accelerometer sensor listener for tilt tracking. */
     private fun registerSensor() {
+        tiltTracker.reset()
         accelerometer?.let {
             sensorManager.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_GAME)
         }
@@ -141,6 +149,11 @@ class LockTimerService : Service() {
             }
         }
         return START_NOT_STICKY
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        overlayManager?.onConfigurationChanged()
     }
 
     override fun onDestroy() {

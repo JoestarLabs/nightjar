@@ -2,7 +2,9 @@ package com.bl4ckswordsman.nightjar.service
 
 import android.content.Context
 import android.graphics.PixelFormat
+import android.hardware.display.DisplayManager
 import android.util.Log
+import android.view.Display
 import android.view.WindowManager
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -62,8 +64,24 @@ class ServiceLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateReg
  * @param context Application or service context used to access [WindowManager].
  */
 class ComposeOverlayManager(private val context: Context) {
-    private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val windowContext: Context by lazy {
+        val displayManager = context.getSystemService(DisplayManager::class.java)
+        val defaultDisplay = displayManager?.getDisplay(Display.DEFAULT_DISPLAY)
+        if (defaultDisplay != null) {
+            context.createWindowContext(
+                defaultDisplay,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                null
+            )
+        } else {
+            context
+        }
+    }
+    private val windowManager: WindowManager by lazy {
+        windowContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    }
     private var composeView: ComposeView? = null
+    private var layoutParams: WindowManager.LayoutParams? = null
     private var lifecycleOwner: ServiceLifecycleOwner? = null
 
     // State holders for Compose content updates
@@ -118,6 +136,7 @@ class ComposeOverlayManager(private val context: Context) {
             windowManager.addView(view, params)
             this.lifecycleOwner = owner
             this.composeView = view
+            this.layoutParams = params
         } catch (e: Exception) {
             Log.w(TAG, "Failed to attach sunset overlay window", e)
             owner.stop()
@@ -126,7 +145,7 @@ class ComposeOverlayManager(private val context: Context) {
 
     /** Creates and configures the [ComposeView] hosting the sunset animation composables. */
     private fun createComposeView(lifecycleOwner: ServiceLifecycleOwner): ComposeView {
-        return ComposeView(context).apply {
+        return ComposeView(windowContext).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             fitsSystemWindows = false
 
@@ -219,10 +238,22 @@ class ComposeOverlayManager(private val context: Context) {
         rawAccelYState.floatValue = rawAccelY
     }
 
+    /** Refreshes the overlay layout after a display orientation or configuration change. */
+    fun onConfigurationChanged() {
+        val view = composeView ?: return
+        val params = layoutParams ?: return
+        try {
+            windowManager.updateViewLayout(view, params)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to update sunset overlay layout on configuration change", e)
+        }
+    }
+
     /** Dismisses and removes the overlay window from the window manager. */
     fun dismiss() {
         val view = composeView ?: return
         composeView = null
+        layoutParams = null
 
         try {
             windowManager.removeView(view)
