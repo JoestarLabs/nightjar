@@ -3,23 +3,17 @@
 package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.Manifest
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,14 +39,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
@@ -60,7 +52,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.launch
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
@@ -122,17 +113,6 @@ fun HomeScreen(
         }
     }
 
-    // ── Dial elevation animation (rises when timer starts) ───────────────────
-    val dialElevation by animateDpAsState(
-        targetValue = if (isRunning) 16.dp else 0.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        label = "dial_elevation"
-    )
-
-
     // ── Settings gear spin & shape morphing ────────────────────────────────────
     var gearRotation by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) {
@@ -157,11 +137,7 @@ fun HomeScreen(
         NotificationPermissionDialog(
             onAllow = {
                 showNotifDialog = false
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    if (!LockDeviceAdminReceiver.isEnabled(context)) showAdminDialog = true
-                }
+                notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             },
             onDismiss = { showNotifDialog = false }
         )
@@ -302,8 +278,7 @@ fun HomeScreen(
                         when {
                             isRunning -> viewModel.stopTimer()
                             !LockDeviceAdminReceiver.isEnabled(context) -> showAdminDialog = true
-                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                                    !hasNotificationPermission(context) -> showNotifDialog = true
+                            !hasNotificationPermission(context) -> showNotifDialog = true
 
                             else -> {
                                 rippleTrigger++
@@ -377,10 +352,8 @@ fun HomeScreen(
     }
 }
 
-/** Checks whether POST_NOTIFICATIONS runtime permission has been granted on Android 13+. */
+/** Checks whether POST_NOTIFICATIONS runtime permission has been granted. */
 private fun hasNotificationPermission(context: android.content.Context): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED
-    } else true
+    return context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+        android.content.pm.PackageManager.PERMISSION_GRANTED
 }

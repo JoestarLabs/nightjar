@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,8 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -254,43 +251,43 @@ fun RisingWaveOverlay(
             val height = size.height
 
             // Calculate base Y position of the liquid wave
-                    val baseLineY = height - (animatedProgress * height)
+            val baseLineY = height - (animatedProgress * height)
 
-                    // Tilt calculations (negate animatedTilt to reverse tilt direction)
-                    val maxTiltOffset = 120.dp.toPx()
-                    val tiltOffset = -animatedTilt * maxTiltOffset
-                    val bottomExtension = height + maxTiltOffset
+            // Tilt calculations (negate animatedTilt to reverse tilt direction)
+            val maxTiltOffset = 120.dp.toPx()
+            val tiltOffset = -animatedTilt * maxTiltOffset
+            val bottomExtension = height + maxTiltOffset
 
-                    // Wave specs
-                    val waveAmplitude = 16.dp.toPx()
-                    val waveFrequency = 0.006f // controlling width/frequency of waves
+            // Wave specs
+            val waveAmplitude = 16.dp.toPx()
+            val waveFrequency = 0.006f // controlling width/frequency of waves
 
-                    // ─── 1. Back Wave (Slightly darker, offset) ───
-                    backPath.reset()
-                    buildWavePath(
-                        path           = backPath,
-                        width          = width,
-                        baseLineY      = baseLineY,
-                        tiltOffset     = tiltOffset,
-                        bottomExtension = bottomExtension,
-                        amplitude      = waveAmplitude,
-                        frequency      = waveFrequency,
-                        phase          = backWavePhase,
-                        useCosine      = false
-                    )
+            // ─── 1. Back Wave (Slightly darker, offset) ───
+            backPath.reset()
+            buildWavePath(
+                path            = backPath,
+                width           = width,
+                baseLineY       = baseLineY,
+                tiltOffset      = tiltOffset,
+                bottomExtension = bottomExtension,
+                amplitude       = waveAmplitude,
+                frequency       = waveFrequency,
+                phase           = backWavePhase,
+                useCosine       = false
+            )
 
-                    drawPath(
-                        path = backPath,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                tertiaryColor.copy(alpha = 0.65f),
-                                secondaryColor.copy(alpha = 0.80f),
-                                Color.Black.copy(alpha = 0.90f)
-                            ),
-                            startY = baseLineY - waveAmplitude - kotlin.math.abs(tiltOffset),
-                            endY = height
-                        )
-                    )
+            drawPath(
+                path = backPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        tertiaryColor.copy(alpha = 0.65f),
+                        secondaryColor.copy(alpha = 0.80f),
+                        Color.Black.copy(alpha = 0.90f)
+                    ),
+                    startY = baseLineY - waveAmplitude - kotlin.math.abs(tiltOffset),
+                    endY = height
+                )
+            )
 
             // ─── 2. Front Wave (Primary) ───
             frontPath.reset()

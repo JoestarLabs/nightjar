@@ -2,7 +2,6 @@ package com.bl4ckswordsman.nightjar.service
 
 import android.content.Context
 import android.graphics.PixelFormat
-import android.os.Build
 import android.view.WindowManager
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -181,22 +180,15 @@ class ComposeOverlayManager(private val context: Context) {
                     WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION,
             PixelFormat.TRANSLUCENT
         ).apply {
-            // Support drawing behind cuts and status bars for a true fullscreen wave
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                layoutInDisplayCutoutMode =
-                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            }
+            // Support drawing behind cutouts and status bars for a true fullscreen wave
+            layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
     }
 
     /** Updates the remaining countdown time displayed by the overlay. */
     fun updateRemainingTime(remainingSeconds: Long) {
         remainingSecondsState.longValue = remainingSeconds
-    }
-
-    /** Updates the lateral tilt factor used by the classic wave animation. */
-    fun updateTilt(tilt: Float) {
-        tiltState.floatValue = tilt
     }
 
     /** Updates sensor values for physical gravity alignment across 360 degrees. */

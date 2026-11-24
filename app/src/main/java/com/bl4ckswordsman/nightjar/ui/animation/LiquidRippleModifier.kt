@@ -16,12 +16,9 @@ package com.bl4ckswordsman.nightjar.ui.animation
 
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -36,7 +33,6 @@ import org.intellij.lang.annotations.Language
 @Language("AGSL")
 private const val LIQUID_RIPPLE_AGSL = """
     uniform shader inputShader;
-    uniform float2 uResolution;
     uniform float2 uOrigin;
     uniform float uTime;
     uniform float uAmplitude;
@@ -103,65 +99,29 @@ fun Modifier.liquidRipple(
         }
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        Api33LiquidRipple.applyLiquidRipple(
-            modifier = Modifier,
-            animTime = animTime,
-            density = density,
-            durationMillis = durationMillis,
-            amplitudeDp = amplitudeDp,
-            frequency = frequency,
-            decay = decay,
-            speedDp = speedDp,
-            origin = origin,
-        )
-    } else {
-        Modifier
-    }
-}
+    val shader = remember { RuntimeShader(LIQUID_RIPPLE_AGSL) }
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-private object Api33LiquidRipple {
-    /**
-     * Internal implementation of the API 33+ RuntimeShader liquid ripple effect.
-     */
-    @Composable
-    fun applyLiquidRipple(
-        modifier: Modifier,
-        animTime: Animatable<Float, *>,
-        density: androidx.compose.ui.unit.Density,
-        durationMillis: Int,
-        amplitudeDp: Float,
-        frequency: Float,
-        decay: Float,
-        speedDp: Float,
-        origin: Offset,
-    ): Modifier {
-        val shader = remember { RuntimeShader(LIQUID_RIPPLE_AGSL) }
+    Modifier.graphicsLayer {
+        val currentTime = animTime.value
+        val maxTime = durationMillis / 1000f
+        if (currentTime > 0f && currentTime < maxTime) {
+            val densityVal = density.density
+            val amplitude = amplitudeDp * densityVal
+            val speed = speedDp * densityVal
 
-        return modifier.graphicsLayer {
-            val currentTime = animTime.value
-            val maxTime = durationMillis / 1000f
-            if (currentTime > 0f && currentTime < maxTime) {
-                val densityVal = density.density
-                val amplitude = amplitudeDp * densityVal
-                val speed = speedDp * densityVal
+            val ox = if (origin != Offset.Zero && origin.isSpecified) origin.x else size.width / 2f
+            val oy = if (origin != Offset.Zero && origin.isSpecified) origin.y else size.height / 2f
 
-                val ox = if (origin != Offset.Zero && origin.isSpecified) origin.x else size.width / 2f
-                val oy = if (origin != Offset.Zero && origin.isSpecified) origin.y else size.height / 2f
+            shader.setFloatUniform("uOrigin", ox, oy)
+            shader.setFloatUniform("uTime", currentTime)
+            shader.setFloatUniform("uAmplitude", amplitude)
+            shader.setFloatUniform("uFrequency", frequency)
+            shader.setFloatUniform("uDecay", decay)
+            shader.setFloatUniform("uSpeed", speed)
 
-                shader.setFloatUniform("uResolution", size.width, size.height)
-                shader.setFloatUniform("uOrigin", ox, oy)
-                shader.setFloatUniform("uTime", currentTime)
-                shader.setFloatUniform("uAmplitude", amplitude)
-                shader.setFloatUniform("uFrequency", frequency)
-                shader.setFloatUniform("uDecay", decay)
-                shader.setFloatUniform("uSpeed", speed)
-
-                renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "inputShader").asComposeRenderEffect()
-            } else {
-                renderEffect = null
-            }
+            renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "inputShader").asComposeRenderEffect()
+        } else {
+            renderEffect = null
         }
     }
 }

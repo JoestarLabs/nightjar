@@ -1,6 +1,5 @@
 package com.bl4ckswordsman.nightjar.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -67,10 +66,10 @@ private val ZenDarkColorScheme = darkColorScheme(
     tertiaryContainer = ToriiRed30,
     onTertiaryContainer = ToriiRed90,
 
-    error = Color(0xFFFFB4AB),
-    errorContainer = Color(0xFF93000A),
-    onError = Color(0xFF690005),
-    onErrorContainer = Color(0xFFFFDAD6),
+    error = ErrorRedDark,
+    errorContainer = ErrorRedContainerDark,
+    onError = OnErrorRedDark,
+    onErrorContainer = OnErrorRedContainerDark,
 
     background = SurfaceInk,
     onBackground = NeutralVariant90,
@@ -95,7 +94,7 @@ fun NightjarTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context)
             else dynamicLightColorScheme(context)
