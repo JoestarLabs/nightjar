@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.view.Surface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -100,7 +101,8 @@ fun SunsetAnimationPreviewDialog(
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
                 if (event == null || event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-                tracker.update(event.values[0], event.values[1])
+                val rotation = context.display.rotation
+                tracker.update(event.values[0], event.values[1], rotation)
                 currentTilt = tracker.tilt
                 currentGravityAngleRadState.floatValue = tracker.gravityAngleRad
                 currentRawAccelXState.floatValue = tracker.rawAccelX
