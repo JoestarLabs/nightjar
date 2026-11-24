@@ -41,9 +41,9 @@ internal const val LIQUID_METABALL_AGSL = """
                      - inputShader.eval(p - float2(0.0, uNormalStep)).a;
             float3 n = normalize(float3(-dx, -dy, 0.14));
 
-            float spec = pow(max(dot(n, normalize(float3(-0.35, -0.65, 0.68))), 0.0), 18.0);
-            float fresnel = pow(1.0 - max(n.z, 0.0), 2.5);
-            col += half3(spec * 0.42 + fresnel * 0.18);
+            float spec = pow(max(dot(n, normalize(float3(-0.35, -0.65, 0.68))), 0.0), 10.0);
+            float fresnel = pow(1.0 - max(n.z, 0.0), 2.2);
+            col += half3(spec * 0.14) + uTop * half(fresnel * 0.24);
         }
 
         float alpha = mix(0.60, 0.82, depth) * edge;

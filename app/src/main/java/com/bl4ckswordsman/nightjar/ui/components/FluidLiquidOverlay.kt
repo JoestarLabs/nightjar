@@ -1,8 +1,6 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -171,22 +169,19 @@ fun FluidLiquidOverlay(
         unwrappedTextAngle += diff
     }
 
-    val animatedTextRotation by animateFloatAsState(
-        targetValue = unwrappedTextAngle,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
-        ),
-        label = "text_orientation",
-    )
-
     val motionScheme = MaterialTheme.motionScheme
     val textFastSpatial = motionScheme.fastSpatialSpec<Float>()
     val textDefaultSpatial = motionScheme.defaultSpatialSpec<Float>()
 
+    val animatedTextRotation by animateFloatAsState(
+        targetValue = unwrappedTextAngle,
+        animationSpec = textDefaultSpatial,
+        label = "text_orientation",
+    )
+
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
-    val deepColor = Color(0xFF020617)
+    val deepColor = MaterialTheme.colorScheme.primaryContainer
 
     val shaderHolder = rememberLiquidMetaballShaderHolder(enabled = !isMinimal)
 
