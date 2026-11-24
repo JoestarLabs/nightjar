@@ -139,6 +139,18 @@ class TimerPreferencesDataSource(
         }
     }
 
+    /**
+     * Clears the persisted active timer only if its stored start timestamp still equals
+     * [expectedStartedAtMillis], preventing stale cleanup from overwriting a newly started timer.
+     */
+    suspend fun clearActiveTimerIfMatches(expectedStartedAtMillis: Long) {
+        dataStore.edit { prefs ->
+            if (prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] == expectedStartedAtMillis) {
+                prefs[TimerPreferenceKeys.STARTED_AT_MILLIS] = 0L
+            }
+        }
+    }
+
     /** Persist the commitment mode setting. */
     suspend fun saveCommitmentMode(enabled: Boolean) {
         dataStore.edit { prefs ->

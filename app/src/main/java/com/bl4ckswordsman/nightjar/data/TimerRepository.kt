@@ -55,10 +55,10 @@ class TimerRepository @Inject constructor(
                         )
                     )
                 } else {
-                    preferencesDataSource.clearActiveTimer()
+                    preferencesDataSource.clearActiveTimerIfMatches(startedAt)
                 }
             } else if (startedAt > 0L) {
-                preferencesDataSource.clearActiveTimer()
+                preferencesDataSource.clearActiveTimerIfMatches(startedAt)
             }
         }
     }
