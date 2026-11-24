@@ -73,33 +73,17 @@ class LockTimerService : Service() {
     // Sensor-based tilt detection
     private val sensorManager by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
     private var accelerometer: Sensor? = null
-    private var filteredGx = 0f
-    private var filteredGy = 9.8f
-    private var currentTilt = 0f
-    private var currentGravityAngleRad = 0f
+    private val tiltTracker = TiltGravityTracker()
 
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null || event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-
-            val x = event.values[0]
-            val y = event.values[1]
-
-            // Apply low-pass filter
-            filteredGx = filteredGx * 0.85f + x * 0.15f
-            filteredGy = filteredGy * 0.85f + y * 0.15f
-
-            // Map accelerometer X to a normalized tilt float (-1f to 1f) for classic wave
-            currentTilt = (filteredGx / 5.5f).coerceIn(-1f, 1f)
-
-            // Compute 360-degree gravity angle in radians (atan2(-gx, gy))
-            val xyMagnitude = kotlin.math.hypot(filteredGx, filteredGy)
-            if (xyMagnitude > 1.2f) {
-                currentGravityAngleRad = kotlin.math.atan2(-filteredGx, filteredGy)
-            }
-
+            tiltTracker.update(event.values[0], event.values[1])
             if (overlayManager?.isShowing == true) {
-                overlayManager?.updateSensors(tilt = currentTilt, gravityAngleRad = currentGravityAngleRad)
+                overlayManager?.updateSensors(
+                    tilt = tiltTracker.tilt,
+                    gravityAngleRad = tiltTracker.gravityAngleRad
+                )
             }
         }
 
@@ -228,8 +212,8 @@ class LockTimerService : Service() {
                     overlayManager?.show(
                         remainingSeconds = remaining,
                         totalSeconds = sunsetDuration,
-                        tilt = currentTilt,
-                        gravityAngleRad = currentGravityAngleRad,
+                        tilt = tiltTracker.tilt,
+                        gravityAngleRad = tiltTracker.gravityAngleRad,
                         animation = sunsetAnimation,
                         startedAtMillis = sunsetWindowStartMs
                     )
@@ -274,8 +258,8 @@ class LockTimerService : Service() {
                             overlayManager?.show(
                                 remainingSeconds = remaining,
                                 totalSeconds = sunsetDuration,
-                                tilt = currentTilt,
-                                gravityAngleRad = currentGravityAngleRad,
+                                tilt = tiltTracker.tilt,
+                                gravityAngleRad = tiltTracker.gravityAngleRad,
                                 animation = sunsetAnimation,
                                 startedAtMillis = sunsetWindowStartMs
                             )
