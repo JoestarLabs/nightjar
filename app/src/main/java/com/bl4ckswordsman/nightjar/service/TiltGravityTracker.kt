@@ -16,12 +16,22 @@ class TiltGravityTracker {
     var gravityAngleRad: Float = 0f
         private set
 
+    var linearAccelX: Float = 0f
+        private set
+
+    var linearAccelY: Float = 0f
+        private set
+
     /**
-     * Incorporates an accelerometer `(x, y)` sample in m/s² and updates [tilt] and [gravityAngleRad].
+     * Incorporates an accelerometer `(x, y)` sample in m/s² and updates [tilt],
+     * [gravityAngleRad], and high-passed [linearAccelX]/[linearAccelY].
      */
     fun update(x: Float, y: Float) {
         filteredGx = filteredGx * FILTER_PREVIOUS_WEIGHT + x * FILTER_SAMPLE_WEIGHT
         filteredGy = filteredGy * FILTER_PREVIOUS_WEIGHT + y * FILTER_SAMPLE_WEIGHT
+
+        linearAccelX = x - filteredGx
+        linearAccelY = y - filteredGy
 
         tilt = (filteredGx / TILT_NORMALIZATION_DIVISOR).coerceIn(-1f, 1f)
 

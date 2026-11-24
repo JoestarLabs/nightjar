@@ -82,7 +82,9 @@ class LockTimerService : Service() {
             if (overlayManager?.isShowing == true) {
                 overlayManager?.updateSensors(
                     tilt = tiltTracker.tilt,
-                    gravityAngleRad = tiltTracker.gravityAngleRad
+                    gravityAngleRad = tiltTracker.gravityAngleRad,
+                    linearAccelX = tiltTracker.linearAccelX,
+                    linearAccelY = tiltTracker.linearAccelY,
                 )
             }
         }

@@ -71,6 +71,8 @@ class ComposeOverlayManager(private val context: Context) {
     private val totalSecondsState = mutableLongStateOf(0L)
     private val tiltState = mutableFloatStateOf(0f)
     private val gravityAngleRadState = mutableFloatStateOf(0f)
+    private val linearAccelXState = mutableFloatStateOf(0f)
+    private val linearAccelYState = mutableFloatStateOf(0f)
     private val animationState = mutableStateOf(SunsetAnimation.FLUID_LIQUID)
     private val startedAtMillisState = mutableLongStateOf(0L)
 
@@ -139,7 +141,9 @@ class ComposeOverlayManager(private val context: Context) {
                             FluidLiquidOverlay(
                                 remainingSeconds = remainingSecondsState.longValue,
                                 totalSeconds = totalSecondsState.longValue,
-                                gravityAngleRad = gravityAngleRadState.floatValue,
+                                gravityAngleRad = { gravityAngleRadState.floatValue },
+                                linearAccelX = { linearAccelXState.floatValue },
+                                linearAccelY = { linearAccelYState.floatValue },
                                 startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
                             )
                         }
@@ -196,10 +200,17 @@ class ComposeOverlayManager(private val context: Context) {
         remainingSecondsState.longValue = remainingSeconds
     }
 
-    /** Updates sensor values for physical gravity alignment across 360 degrees. */
-    fun updateSensors(tilt: Float, gravityAngleRad: Float) {
+    /** Updates sensor values for physical gravity alignment and linear acceleration across 360 degrees. */
+    fun updateSensors(
+        tilt: Float,
+        gravityAngleRad: Float,
+        linearAccelX: Float = 0f,
+        linearAccelY: Float = 0f,
+    ) {
         tiltState.floatValue = tilt
         gravityAngleRadState.floatValue = gravityAngleRad
+        linearAccelXState.floatValue = linearAccelX
+        linearAccelYState.floatValue = linearAccelY
     }
 
     /** Dismisses and removes the overlay window from the window manager. */
