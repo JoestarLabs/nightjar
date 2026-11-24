@@ -71,6 +71,8 @@ internal class TimerNotificationFactory(private val context: Context) {
 
             val builder = Notification.Builder(context, NightjarApp.CHANNEL_TIMER_ID)
                 .setSmallIcon(smallIconRes)
+                .setColor(segmentColor)
+                .setCategory(Notification.CATEGORY_PROGRESS)
                 .setContentTitle(localizedContext.getString(R.string.notification_title))
                 .setWhen(countdownEndEpochMs)
                 .setUsesChronometer(true)

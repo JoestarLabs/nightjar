@@ -211,6 +211,8 @@ class LockTimerService : Service() {
         var remaining = computeCeilingRemainingSeconds(endTimeMs, System.currentTimeMillis())
         var alertFired = false
         var sunsetChimePlayed = false
+        var lastNotifiedRemaining = remaining
+        var lastNotifiedUrgent = isUrgent(remaining)
 
         timerRepository.updateState(
             TimerState.Running(
@@ -298,16 +300,29 @@ class LockTimerService : Service() {
                 postOneMinuteAlert()
             }
 
-            nm.notify(
-                NOTIFICATION_ID,
-                buildNotification(
+            val isUrgentNow = isAlertTick || isUrgent(remaining)
+            if (shouldUpdateNotification(
                     durationSeconds = durationSeconds,
-                    countdownEndEpochMs = endTimeMs,
                     remainingSeconds = remaining,
-                    alertOnce = !isAlertTick,
-                    isUrgent = isAlertTick || isUrgent(remaining)
+                    lastNotifiedRemaining = lastNotifiedRemaining,
+                    isUrgent = isUrgentNow,
+                    lastNotifiedUrgent = lastNotifiedUrgent,
+                    isAlertTick = isAlertTick,
                 )
-            )
+            ) {
+                lastNotifiedRemaining = remaining
+                lastNotifiedUrgent = isUrgentNow
+                nm.notify(
+                    NOTIFICATION_ID,
+                    buildNotification(
+                        durationSeconds = durationSeconds,
+                        countdownEndEpochMs = endTimeMs,
+                        remainingSeconds = remaining,
+                        alertOnce = !isAlertTick,
+                        isUrgent = isUrgentNow
+                    )
+                )
+            }
         }
         if (isActive) {
             onTimerExpired()
@@ -439,6 +454,8 @@ class LockTimerService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val NOTIFICATION_ALERT_ID = 1002
         private const val ONE_MINUTE_SECONDS = 60L
+        private const val NOTIFICATION_UPDATE_MIN_INTERVAL_SECONDS = 15L
+        private const val NOTIFICATION_PROGRESS_STEPS = 20L
 
         /**
          * Resolves the small icon resource ID for the notification and Live Update chip.
@@ -463,6 +480,30 @@ class LockTimerService : Service() {
          */
         fun isUrgent(remainingSeconds: Long): Boolean =
             remainingSeconds <= ONE_MINUTE_SECONDS
+
+        /**
+         * Determines whether the ongoing foreground notification should be re-posted on this tick.
+         *
+         * Because the notification uses a native countdown chronometer, re-posting every second
+         * causes excessive SystemUI / One UI drawer re-inflation. Updates are throttled to coarse
+         * progress intervals (`>= 15s` or 5% steps) while still firing immediately on urgency
+         * transitions and the 1-minute alert tick.
+         */
+        internal fun shouldUpdateNotification(
+            durationSeconds: Long,
+            remainingSeconds: Long,
+            lastNotifiedRemaining: Long,
+            isUrgent: Boolean,
+            lastNotifiedUrgent: Boolean,
+            isAlertTick: Boolean,
+        ): Boolean {
+            if (isAlertTick || isUrgent != lastNotifiedUrgent) return true
+            val minInterval = maxOf(
+                NOTIFICATION_UPDATE_MIN_INTERVAL_SECONDS,
+                durationSeconds / NOTIFICATION_PROGRESS_STEPS
+            )
+            return (lastNotifiedRemaining - remainingSeconds) >= minInterval
+        }
 
         /**
          * Returns ceiling-rounded remaining seconds until [endTimeMs], so `t = 0..999ms` after
