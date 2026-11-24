@@ -55,9 +55,9 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
         widthPx = width
         heightPx = height
 
-        val areaPerParticle = (width * height * 1.05f) / maxParticles.toFloat()
+        val areaPerParticle = (width * height * 1.08f) / maxParticles.toFloat()
         val spacing = sqrt(areaPerParticle)
-        interactionRadiusPx = (spacing * 1.65f).coerceAtLeast(16f)
+        interactionRadiusPx = (spacing * 2.25f).coerceAtLeast(16f)
         invCellSize = 1f / interactionRadiusPx
         gridCols = ceil(width * invCellSize).toInt().coerceIn(1, MAX_GRID_COLS)
         gridRows = ceil(height * invCellSize).toInt().coerceIn(1, MAX_GRID_ROWS)
@@ -168,7 +168,7 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
         // 3. Double-Density Relaxation (Clavet et al.)
         val stiffness = STIFFNESS * h
         val nearStiffness = NEAR_STIFFNESS * h
-        val minNegPressure = -stiffness * 0.35f
+        val minNegPressure = -stiffness * 0.08f
 
         for (i in 0 until count) {
             val xi = x[i]
@@ -292,16 +292,16 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
         private const val MAX_GRID_CELLS = MAX_GRID_COLS * MAX_GRID_ROWS
 
         private const val MAX_FRAME_DT_SEC = 1f / 20f
-        private const val SUB_STEPS = 2
+        private const val SUB_STEPS = 4
         private const val MAX_ACCEL = 35f
 
-        // Lively & splashy water tuning
-        private const val ACCEL_SCALE_PER_H = 3.8f
-        private const val VELOCITY_DAMPING = 0.996f
-        private const val REST_DENSITY = 1.65f
-        private const val STIFFNESS = 10.5f
-        private const val NEAR_STIFFNESS = 18f
-        private const val WALL_RESTITUTION = 0.25f
+        // Lively, nearly incompressible water tuning calibrated for full-screen fill
+        private const val ACCEL_SCALE_PER_H = 2.8f
+        private const val VELOCITY_DAMPING = 0.998f
+        private const val REST_DENSITY = 1.0f
+        private const val STIFFNESS = 95f
+        private const val NEAR_STIFFNESS = 140f
+        private const val WALL_RESTITUTION = 0.30f
         private const val MAX_SPEED_PER_H = 18f
     }
 }

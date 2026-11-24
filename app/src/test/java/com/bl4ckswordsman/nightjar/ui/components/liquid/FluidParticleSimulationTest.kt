@@ -113,4 +113,29 @@ class FluidParticleSimulationTest {
         sim.reset()
         assertEquals(0, sim.activeCount)
     }
+
+    @Test
+    fun `full particle count fills nearly to the top of the screen under gravity`() {
+        for (count in listOf(130, 80)) {
+            val sim = FluidParticleSimulation(maxParticles = count)
+            val width = 1080f
+            val height = 2400f
+            sim.resize(width = width, height = height)
+            sim.setActiveCount(targetCount = count, gravityX = 0f, gravityY = 9.8f)
+
+            repeat(180) {
+                sim.step(dtSec = 1f / 60f, accelX = 0f, accelY = 9.8f)
+            }
+
+            var minY = height
+            for (i in 0 until sim.activeCount) {
+                if (sim.y[i] < minY) minY = sim.y[i]
+            }
+            val topWithMetaballReach = (minY - sim.interactionRadiusPx).coerceAtLeast(0f)
+            assertTrue(
+                "Expected full count ($count) to fill near top, got minY=$minY, reach=$topWithMetaballReach",
+                topWithMetaballReach < height * 0.15f,
+            )
+        }
+    }
 }
