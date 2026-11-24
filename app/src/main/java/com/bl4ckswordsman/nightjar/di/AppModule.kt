@@ -1,36 +1,20 @@
 package com.bl4ckswordsman.nightjar.di
 
-import android.content.Context
-import com.bl4ckswordsman.nightjar.data.TimerPreferencesDataSource
-import com.bl4ckswordsman.nightjar.data.TimerRepository
 import com.bl4ckswordsman.nightjar.service.AndroidSunsetAudioPlayer
 import com.bl4ckswordsman.nightjar.service.SunsetAudioPlayer
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AppModule {
+abstract class AppModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideTimerPreferencesDataSource(
-        @ApplicationContext context: Context
-    ): TimerPreferencesDataSource = TimerPreferencesDataSource(context)
-
-    @Provides
-    @Singleton
-    fun provideTimerRepository(
-        preferencesDataSource: TimerPreferencesDataSource
-    ): TimerRepository = TimerRepository(preferencesDataSource)
-
-    @Provides
-    @Singleton
-    fun provideSunsetAudioPlayer(
-        @ApplicationContext context: Context
-    ): SunsetAudioPlayer = AndroidSunsetAudioPlayer(context)
+    abstract fun bindSunsetAudioPlayer(
+        impl: AndroidSunsetAudioPlayer
+    ): SunsetAudioPlayer
 }
