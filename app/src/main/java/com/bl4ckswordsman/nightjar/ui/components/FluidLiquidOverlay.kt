@@ -98,11 +98,12 @@ fun FluidLiquidOverlay(
 
         while (true) {
             withFrameNanos { frameNanos ->
-                val dtSec = if (lastNanos == 0L) {
+                val rawDtSec = if (lastNanos == 0L) {
                     1f / 60f
                 } else {
-                    ((frameNanos - lastNanos) / 1_000_000_000f).coerceIn(0.001f, 0.05f)
+                    ((frameNanos - lastNanos) / 1_000_000_000f).coerceAtLeast(0.001f)
                 }
+                val dtSec = rawDtSec.coerceAtMost(0.05f)
                 lastNanos = frameNanos
 
                 val rawAngle = gravityAngleRad()
@@ -130,10 +131,10 @@ fun FluidLiquidOverlay(
                 }
 
                 if (isFull) {
-                    val dtMs = dtSec * 1000f
+                    val dtMs = rawDtSec * 1000f
                     emaFrameMs = emaFrameMs * 0.9f + dtMs * 0.1f
                     if (emaFrameMs > FluidTuning.WATCHDOG_FRAME_MS) {
-                        overrunSec += dtSec
+                        overrunSec += rawDtSec
                         if (overrunSec >= FluidTuning.WATCHDOG_SUSTAINED_SEC) {
                             effectsController.reportFrameBudgetExceeded()
                         }
@@ -188,7 +189,6 @@ fun FluidLiquidOverlay(
     Box(modifier = modifier.fillMaxSize()) {
         // Subtle background dim preserving underlying content visibility
         Canvas(modifier = Modifier.fillMaxSize()) {
-            frameTick.longValue
             val progress = countdown.progress.floatValue
             drawRect(Color.Black.copy(alpha = FluidTuning.BACKGROUND_DIM_MAX_ALPHA * progress))
 

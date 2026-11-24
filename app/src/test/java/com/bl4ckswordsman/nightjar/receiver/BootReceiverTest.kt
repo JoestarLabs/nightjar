@@ -189,7 +189,7 @@ class BootReceiverTest {
         )
 
         assertFalse(serviceStarted)
-        org.mockito.kotlin.verify(mockDataSource).clearActiveTimer()
+        org.mockito.kotlin.verify(mockDataSource).clearActiveTimerIfMatches(1_000_000L)
     }
 
     @Test

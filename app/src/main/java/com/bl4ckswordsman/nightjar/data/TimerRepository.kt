@@ -1,5 +1,6 @@
 package com.bl4ckswordsman.nightjar.data
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -55,11 +57,23 @@ class TimerRepository @Inject constructor(
                         )
                     )
                 } else {
-                    preferencesDataSource.clearActiveTimerIfMatches(startedAt)
+                    clearStaleTimer(startedAt)
                 }
             } else if (startedAt > 0L) {
-                preferencesDataSource.clearActiveTimerIfMatches(startedAt)
+                clearStaleTimer(startedAt)
             }
         }
+    }
+
+    private suspend fun clearStaleTimer(startedAt: Long) {
+        try {
+            preferencesDataSource.clearActiveTimerIfMatches(startedAt)
+        } catch (e: IOException) {
+            Log.w(TAG, "Failed to clear stale active timer during init", e)
+        }
+    }
+
+    private companion object {
+        const val TAG = "TimerRepository"
     }
 }

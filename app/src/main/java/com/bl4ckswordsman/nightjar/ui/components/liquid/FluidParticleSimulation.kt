@@ -41,6 +41,9 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
     private var gridCols = 1
     private var gridRows = 1
     private var invCellSize = 1f / 48f
+    private var pendingTargetCount = 0
+    private var pendingGravityX = 0f
+    private var pendingGravityY = 9.8f
 
     /**
      * Updates container dimensions and recomputes interaction radius so [maxParticles]
@@ -71,6 +74,10 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
                 prevX[i] = x[i]
                 prevY[i] = y[i]
             }
+        } else if (pendingTargetCount > 0) {
+            val target = pendingTargetCount
+            pendingTargetCount = 0
+            setActiveCount(target, pendingGravityX, pendingGravityY)
         }
     }
 
@@ -82,17 +89,24 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
         val clamped = targetCount.coerceIn(0, maxParticles)
         if (clamped < activeCount) {
             activeCount = clamped
+            pendingTargetCount = clamped
             return
         }
         if (widthPx <= 1f || heightPx <= 1f) {
-            activeCount = clamped
+            pendingTargetCount = clamped
+            pendingGravityX = gravityX
+            pendingGravityY = gravityY
             return
         }
 
         val gMag = hypot(gravityX, gravityY).coerceAtLeast(0.001f)
         val gx = gravityX / gMag
         val gy = gravityY / gMag
-        val margin = interactionRadiusPx * 0.25f
+        val baseMargin = interactionRadiusPx * 0.25f
+        val marginX = baseMargin.coerceAtMost(widthPx * 0.45f)
+        val marginY = baseMargin.coerceAtMost(heightPx * 0.45f)
+        val spreadX = (interactionRadiusPx * 0.4f).coerceAtMost((widthPx - 2f * marginX).coerceAtLeast(0f))
+        val spreadY = (interactionRadiusPx * 0.4f).coerceAtMost((heightPx - 2f * marginY).coerceAtLeast(0f))
 
         for (i in activeCount until clamped) {
             // Spawn along the bottom wall relative to gravity, with natural spread
@@ -100,13 +114,13 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
             val spawnX: Float
             val spawnY: Float
             if (kotlin.math.abs(gy) >= kotlin.math.abs(gx)) {
-                spawnX = u * widthPx
-                spawnY = if (gy >= 0f) heightPx - margin - rng.nextFloat() * interactionRadiusPx * 0.4f
-                else margin + rng.nextFloat() * interactionRadiusPx * 0.4f
+                spawnX = (u * widthPx).coerceIn(marginX, (widthPx - marginX).coerceAtLeast(marginX))
+                spawnY = if (gy >= 0f) heightPx - marginY - rng.nextFloat() * spreadY
+                else marginY + rng.nextFloat() * spreadY
             } else {
-                spawnY = u * heightPx
-                spawnX = if (gx >= 0f) widthPx - margin - rng.nextFloat() * interactionRadiusPx * 0.4f
-                else margin + rng.nextFloat() * interactionRadiusPx * 0.4f
+                spawnY = (u * heightPx).coerceIn(marginY, (heightPx - marginY).coerceAtLeast(marginY))
+                spawnX = if (gx >= 0f) widthPx - marginX - rng.nextFloat() * spreadX
+                else marginX + rng.nextFloat() * spreadX
             }
             x[i] = spawnX
             y[i] = spawnY
@@ -141,8 +155,10 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
         val hSq = h * h
         val dtSq = dt * dt
         val margin = h * 0.24f
-        val maxX = (widthPx - margin).coerceAtLeast(margin)
-        val maxY = (heightPx - margin).coerceAtLeast(margin)
+        val marginX = margin.coerceAtMost(widthPx * 0.45f)
+        val marginY = margin.coerceAtMost(heightPx * 0.45f)
+        val maxX = (widthPx - marginX).coerceAtLeast(marginX)
+        val maxY = (heightPx - marginY).coerceAtLeast(marginY)
 
         // 1. Apply external force + mild damping, predict positions
         for (i in 0 until count) {
@@ -258,8 +274,8 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
         for (i in 0 until count) {
             var px = x[i]
             var py = y[i]
-            if (px < margin) px = margin else if (px > maxX) px = maxX
-            if (py < margin) py = margin else if (py > maxY) py = maxY
+            if (px < marginX) px = marginX else if (px > maxX) px = maxX
+            if (py < marginY) py = marginY else if (py > maxY) py = maxY
             x[i] = px
             y[i] = py
 
@@ -267,8 +283,8 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
             var nvy = (py - prevY[i]) * invDt
 
             // Mild wall bounce when hitting edges fast
-            if (px <= margin || px >= maxX) nvx *= -WALL_RESTITUTION
-            if (py <= margin || py >= maxY) nvy *= -WALL_RESTITUTION
+            if (px <= marginX || px >= maxX) nvx *= -WALL_RESTITUTION
+            if (py <= marginY || py >= maxY) nvy *= -WALL_RESTITUTION
 
             val speedSq = nvx * nvx + nvy * nvy
             if (speedSq > maxSpeed * maxSpeed) {
@@ -284,6 +300,7 @@ internal class FluidParticleSimulation(val maxParticles: Int = 130) {
     /** Clears all active particles (e.g. when looping the preview or entering MINIMAL quality). */
     fun reset() {
         activeCount = 0
+        pendingTargetCount = 0
     }
 
     companion object {

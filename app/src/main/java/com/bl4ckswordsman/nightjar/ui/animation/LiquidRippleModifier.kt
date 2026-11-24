@@ -85,8 +85,6 @@ fun Modifier.liquidRipple(
     decay: Float = 4.5f,
     speedDp: Float = 1400f,
 ): Modifier {
-    if (!enabled) return this
-
     val density = LocalDensity.current
     val animTime = remember { Animatable(0f) }
 
@@ -100,6 +98,8 @@ fun Modifier.liquidRipple(
             animTime.snapTo(0f)
         }
     }
+
+    if (!enabled) return this
 
     val shader = remember { RuntimeShader(LIQUID_RIPPLE_AGSL) }
 
