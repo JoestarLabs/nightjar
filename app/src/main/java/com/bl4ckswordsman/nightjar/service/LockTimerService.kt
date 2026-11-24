@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -58,6 +59,8 @@ class LockTimerService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var timerJob: Job? = null
+    private var activeRunId = 0L
+    private var activeStartedAtMillis = 0L
     private val nm by lazy { getSystemService<NotificationManager>()!! }
 
     /** Whether cancellation is locked for the current timer run. Set from the start intent. */
@@ -153,6 +156,8 @@ class LockTimerService : Service() {
         unregisterSensor()
         overlayManager?.dismiss()
         val startedAt = System.currentTimeMillis()
+        activeRunId++
+        activeStartedAtMillis = startedAt
 
         persistTimerStart(durationSeconds, startedAt)
 
@@ -294,6 +299,8 @@ class LockTimerService : Service() {
 
     /** Stops the active countdown, cleans up overlay windows, and terminates the service. */
     private fun stopTimer() {
+        val runId = activeRunId
+        val startedAt = activeStartedAtMillis
         timerJob?.cancel()
         timerJob = null
         unregisterSensor()
@@ -302,8 +309,17 @@ class LockTimerService : Service() {
         timerRepository.updateState(TimerState.Idle)
         serviceScope.launch {
             withContext(NonCancellable) {
-                timerRepository.preferencesDataSource.clearActiveTimer()
+                try {
+                    if (startedAt > 0L) {
+                        timerRepository.preferencesDataSource.clearActiveTimerIfMatches(startedAt)
+                    } else {
+                        timerRepository.preferencesDataSource.clearActiveTimer()
+                    }
+                } catch (e: IOException) {
+                    Log.w(TAG, "Failed to clear active timer on stop", e)
+                }
             }
+            if (activeRunId != runId) return@launch
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
@@ -311,6 +327,8 @@ class LockTimerService : Service() {
 
     /** Invoked upon countdown expiry to lock device screen and update completion state. */
     private fun onTimerExpired() {
+        val runId = activeRunId
+        val startedAt = activeStartedAtMillis
         timerRepository.updateState(TimerState.Finished)
 
         serviceScope.launch(Dispatchers.Main) {
@@ -329,10 +347,19 @@ class LockTimerService : Service() {
 
         serviceScope.launch {
             withContext(NonCancellable) {
-                timerRepository.preferencesDataSource.clearActiveTimer()
+                try {
+                    if (startedAt > 0L) {
+                        timerRepository.preferencesDataSource.clearActiveTimerIfMatches(startedAt)
+                    } else {
+                        timerRepository.preferencesDataSource.clearActiveTimer()
+                    }
+                } catch (e: IOException) {
+                    Log.w(TAG, "Failed to clear active timer on expiry", e)
+                }
             }
             // Small grace period to ensure lock action is dispatched
             delay(800)
+            if (activeRunId != runId) return@launch
             timerRepository.updateState(TimerState.Idle)
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
