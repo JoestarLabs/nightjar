@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 // ── Static fallback color schemes ────────────────────────────────────────────
-// Used on devices without Dynamic Color support (Android < 12).
+// Used when Dynamic Color is disabled.
 
 private val ZenLightColorScheme = lightColorScheme(
     primary = BambooGreen40,
@@ -88,8 +88,8 @@ private val ZenDarkColorScheme = darkColorScheme(
 @Composable
 fun NightjarTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color uses the device wallpaper palette on Android 12+.
-    // Falls back to zen palette on older devices.
+    // Dynamic color uses the device wallpaper palette (Android 12+, minSdk is 33).
+    // Falls back to zen palette when dynamicColor is false.
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {

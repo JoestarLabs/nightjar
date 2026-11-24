@@ -411,7 +411,7 @@ class LockTimerService : Service() {
     /**
      * Builds the countdown notification using the system Chronometer API.
      * [countdownEndEpochMs] = the wall-clock time when the timer reaches zero.
-     * The OS renders the countdown in the notification without any Gradle-side polling.
+     * The OS renders the countdown in the notification without any app-side polling.
      */
     private fun getLocalizedContext(): Context {
         val localeManager = ContextCompat.getSystemService(this, android.app.LocaleManager::class.java)

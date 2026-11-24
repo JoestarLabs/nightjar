@@ -2,7 +2,7 @@ Nightjar is a Material 3 Expressive lock timer application for Android designed 
 
 Features:
 
-- Expressive Zen Timer Dial: A clean, interactive circular dial to easily adjust and track active countdowns.
+- Expressive Zen Timer Dial: A clean, interactive circular dial with a wavy progress ring to easily adjust and track active countdowns.
 - Duration Picker Sheet: A playful, Material 3 bottom sheet for precise hour, minute, and second configurations.
-- Sunset Warning (Rising Wave): A fullscreen liquid wave overlay that rises from the bottom to gently alert when time is almost up.
-- Commitment Mode: A setting that locks the timer so it cannot be stopped once started.
+- Sunset Warning Suite: Fullscreen warning overlays (Fluid Liquid, Material Shapes, Snowflakes, and Classic Wave) with an optional chime to gently alert when time is almost up.
+- Commitment Mode: A setting that locks the timer so it cannot be stopped accidentally once started, with a slide-to-unlock emergency override.
