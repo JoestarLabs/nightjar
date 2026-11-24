@@ -21,7 +21,11 @@ fun calculateVersionCode(version: String): Int {
 
 android {
     namespace = "com.bl4ckswordsman.nightjar"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
 
     defaultConfig {
         applicationId = "com.bl4ckswordsman.nightjar"
