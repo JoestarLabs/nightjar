@@ -173,11 +173,7 @@ class LockTimerService : Service() {
         // Wall-clock end time — the single source of truth for all remaining-time calculations.
         val endTimeMs = startedAt + durationSeconds * 1_000L
 
-        /** Remaining seconds derived directly from the wall clock — never drifts. */
-        fun wallRemaining(): Long =
-            ((endTimeMs - System.currentTimeMillis()) / 1_000L).coerceAtLeast(0L)
-
-        var remaining = wallRemaining()
+        var remaining = computeCeilingRemainingSeconds(endTimeMs, System.currentTimeMillis())
         var alertFired = false
         var sunsetChimePlayed = false
 
@@ -215,17 +211,12 @@ class LockTimerService : Service() {
         }
 
         while (remaining > 0 && isActive) {
-            // Sleep until the exact wall-clock moment the next second boundary crosses.
-            // Each nextTickMs is an absolute wall-clock target — no drift accumulates.
-            val nextTickMs = endTimeMs - (remaining - 1) * 1_000L
-            val sleepMs = (nextTickMs - System.currentTimeMillis()).coerceAtLeast(0L)
+            // Sleep until the exact wall-clock second boundary for (remaining - 1).
+            val sleepMs = computeNextTickDelayMs(endTimeMs, remaining, System.currentTimeMillis())
             delay(sleepMs)
 
-            // Decrement directly to avoid integer-division off-by-one: waking up even 1 ms
-            // past nextTickMs would cause wallRemaining() to return (remaining - 2) and skip
-            // a number. The wall-clock sync below catches any rare multi-second OS overshoots.
             remaining--
-            val wallRem = wallRemaining()
+            val wallRem = computeCeilingRemainingSeconds(endTimeMs, System.currentTimeMillis())
             if (wallRem < remaining - 1) remaining = wallRem  // drift guard: >1 s behind
 
             timerRepository.updateState(
@@ -413,6 +404,25 @@ class LockTimerService : Service() {
          */
         fun isUrgent(remainingSeconds: Long): Boolean =
             remainingSeconds <= ONE_MINUTE_SECONDS
+
+        /**
+         * Returns ceiling-rounded remaining seconds until [endTimeMs], so `t = 0..999ms` after
+         * start still reports `duration` and ticks align with 1-second wall-clock boundaries.
+         */
+        internal fun computeCeilingRemainingSeconds(endTimeMs: Long, nowMs: Long): Long =
+            ((endTimeMs - nowMs + 999L).coerceAtLeast(0L)) / 1_000L
+
+        /**
+         * Computes the delay in ms until the next 1-second boundary (`endTimeMs - (remaining - 1) * 1000`).
+         */
+        internal fun computeNextTickDelayMs(
+            endTimeMs: Long,
+            currentRemainingSeconds: Long,
+            nowMs: Long
+        ): Long {
+            val nextTickMs = endTimeMs - (currentRemainingSeconds - 1L).coerceAtLeast(0L) * 1_000L
+            return (nextTickMs - nowMs).coerceAtLeast(0L)
+        }
 
         /** Creates an [Intent] to start the timer countdown service. */
         fun startIntent(
