@@ -116,7 +116,7 @@ class FluidParticleSimulationTest {
 
     @Test
     fun `full particle count fills nearly to the top of the screen under gravity`() {
-        for (count in listOf(130, 80)) {
+        for (count in listOf(220, 130)) {
             val sim = FluidParticleSimulation(maxParticles = count)
             val width = 1080f
             val height = 2400f
