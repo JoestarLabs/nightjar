@@ -39,11 +39,22 @@ import com.bl4ckswordsman.nightjar.R
 internal class SunsetCountdownState(
     val progress: FloatState,
     val displayRemaining: LongState,
-    val frameTimeMillis: LongState,
+    val elapsedSeconds: FloatState,
 )
 
+internal fun computeFallbackOverlayProgress(remainingSeconds: Long, totalSeconds: Long): Float =
+    if (totalSeconds > 0L) ((totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
+    else 1f
+
 /**
- * Tracks wall-clock progress and remaining seconds at vsync rate when [startedAtMillis] is provided.
+ * Computes relative elapsed seconds from [anchorMs] without losing Float32 precision on epoch timestamps.
+ */
+internal fun computeRelativeElapsedSeconds(nowMs: Long, anchorMs: Long): Float =
+    (nowMs - anchorMs).coerceAtLeast(0L) / 1_000f
+
+/**
+ * Tracks wall-clock progress and remaining seconds at vsync rate when [startedAtMillis] is provided,
+ * and falls back cleanly to [remainingSeconds]/[totalSeconds] updates otherwise.
  */
 @Composable
 internal fun rememberSunsetCountdownState(
@@ -51,30 +62,43 @@ internal fun rememberSunsetCountdownState(
     totalSeconds: Long,
     startedAtMillis: Long?,
 ): SunsetCountdownState {
+    val fallbackAnchorMs = remember { System.currentTimeMillis() }
+    val anchorMs = startedAtMillis ?: fallbackAnchorMs
+
     val continuousProgress = remember {
         mutableFloatStateOf(
             if (totalSeconds > 0L && startedAtMillis != null) {
-                val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1_000f
-                (elapsed / totalSeconds).coerceIn(0f, 1f)
-            } else if (totalSeconds > 0L) {
-                (totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()
-            } else 1f
+                (computeRelativeElapsedSeconds(System.currentTimeMillis(), startedAtMillis) / totalSeconds)
+                    .coerceIn(0f, 1f)
+            } else {
+                computeFallbackOverlayProgress(remainingSeconds, totalSeconds)
+            }
         )
     }
     val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
-    val frameTimeMillis = remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val elapsedSeconds = remember {
+        mutableFloatStateOf(computeRelativeElapsedSeconds(System.currentTimeMillis(), anchorMs))
+    }
+
+    LaunchedEffect(startedAtMillis, totalSeconds, remainingSeconds) {
+        if (startedAtMillis == null || totalSeconds <= 0L) {
+            continuousProgress.floatValue = computeFallbackOverlayProgress(remainingSeconds, totalSeconds)
+            displayRemaining.longValue = remainingSeconds.coerceAtLeast(0L)
+            elapsedSeconds.floatValue = computeRelativeElapsedSeconds(System.currentTimeMillis(), anchorMs)
+        }
+    }
 
     LaunchedEffect(startedAtMillis, totalSeconds) {
         if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
         while (true) {
             withFrameMillis {
                 val now = System.currentTimeMillis()
-                frameTimeMillis.longValue = now
-                val elapsed = (now - startedAtMillis).coerceAtLeast(0L)
+                val elapsedMs = (now - startedAtMillis).coerceAtLeast(0L)
+                elapsedSeconds.floatValue = elapsedMs / 1_000f
                 continuousProgress.floatValue =
-                    (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
+                    (elapsedMs.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
                 displayRemaining.longValue =
-                    ((totalSeconds * 1_000L - elapsed) / 1_000L).coerceAtLeast(0L)
+                    ((totalSeconds * 1_000L - elapsedMs) / 1_000L).coerceAtLeast(0L)
             }
             if (continuousProgress.floatValue >= 1f) break
         }
@@ -84,7 +108,7 @@ internal fun rememberSunsetCountdownState(
         SunsetCountdownState(
             progress = continuousProgress,
             displayRemaining = displayRemaining,
-            frameTimeMillis = frameTimeMillis,
+            elapsedSeconds = elapsedSeconds,
         )
     }
 }
