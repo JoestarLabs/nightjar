@@ -2,6 +2,7 @@ package com.bl4ckswordsman.nightjar.service
 
 import android.content.Context
 import android.graphics.PixelFormat
+import android.util.Log
 import android.view.WindowManager
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -103,14 +104,20 @@ class ComposeOverlayManager(private val context: Context) {
 
         if (composeView != null) return
 
-        val lifecycleOwner = ServiceLifecycleOwner().also { this.lifecycleOwner = it }
-        lifecycleOwner.start()
+        val owner = ServiceLifecycleOwner()
+        owner.start()
 
-        val view = createComposeView(lifecycleOwner)
+        val view = createComposeView(owner)
         val params = createLayoutParams()
 
-        windowManager.addView(view, params)
-        this.composeView = view
+        try {
+            windowManager.addView(view, params)
+            this.lifecycleOwner = owner
+            this.composeView = view
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to attach sunset overlay window", e)
+            owner.stop()
+        }
     }
 
     /** Creates and configures the [ComposeView] hosting the sunset animation composables. */
@@ -203,10 +210,14 @@ class ComposeOverlayManager(private val context: Context) {
         try {
             windowManager.removeView(view)
         } catch (e: Exception) {
-            // View might already be detached or service destroyed
+            Log.w(TAG, "Failed to remove sunset overlay window", e)
         }
 
         lifecycleOwner?.stop()
         lifecycleOwner = null
+    }
+
+    private companion object {
+        const val TAG = "ComposeOverlayManager"
     }
 }

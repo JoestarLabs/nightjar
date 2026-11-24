@@ -45,13 +45,20 @@ class TimerRepository @Inject constructor(
             if (startedAt > 0L && duration > 0L) {
                 val elapsed = (System.currentTimeMillis() - startedAt) / 1_000L
                 val remaining = duration - elapsed
-                if (remaining > 0L) {
-                    _timerState.value = TimerState.Running(
-                        totalSeconds = duration,
-                        remainingSeconds = remaining,
-                        startedAtMillis = startedAt
+                if (remaining > 0L && elapsed >= 0L) {
+                    _timerState.compareAndSet(
+                        TimerState.Idle,
+                        TimerState.Running(
+                            totalSeconds = duration,
+                            remainingSeconds = remaining,
+                            startedAtMillis = startedAt
+                        )
                     )
+                } else {
+                    preferencesDataSource.clearActiveTimer()
                 }
+            } else if (startedAt > 0L) {
+                preferencesDataSource.clearActiveTimer()
             }
         }
     }

@@ -5,11 +5,14 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.getSystemService
 import com.bl4ckswordsman.nightjar.R
 
 class LockDeviceAdminReceiver : DeviceAdminReceiver() {
     companion object {
+        private const val TAG = "LockDeviceAdminReceiver"
+
         fun getComponentName(context: Context): ComponentName {
             return ComponentName(context, LockDeviceAdminReceiver::class.java)
         }
@@ -21,10 +24,12 @@ class LockDeviceAdminReceiver : DeviceAdminReceiver() {
 
         fun requestLock(context: Context): Boolean {
             val dpm = context.getSystemService<DevicePolicyManager>() ?: return false
-            return if (dpm.isAdminActive(getComponentName(context))) {
+            if (!dpm.isAdminActive(getComponentName(context))) return false
+            return try {
                 dpm.lockNow()
                 true
-            } else {
+            } catch (e: SecurityException) {
+                Log.w(TAG, "Device admin lockNow failed", e)
                 false
             }
         }

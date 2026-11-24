@@ -3,6 +3,7 @@ package com.bl4ckswordsman.nightjar.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.bl4ckswordsman.nightjar.data.TimerPreferencesDataSource
 import com.bl4ckswordsman.nightjar.service.LockTimerService
@@ -10,6 +11,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -46,9 +48,14 @@ class BootReceiver : BroadcastReceiver() {
 
         // Use goAsync so we can safely read DataStore in a coroutine
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
+        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+            Log.w(TAG, "Unhandled error during boot recovery", throwable)
+        }
+        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
             try {
                 handleBoot(context, preferencesDataSource)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to resume timer after boot", e)
             } finally {
                 pendingResult.finish()
             }
@@ -70,16 +77,33 @@ class BootReceiver : BroadcastReceiver() {
 
         if (startedAt > 0L && duration > 0L) {
             val elapsedSeconds = (currentTimeMillis - startedAt) / 1_000
+            if (elapsedSeconds < 0L) {
+                // Clock skewed backwards across reboot; clear stale timer rather than inflating duration
+                preferencesDataSource.clearActiveTimer()
+                return
+            }
             val remaining = duration - elapsedSeconds
             if (remaining > 5) {
-                // Resume timer with remaining seconds and preserved commitment mode
-                startService(
-                    context,
-                    LockTimerService.startIntent(context, remaining, commitmentMode)
-                )
+                try {
+                    // Resume timer with remaining seconds and preserved commitment mode
+                    startService(
+                        context,
+                        LockTimerService.startIntent(context, remaining, commitmentMode)
+                    )
+                } catch (e: Exception) {
+                    Log.w(TAG, "Unable to start foreground service on boot", e)
+                }
+            } else {
+                // If ≤ 5 s remain after reboot, clear persisted timer and skip.
+                preferencesDataSource.clearActiveTimer()
             }
-            // If ≤ 5 s remain after reboot, skip — not worth resuming.
+        } else if (startedAt > 0L) {
+            preferencesDataSource.clearActiveTimer()
         }
+    }
+
+    private companion object {
+        const val TAG = "BootReceiver"
     }
 }
 
