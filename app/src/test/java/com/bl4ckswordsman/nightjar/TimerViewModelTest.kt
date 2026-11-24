@@ -85,15 +85,34 @@ class TimerViewModelTest {
     }
 
     @Test
-    fun `toggleTimer when idle does not crash without service`() {
-        // Context.startService returns null without a real Android environment;
-        // verify no exception is thrown.
+    fun `toggleTimer when idle starts foreground service with selected duration and commitment`() = runTest {
         viewModel.setSelectedSeconds(60L)
-        try {
-            viewModel.toggleTimer()
-        } catch (e: Exception) {
-            assertFalse("Should not throw on toggleTimer in test env: ${e.message}", true)
-        }
+        viewModel.toggleTimer()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        org.mockito.kotlin.verify(mockContext).startForegroundService(org.mockito.kotlin.argThat {
+            action == com.bl4ckswordsman.nightjar.service.LockTimerService.ACTION_START &&
+                getLongExtra(com.bl4ckswordsman.nightjar.service.LockTimerService.EXTRA_DURATION_SECONDS, -1L) == 60L &&
+                !getBooleanExtra(com.bl4ckswordsman.nightjar.service.LockTimerService.EXTRA_COMMITMENT_MODE, true)
+        })
+    }
+
+    @Test
+    fun `startTimer uses persisted commitmentMode even before collector updates`() = runTest {
+        val prefsFlow = MutableStateFlow(TimerPreferences(lastDurationSeconds = 120L, commitmentMode = true))
+        whenever(mockDataSource.preferences).thenReturn(prefsFlow)
+        val freshRepo = TimerRepository(mockDataSource)
+        val freshVm = TimerViewModel(mockContext, freshRepo)
+
+        freshVm.setSelectedSeconds(120L)
+        freshVm.toggleTimer()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        org.mockito.kotlin.verify(mockContext).startForegroundService(org.mockito.kotlin.argThat {
+            action == com.bl4ckswordsman.nightjar.service.LockTimerService.ACTION_START &&
+                getLongExtra(com.bl4ckswordsman.nightjar.service.LockTimerService.EXTRA_DURATION_SECONDS, -1L) == 120L &&
+                getBooleanExtra(com.bl4ckswordsman.nightjar.service.LockTimerService.EXTRA_COMMITMENT_MODE, false)
+        })
     }
 
     @Test
