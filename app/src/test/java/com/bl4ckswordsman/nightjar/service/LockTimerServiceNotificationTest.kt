@@ -114,10 +114,10 @@ class LockTimerServiceNotificationTest {
         assertTrue(
             LockTimerService.shouldUpdateNotification(
                 durationSeconds = 300L,
-                remainingSeconds = 60L,
-                lastNotifiedRemaining = 61L,
+                remainingSeconds = 59L,
+                lastNotifiedRemaining = 60L,
                 isUrgent = true,
-                lastNotifiedUrgent = false,
+                lastNotifiedUrgent = true,
                 isAlertTick = true,
             )
         )
