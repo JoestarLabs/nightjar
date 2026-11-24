@@ -25,11 +25,11 @@ internal const val LIQUID_METABALL_AGSL = """
 
     half4 main(float2 p) {
         float d = inputShader.eval(p).a;
-        if (d < uThreshold - 0.04) {
+        if (d < uThreshold - 0.012) {
             return half4(0.0);
         }
 
-        float edge = smoothstep(uThreshold - 0.04, uThreshold + 0.04, d);
+        float edge = smoothstep(uThreshold - 0.012, uThreshold + 0.012, d);
         float depth = clamp((d - uThreshold) / max(1.0 - uThreshold, 0.001), 0.0, 1.0);
 
         half3 col = mix(uTop, mix(uMid, uDeep, half(depth)), half(depth * 0.78));
