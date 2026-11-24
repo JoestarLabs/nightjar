@@ -20,7 +20,6 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:localeConfig="@xml/locale_config"
@@ -32,7 +31,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.Nightjar"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -45,14 +43,14 @@
             android:name=".SettingsActivity"
             android:exported="false"
             android:label="@string/settings_title"
-            android:theme="@style/Theme.Nightjar"></activity>
+            android:theme="@style/Theme.Nightjar" />
 
         <!-- ── Dependencies Activity ───────────────────────────────────── -->
         <activity
             android:name=".DependenciesActivity"
             android:exported="false"
             android:label="@string/dependencies_title"
-            android:theme="@style/Theme.Nightjar"></activity>
+            android:theme="@style/Theme.Nightjar" />
 
 
         <!-- ── Lock Timer Foreground Service ───────────────────────────── -->
@@ -90,7 +88,7 @@
         <receiver
             android:name=".receiver.BootReceiver"
             android:exported="false">
-            <intent-filter android:priority="100">
+            <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
