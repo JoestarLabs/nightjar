@@ -35,10 +35,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -70,7 +71,10 @@ fun DurationPickerSheet(
     onConfirm: (Long) -> Unit,
     maxSeconds: Long = 7200L // 2 hours
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        confirmValueChange = { it != SheetValue.PartiallyExpanded },
+    )
 
     var hours by remember { mutableIntStateOf((initialSeconds / 3600).toInt().coerceIn(0, 2)) }
     var minutes by remember {
@@ -79,6 +83,15 @@ fun DurationPickerSheet(
         )
     }
     var seconds by remember { mutableIntStateOf((initialSeconds % 60).toInt().coerceIn(0, 59)) }
+
+    fun clampToMax() {
+        val total = hours * 3600L + minutes * 60L + seconds
+        if (total > maxSeconds) {
+            hours = (maxSeconds / 3600).toInt()
+            minutes = ((maxSeconds % 3600) / 60).toInt()
+            seconds = (maxSeconds % 60).toInt()
+        }
+    }
 
     fun addSeconds(amount: Long) {
         val currentTotal = hours * 3600L + minutes * 60L + seconds
@@ -130,13 +143,7 @@ fun DurationPickerSheet(
                         label = "Hours",
                         onValueChange = {
                             hours = it
-                            // Enforce max constraint
-                            val total = hours * 3600L + minutes * 60L + seconds
-                            if (total > maxSeconds) {
-                                hours = (maxSeconds / 3600).toInt()
-                                minutes = ((maxSeconds % 3600) / 60).toInt()
-                                seconds = (maxSeconds % 60).toInt()
-                            }
+                            clampToMax()
                         },
                         max = 2
                     )
@@ -155,12 +162,7 @@ fun DurationPickerSheet(
                         label = "Minutes",
                         onValueChange = {
                             minutes = it
-                            val total = hours * 3600L + minutes * 60L + seconds
-                            if (total > maxSeconds) {
-                                hours = (maxSeconds / 3600).toInt()
-                                minutes = ((maxSeconds % 3600) / 60).toInt()
-                                seconds = (maxSeconds % 60).toInt()
-                            }
+                            clampToMax()
                         },
                         max = 59
                     )
@@ -179,12 +181,7 @@ fun DurationPickerSheet(
                         label = "Seconds",
                         onValueChange = {
                             seconds = it
-                            val total = hours * 3600L + minutes * 60L + seconds
-                            if (total > maxSeconds) {
-                                hours = (maxSeconds / 3600).toInt()
-                                minutes = ((maxSeconds % 3600) / 60).toInt()
-                                seconds = (maxSeconds % 60).toInt()
-                            }
+                            clampToMax()
                         },
                         max = 59
                     )

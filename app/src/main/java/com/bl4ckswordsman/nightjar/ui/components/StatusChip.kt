@@ -46,29 +46,33 @@ fun StatusChip(
         else -> stringResource(R.string.status_idle)
     }
 
-    // Pulse and breathing transitions
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 900),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "status_pulse"
-    )
-
-    val breatheScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "status_breathe"
-    )
-
-    val currentScale = if (isRunning || isFinishing) breatheScale else 1f
+    // Pulse and breathing transitions (active only while running or finishing)
+    val pulseAlpha: Float
+    val currentScale: Float
+    if (isRunning || isFinishing) {
+        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+        pulseAlpha = infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0.3f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 900),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "status_pulse"
+        ).value
+        currentScale = infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 1.05f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "status_breathe"
+        ).value
+    } else {
+        pulseAlpha = 1f
+        currentScale = 1f
+    }
 
     val chipColors = AssistChipDefaults.assistChipColors(
         containerColor = when {
