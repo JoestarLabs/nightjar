@@ -302,17 +302,17 @@ fun SunsetAnimationPreviewDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     listOf(
-                        SunsetAnimation.FLUID_LIQUID to R.string.settings_sunset_animation_fluid_liquid,
-                        SunsetAnimation.MATERIAL_SHAPES to R.string.settings_sunset_animation_material_shapes,
-                        SunsetAnimation.SNOWFLAKES to R.string.settings_sunset_animation_snowflakes,
-                        SunsetAnimation.CLASSIC_WAVE to R.string.settings_sunset_animation_classic_wave,
-                        SunsetAnimation.OFF to R.string.settings_sunset_animation_off
-                    ).forEach { (anim, labelRes) ->
+                        SunsetAnimation.FLUID_LIQUID,
+                        SunsetAnimation.MATERIAL_SHAPES,
+                        SunsetAnimation.SNOWFLAKES,
+                        SunsetAnimation.CLASSIC_WAVE,
+                        SunsetAnimation.OFF
+                    ).forEach { anim ->
                         val isSelected = previewAnimation == anim
                         FilterChip(
                             selected = isSelected,
                             onClick = { previewAnimation = anim },
-                            label = { Text(stringResource(labelRes)) },
+                            label = { Text(stringResource(anim.labelRes())) },
                             leadingIcon = if (isSelected) {
                                 {
                                     Icon(

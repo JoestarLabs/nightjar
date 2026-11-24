@@ -2,16 +2,13 @@ package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.app.LocaleManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
-import androidx.core.net.toUri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,15 +17,13 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Extension
@@ -38,18 +33,7 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.Warning
-import androidx.compose.ui.Alignment
-import com.bl4ckswordsman.nightjar.data.SunsetAnimation
-import com.bl4ckswordsman.nightjar.ui.components.SunsetAnimationPreviewDialog
-
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -59,65 +43,39 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bl4ckswordsman.nightjar.BuildConfig
 import com.bl4ckswordsman.nightjar.DependenciesActivity
 import com.bl4ckswordsman.nightjar.R
+import com.bl4ckswordsman.nightjar.data.SunsetAnimation
 import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
+import com.bl4ckswordsman.nightjar.ui.components.SunsetAnimationPreviewDialog
+import com.bl4ckswordsman.nightjar.ui.components.labelRes
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
-
-/**
- * Container layout applying rounded corners and spacing to a column of card items.
- *
- * @param modifier Modifier applied to the container layout.
- * @param spacing Vertical spacing between items.
- * @param cornerRadius Corner radius of the card container.
- * @param containerColor Background color of the container.
- * @param content Composable column content.
- */
-@Composable
-private fun RoundedCardContainer(
-    modifier: Modifier = Modifier,
-    spacing: androidx.compose.ui.unit.Dp = 2.dp,
-    cornerRadius: androidx.compose.ui.unit.Dp = 20.dp,
-    containerColor: Color = Color.Transparent,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(containerColor),
-        verticalArrangement = Arrangement.spacedBy(spacing),
-        content = content
-    )
-}
 
 /**
  * Settings and customization screen for Nightjar.
@@ -168,9 +126,9 @@ fun SettingsScreen(
     var refreshTrigger by remember { mutableIntStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
                 refreshTrigger++
             }
         }
@@ -180,12 +138,17 @@ fun SettingsScreen(
         }
     }
 
-    // Read current locale from LocaleManager
     val selectedLocaleTag = remember(refreshTrigger) {
         localeManager.applicationLocales.toLanguageTags().takeIf { it.isNotEmpty() } ?: ""
     }
-
     val adminEnabled = remember(refreshTrigger) { LockDeviceAdminReceiver.isEnabled(context) }
+    val notificationEnabled = remember(refreshTrigger) {
+        ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    val overlayEnabled = remember(refreshTrigger) { Settings.canDrawOverlays(context) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -193,16 +156,8 @@ fun SettingsScreen(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumFlexibleTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.settings_title),
-                    )
-                },
-                subtitle = {
-                    Text(
-                        text = stringResource(R.string.settings_subtitle),
-                    )
-                },
+                title = { Text(text = stringResource(R.string.settings_title)) },
+                subtitle = { Text(text = stringResource(R.string.settings_subtitle)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,
@@ -243,7 +198,6 @@ fun SettingsScreen(
                 }
 
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.settings_section_language)) },
                     supportingContent = { Text(currentLanguageLabel) },
                     leadingContent = {
                         Icon(
@@ -271,7 +225,9 @@ fun SettingsScreen(
                             }
                             context.startActivity(intent)
                         }
-                )
+                ) {
+                    Text(stringResource(R.string.settings_section_language))
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -280,239 +236,77 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_section_permissions))
 
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
-                // Device Admin
-                ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_perm_admin))
-                    },
-                    supportingContent = {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.settings_perm_admin_desc),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = if (adminEnabled)
-                                    stringResource(R.string.settings_perm_admin_enabled)
-                                else
-                                    stringResource(R.string.settings_perm_admin_disabled),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (adminEnabled)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Lock,
-                            contentDescription = null,
-                            tint = if (adminEnabled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.error,
-                        )
-                    },
-                    trailingContent = {
-                        Icon(
-                            imageVector = if (adminEnabled) Icons.Rounded.CheckCircle
-                            else Icons.Rounded.Warning,
-                            contentDescription = null,
-                            tint = if (adminEnabled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.error,
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                SettingsPermissionRow(
+                    title = stringResource(R.string.settings_perm_admin),
+                    description = stringResource(R.string.settings_perm_admin_desc),
+                    statusText = stringResource(
+                        if (adminEnabled) R.string.settings_perm_admin_enabled
+                        else R.string.settings_perm_admin_disabled
                     ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = !adminEnabled) {
-                            context.startActivity(
-                                LockDeviceAdminReceiver.getRegisterIntent(context)
-                            )
-                        }
+                    icon = Icons.Rounded.Lock,
+                    granted = adminEnabled,
+                    clickableWhenGranted = false,
+                    onClick = {
+                        context.startActivity(LockDeviceAdminReceiver.getRegisterIntent(context))
+                    }
                 )
 
-                // Notifications
-                val notificationEnabled = remember(refreshTrigger) {
-                    androidx.core.content.ContextCompat.checkSelfPermission(
-                        context,
-                        android.Manifest.permission.POST_NOTIFICATIONS
-                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                }
-
-                ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_perm_notification))
-                    },
-                    supportingContent = {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.settings_perm_notification_desc),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = if (notificationEnabled)
-                                    stringResource(R.string.settings_perm_enabled)
-                                else
-                                    stringResource(R.string.settings_perm_disabled),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (notificationEnabled)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Notifications,
-                            contentDescription = null,
-                            tint = if (notificationEnabled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.error,
-                        )
-                    },
-                    trailingContent = {
-                        Icon(
-                            imageVector = if (notificationEnabled) Icons.Rounded.CheckCircle
-                            else Icons.Rounded.Warning,
-                            contentDescription = null,
-                            tint = if (notificationEnabled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.error,
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                SettingsPermissionRow(
+                    title = stringResource(R.string.settings_perm_notification),
+                    description = stringResource(R.string.settings_perm_notification_desc),
+                    statusText = stringResource(
+                        if (notificationEnabled) R.string.settings_perm_enabled
+                        else R.string.settings_perm_disabled
                     ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            context.startActivity(
-                                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                                }
-                            )
-                        }
+                    icon = Icons.Rounded.Notifications,
+                    granted = notificationEnabled,
+                    clickableWhenGranted = true,
+                    onClick = {
+                        context.startActivity(
+                            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            }
+                        )
+                    }
                 )
 
-                // Display over other apps (Overlay)
-                val overlayEnabled = remember(refreshTrigger) { Settings.canDrawOverlays(context) }
-
-                ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_perm_overlay))
-                    },
-                    supportingContent = {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.settings_perm_overlay_desc),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = if (overlayEnabled)
-                                    stringResource(R.string.settings_perm_enabled)
-                                else
-                                    stringResource(R.string.settings_perm_disabled),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (overlayEnabled)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Warning,
-                            contentDescription = null,
-                            tint = if (overlayEnabled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.error,
-                        )
-                    },
-                    trailingContent = {
-                        Icon(
-                            imageVector = if (overlayEnabled) Icons.Rounded.CheckCircle
-                            else Icons.Rounded.Warning,
-                            contentDescription = null,
-                            tint = if (overlayEnabled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.error,
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                SettingsPermissionRow(
+                    title = stringResource(R.string.settings_perm_overlay),
+                    description = stringResource(R.string.settings_perm_overlay_desc),
+                    statusText = stringResource(
+                        if (overlayEnabled) R.string.settings_perm_enabled
+                        else R.string.settings_perm_disabled
                     ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            val intent = Intent(
-                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                "package:${context.packageName}".toUri()
-                            )
-                            context.startActivity(intent)
-                        }
+                    icon = Icons.Rounded.Warning,
+                    granted = overlayEnabled,
+                    clickableWhenGranted = true,
+                    onClick = {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            "package:${context.packageName}".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
                 )
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Timer behaviour ───────────────────────────────────────
+            // ── Timer behaviour ───────────────────────────────────────────────
             SettingsSectionHeader(stringResource(R.string.settings_section_timer_behaviour))
 
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
-                val commitmentInteractionSource = remember { MutableInteractionSource() }
-                ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_commitment_mode_title))
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.settings_commitment_mode_desc))
-                    },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Lock,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = commitmentMode,
-                            onCheckedChange = null,
-                            interactionSource = commitmentInteractionSource,
-                            enabled = !timerIsRunning,
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .toggleable(
-                            value = commitmentMode,
-                            interactionSource = commitmentInteractionSource,
-                            indication = ripple(),
-                            enabled = !timerIsRunning,
-                            role = Role.Switch,
-                            onValueChange = { timerViewModel.setCommitmentMode(it) }
-                        )
+                SettingsToggleRow(
+                    title = stringResource(R.string.settings_commitment_mode_title),
+                    description = stringResource(R.string.settings_commitment_mode_desc),
+                    icon = Icons.Rounded.Lock,
+                    checked = commitmentMode,
+                    enabled = !timerIsRunning,
+                    onCheckedChange = { timerViewModel.setCommitmentMode(it) }
                 )
 
                 ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_custom_presets_title))
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.settings_custom_presets_desc))
-                    },
+                    supportingContent = { Text(stringResource(R.string.settings_custom_presets_desc)) },
                     leadingContent = {
                         Icon(
                             Icons.Rounded.Edit,
@@ -526,81 +320,30 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showPresetsDialog = true }
+                ) {
+                    Text(stringResource(R.string.settings_custom_presets_title))
+                }
+
+                SettingsToggleRow(
+                    title = stringResource(R.string.settings_sunset_mode_title),
+                    description = stringResource(R.string.settings_sunset_mode_desc),
+                    icon = Icons.Rounded.Warning,
+                    checked = sunsetModeEnabled,
+                    enabled = !timerIsRunning,
+                    onCheckedChange = { isChecked ->
+                        if (isChecked && !Settings.canDrawOverlays(context)) {
+                            showOverlayDialog = true
+                        }
+                        timerViewModel.setSunsetModeEnabled(isChecked)
+                    }
                 )
 
-                // Sunset warning mode toggle
-                val sunsetModeInteractionSource = remember { MutableInteractionSource() }
-                ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_sunset_mode_title))
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.settings_sunset_mode_desc))
-                    },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = sunsetModeEnabled,
-                            onCheckedChange = null,
-                            interactionSource = sunsetModeInteractionSource,
-                            enabled = !timerIsRunning,
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .toggleable(
-                            value = sunsetModeEnabled,
-                            interactionSource = sunsetModeInteractionSource,
-                            indication = ripple(),
-                            enabled = !timerIsRunning,
-                            role = Role.Switch,
-                            onValueChange = { isChecked ->
-                                if (isChecked && !Settings.canDrawOverlays(context)) {
-                                    showOverlayDialog = true
-                                }
-                                timerViewModel.setSunsetModeEnabled(isChecked)
-                            }
-                        )
-                )
-
-                // Sunset warning options
                 if (sunsetModeEnabled) {
-                    // Sunset animation style selector
                     var isAnimationMenuExpanded by remember { mutableStateOf(false) }
-                    val animationInteractionSource = remember { MutableInteractionSource() }
-                    val isAnimationPressed by animationInteractionSource.collectIsPressedAsState()
-                    val animationCornerPercent by animateIntAsState(
-                        targetValue = if (isAnimationPressed) 18 else 50,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMedium,
-                        ),
-                        label = "sunset_animation_corners"
-                    )
+                    val animationLabel = stringResource(sunsetAnimation.labelRes())
 
                     ListItem(
-                        headlineContent = {
-                            Text(stringResource(R.string.settings_sunset_animation_title))
-                        },
-                        supportingContent = {
-                            val animationLabel = when (sunsetAnimation) {
-                                SunsetAnimation.FLUID_LIQUID -> stringResource(R.string.settings_sunset_animation_fluid_liquid)
-                                SunsetAnimation.CLASSIC_WAVE -> stringResource(R.string.settings_sunset_animation_classic_wave)
-                                SunsetAnimation.MATERIAL_SHAPES -> stringResource(R.string.settings_sunset_animation_material_shapes)
-                                SunsetAnimation.SNOWFLAKES -> stringResource(R.string.settings_sunset_animation_snowflakes)
-                                SunsetAnimation.OFF -> stringResource(R.string.settings_sunset_animation_off)
-                            }
-                            Text(animationLabel)
-                        },
+                        supportingContent = { Text(animationLabel) },
                         leadingContent = {
                             Icon(
                                 Icons.Rounded.AutoAwesome,
@@ -624,142 +367,28 @@ fun SettingsScreen(
                                     Icon(
                                         Icons.Rounded.Visibility,
                                         contentDescription = stringResource(R.string.settings_sunset_animation_preview_cd),
-                                        tint = if (!timerIsRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                        tint = if (!timerIsRunning) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                     )
                                 }
 
-                                Box {
-                                    androidx.compose.material3.Surface(
-                                        onClick = {
-                                            if (!timerIsRunning) isAnimationMenuExpanded = true
-                                        },
-                                        interactionSource = animationInteractionSource,
-                                        shape = RoundedCornerShape(percent = animationCornerPercent),
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                    ) {
-                                        val currentText = when (sunsetAnimation) {
-                                            SunsetAnimation.FLUID_LIQUID -> stringResource(R.string.settings_sunset_animation_fluid_liquid)
-                                            SunsetAnimation.CLASSIC_WAVE -> stringResource(R.string.settings_sunset_animation_classic_wave)
-                                            SunsetAnimation.MATERIAL_SHAPES -> stringResource(R.string.settings_sunset_animation_material_shapes)
-                                            SunsetAnimation.SNOWFLAKES -> stringResource(R.string.settings_sunset_animation_snowflakes)
-                                            SunsetAnimation.OFF -> stringResource(R.string.settings_sunset_animation_off)
-                                        }
-                                        Text(
-                                            text = currentText,
-                                            style = MaterialTheme.typography.labelLarge,
-                                            modifier = Modifier.padding(
-                                                horizontal = 12.dp,
-                                                vertical = 8.dp
-                                            )
-                                        )
-                                    }
-
-                                    androidx.compose.material3.DropdownMenu(
-                                        expanded = isAnimationMenuExpanded,
-                                        onDismissRequest = { isAnimationMenuExpanded = false }
-                                    ) {
-                                        listOf(
-                                            SunsetAnimation.FLUID_LIQUID to R.string.settings_sunset_animation_fluid_liquid,
-                                            SunsetAnimation.MATERIAL_SHAPES to R.string.settings_sunset_animation_material_shapes,
-                                            SunsetAnimation.SNOWFLAKES to R.string.settings_sunset_animation_snowflakes,
-                                            SunsetAnimation.CLASSIC_WAVE to R.string.settings_sunset_animation_classic_wave,
-                                        ).forEach { (anim, stringRes) ->
-                                            androidx.compose.material3.DropdownMenuItem(
-                                                text = { Text(stringResource(stringRes)) },
-                                                onClick = {
-                                                    isAnimationMenuExpanded = false
-                                                    onSelectSunsetAnimation(anim)
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceBright
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(enabled = !timerIsRunning) {
-                                isAnimationMenuExpanded = true
-                            }
-                    )
-
-                    // Sunset duration selector
-                    var isDurationMenuExpanded by remember { mutableStateOf(false) }
-                    val sunsetDurationInteractionSource = remember { MutableInteractionSource() }
-                    val isSunsetDurationPressed by sunsetDurationInteractionSource.collectIsPressedAsState()
-                    val sunsetDurationCornerPercent by animateIntAsState(
-                        targetValue = if (isSunsetDurationPressed) 18 else 50,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMedium,
-                        ),
-                        label = "sunset_duration_corners"
-                    )
-
-                    ListItem(
-                        headlineContent = {
-                            Text(stringResource(R.string.settings_sunset_duration_title))
-                        },
-                        supportingContent = {
-                            Text(
-                                stringResource(
-                                    R.string.settings_sunset_duration_format,
-                                    sunsetDurationSeconds
-                                )
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                Icons.Rounded.Edit,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        },
-                        trailingContent = {
-                            Box {
-                                androidx.compose.material3.Surface(
-                                    onClick = {
-                                        if (!timerIsRunning) isDurationMenuExpanded = true
-                                    },
-                                    interactionSource = sunsetDurationInteractionSource,
-                                    shape = RoundedCornerShape(percent = sunsetDurationCornerPercent),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                SettingsDropdownPill(
+                                    label = animationLabel,
+                                    expanded = isAnimationMenuExpanded,
+                                    enabled = !timerIsRunning,
+                                    onExpandedChange = { isAnimationMenuExpanded = it }
                                 ) {
-                                    Text(
-                                        text = stringResource(
-                                            R.string.settings_sunset_duration_format,
-                                            sunsetDurationSeconds
-                                        ),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        modifier = Modifier.padding(
-                                            horizontal = 12.dp,
-                                            vertical = 8.dp
-                                        )
-                                    )
-                                }
-
-                                androidx.compose.material3.DropdownMenu(
-                                    expanded = isDurationMenuExpanded,
-                                    onDismissRequest = { isDurationMenuExpanded = false }
-                                ) {
-                                    listOf(15L, 30L, 45L, 60L).forEach { duration ->
-                                        androidx.compose.material3.DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    stringResource(
-                                                        R.string.settings_sunset_duration_format,
-                                                        duration
-                                                    )
-                                                )
-                                            },
+                                    listOf(
+                                        SunsetAnimation.FLUID_LIQUID,
+                                        SunsetAnimation.MATERIAL_SHAPES,
+                                        SunsetAnimation.SNOWFLAKES,
+                                        SunsetAnimation.CLASSIC_WAVE,
+                                    ).forEach { anim ->
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(anim.labelRes())) },
                                             onClick = {
-                                                isDurationMenuExpanded = false
-                                                timerViewModel.setSunsetDurationSeconds(duration)
+                                                isAnimationMenuExpanded = false
+                                                onSelectSunsetAnimation(anim)
                                             }
                                         )
                                     }
@@ -772,49 +401,71 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(enabled = !timerIsRunning) {
-                                isDurationMenuExpanded = true
+                                isAnimationMenuExpanded = true
                             }
+                    ) {
+                        Text(stringResource(R.string.settings_sunset_animation_title))
+                    }
+
+                    var isDurationMenuExpanded by remember { mutableStateOf(false) }
+                    val durationLabel = stringResource(
+                        R.string.settings_sunset_duration_format,
+                        sunsetDurationSeconds
                     )
 
-                    // Sunset sound alert toggle
-                    val sunsetAudioInteractionSource = remember { MutableInteractionSource() }
                     ListItem(
-                        headlineContent = {
-                            Text(stringResource(R.string.settings_sunset_audio_title))
-                        },
-                        supportingContent = {
-                            Text(stringResource(R.string.settings_sunset_audio_desc))
-                        },
+                        supportingContent = { Text(durationLabel) },
                         leadingContent = {
                             Icon(
-                                Icons.Rounded.Notifications,
+                                Icons.Rounded.Edit,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         },
                         trailingContent = {
-                            Switch(
-                                checked = sunsetAudioEnabled,
-                                onCheckedChange = null,
-                                interactionSource = sunsetAudioInteractionSource,
+                            SettingsDropdownPill(
+                                label = durationLabel,
+                                expanded = isDurationMenuExpanded,
                                 enabled = !timerIsRunning,
-                            )
+                                onExpandedChange = { isDurationMenuExpanded = it }
+                            ) {
+                                listOf(15L, 30L, 45L, 60L).forEach { duration ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(
+                                                    R.string.settings_sunset_duration_format,
+                                                    duration
+                                                )
+                                            )
+                                        },
+                                        onClick = {
+                                            isDurationMenuExpanded = false
+                                            timerViewModel.setSunsetDurationSeconds(duration)
+                                        }
+                                    )
+                                }
+                            }
                         },
                         colors = ListItemDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceBright
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .toggleable(
-                                value = sunsetAudioEnabled,
-                                interactionSource = sunsetAudioInteractionSource,
-                                indication = ripple(),
-                                enabled = !timerIsRunning,
-                                role = Role.Switch,
-                                onValueChange = { isChecked ->
-                                    timerViewModel.setSunsetAudioEnabled(isChecked)
-                                }
-                            )
+                            .clickable(enabled = !timerIsRunning) {
+                                isDurationMenuExpanded = true
+                            }
+                    ) {
+                        Text(stringResource(R.string.settings_sunset_duration_title))
+                    }
+
+                    SettingsToggleRow(
+                        title = stringResource(R.string.settings_sunset_audio_title),
+                        description = stringResource(R.string.settings_sunset_audio_desc),
+                        icon = Icons.Rounded.Notifications,
+                        checked = sunsetAudioEnabled,
+                        enabled = !timerIsRunning,
+                        onCheckedChange = { timerViewModel.setSunsetAudioEnabled(it) }
                     )
                 }
             }
@@ -825,19 +476,8 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_section_about))
 
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
-                // Version Item
                 ListItem(
-                    headlineContent = {
-                        Text(
-                            stringResource(
-                                R.string.settings_about_version,
-                                BuildConfig.VERSION_NAME
-                            )
-                        )
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.settings_about_version_desc))
-                    },
+                    supportingContent = { Text(stringResource(R.string.settings_about_version_desc)) },
                     leadingContent = {
                         Icon(
                             Icons.Rounded.Info,
@@ -849,16 +489,12 @@ fun SettingsScreen(
                         containerColor = MaterialTheme.colorScheme.surfaceBright
                     ),
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    Text(stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME))
+                }
 
-                // GitHub Organization Item
                 ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_about_github))
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.settings_about_github_desc))
-                    },
+                    supportingContent = { Text(stringResource(R.string.settings_about_github_desc)) },
                     leadingContent = {
                         Icon(
                             Icons.Rounded.Code,
@@ -889,16 +525,12 @@ fun SettingsScreen(
                                 // Fallback if browser is missing
                             }
                         }
-                )
+                ) {
+                    Text(stringResource(R.string.settings_about_github))
+                }
 
-                // Dependencies Item
                 ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.settings_about_dependencies))
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.settings_about_dependencies_desc))
-                    },
+                    supportingContent = { Text(stringResource(R.string.settings_about_dependencies_desc)) },
                     leadingContent = {
                         Icon(
                             Icons.Rounded.Extension,
@@ -927,132 +559,23 @@ fun SettingsScreen(
                                 // Fail-safe
                             }
                         }
-                )
+                ) {
+                    Text(stringResource(R.string.settings_about_dependencies))
+                }
             }
-
 
             Spacer(Modifier.height(24.dp))
         }
     }
 
     if (showPresetsDialog) {
-        val currentPresets = presetsState
-        var preset1 by rememberSaveable { mutableStateOf(if (currentPresets.isNotEmpty()) (currentPresets[0] / 60).toString() else "5") }
-        var preset2 by rememberSaveable { mutableStateOf(if (currentPresets.size > 1) (currentPresets[1] / 60).toString() else "15") }
-        var preset3 by rememberSaveable { mutableStateOf(if (currentPresets.size > 2) (currentPresets[2] / 60).toString() else "30") }
-        var preset4 by rememberSaveable { mutableStateOf(if (currentPresets.size > 3) (currentPresets[3] / 60).toString() else "60") }
-
-        var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
-        val invalidInputStr = stringResource(R.string.dialog_invalid_input)
-
-        AlertDialog(
-            onDismissRequest = { showPresetsDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.dialog_presets_title),
-                    style = MaterialTheme.typography.titleLarge
-                )
+        CustomPresetsDialog(
+            currentPresets = presetsState,
+            onSave = { presets ->
+                timerViewModel.saveCustomPresets(presets)
+                showPresetsDialog = false
             },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = stringResource(R.string.dialog_presets_help),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    OutlinedTextField(
-                        value = preset1,
-                        onValueChange = {
-                            preset1 = it
-                            errorMessage = null
-                        },
-                        label = { Text("#1") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = preset2,
-                        onValueChange = {
-                            preset2 = it
-                            errorMessage = null
-                        },
-                        label = { Text("#2") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = preset3,
-                        onValueChange = {
-                            preset3 = it
-                            errorMessage = null
-                        },
-                        label = { Text("#3") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = preset4,
-                        onValueChange = {
-                            preset4 = it
-                            errorMessage = null
-                        },
-                        label = { Text("#4") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (errorMessage != null) {
-                        Text(
-                            text = errorMessage!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val val1 = preset1.trim().toLongOrNull()
-                        val val2 = preset2.trim().toLongOrNull()
-                        val val3 = preset3.trim().toLongOrNull()
-                        val val4 = preset4.trim().toLongOrNull()
-
-                        if (val1 != null && val1 in 1..120 &&
-                            val2 != null && val2 in 1..120 &&
-                            val3 != null && val3 in 1..120 &&
-                            val4 != null && val4 in 1..120
-                        ) {
-                            timerViewModel.saveCustomPresets(listOf(val1, val2, val3, val4))
-                            showPresetsDialog = false
-                        } else {
-                            errorMessage = invalidInputStr
-                        }
-                    },
-                    shapes = ButtonDefaults.shapes(
-                        shape = CircleShape,
-                        pressedShape = RoundedCornerShape(percent = 18)
-                    )
-                ) {
-                    Text(stringResource(R.string.dialog_btn_save))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showPresetsDialog = false },
-                    shapes = ButtonDefaults.shapes(
-                        shape = CircleShape,
-                        pressedShape = RoundedCornerShape(percent = 18)
-                    )
-                ) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            }
+            onDismiss = { showPresetsDialog = false }
         )
     }
 
@@ -1072,64 +595,16 @@ fun SettingsScreen(
     }
 
     if (showOverlayDialog) {
-        AlertDialog(
-            onDismissRequest = { showOverlayDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.dialog_overlay_title),
-                    style = MaterialTheme.typography.titleLarge
+        OverlayPermissionDialog(
+            onOpenSettings = {
+                showOverlayDialog = false
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    "package:${context.packageName}".toUri()
                 )
+                context.startActivity(intent)
             },
-            text = {
-                Text(
-                    text = stringResource(R.string.dialog_overlay_body),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showOverlayDialog = false
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            "package:${context.packageName}".toUri()
-                        )
-                        context.startActivity(intent)
-                    },
-                    shapes = ButtonDefaults.shapes(
-                        shape = CircleShape,
-                        pressedShape = RoundedCornerShape(percent = 18)
-                    )
-                ) {
-                    Text(stringResource(R.string.dialog_btn_open_settings))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showOverlayDialog = false },
-                    shapes = ButtonDefaults.shapes(
-                        shape = CircleShape,
-                        pressedShape = RoundedCornerShape(percent = 18)
-                    )
-                ) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            }
+            onDismiss = { showOverlayDialog = false }
         )
     }
-}
-
-/**
- * Header label for sections in the settings list.
- *
- * @param title Section title text.
- */
-@Composable
-private fun SettingsSectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-    )
 }
