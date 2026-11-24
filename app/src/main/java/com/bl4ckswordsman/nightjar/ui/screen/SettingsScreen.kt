@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,8 +43,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
@@ -211,37 +208,18 @@ fun SettingsScreen(
                     else -> stringResource(R.string.settings_language_system)
                 }
 
-                ListItem(
-                    supportingContent = { Text(currentLanguageLabel) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Language,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    trailingContent = {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.OpenInNew,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
-                            startActivitySafely(context, intent)
+                SettingsActionRow(
+                    title = stringResource(R.string.settings_section_language),
+                    description = currentLanguageLabel,
+                    icon = Icons.Rounded.Language,
+                    trailingIcon = Icons.AutoMirrored.Rounded.OpenInNew,
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
                         }
-                ) {
-                    Text(stringResource(R.string.settings_section_language))
-                }
+                        startActivitySafely(context, intent)
+                    }
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -320,24 +298,12 @@ fun SettingsScreen(
                     onCheckedChange = { timerViewModel.setCommitmentMode(it) }
                 )
 
-                ListItem(
-                    supportingContent = { Text(stringResource(R.string.settings_custom_presets_desc)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Edit,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showPresetsDialog = true }
-                ) {
-                    Text(stringResource(R.string.settings_custom_presets_title))
-                }
+                SettingsActionRow(
+                    title = stringResource(R.string.settings_custom_presets_title),
+                    description = stringResource(R.string.settings_custom_presets_desc),
+                    icon = Icons.Rounded.Edit,
+                    onClick = { showPresetsDialog = true }
+                )
 
                 SettingsToggleRow(
                     title = stringResource(R.string.settings_sunset_mode_title),
@@ -358,7 +324,9 @@ fun SettingsScreen(
                     var isAnimationMenuExpanded by remember { mutableStateOf(false) }
                     val animationLabel = stringResource(sunsetAnimation.labelRes())
 
-                    ListItem(
+                    SettingsListItem(
+                        title = stringResource(R.string.settings_sunset_animation_title),
+                        leadingIcon = Icons.Rounded.AutoAwesome,
                         supportingContent = {
                             Box(modifier = Modifier.padding(top = 6.dp)) {
                                 SettingsDropdownPill(
@@ -384,13 +352,6 @@ fun SettingsScreen(
                                 }
                             }
                         },
-                        leadingContent = {
-                            Icon(
-                                Icons.Rounded.AutoAwesome,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        },
                         trailingContent = {
                             IconButton(
                                 onClick = { showAnimationPreview = true },
@@ -408,17 +369,10 @@ fun SettingsScreen(
                                 )
                             }
                         },
-                        colors = ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceBright
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(enabled = !timerIsRunning) {
-                                isAnimationMenuExpanded = true
-                            }
-                    ) {
-                        Text(stringResource(R.string.settings_sunset_animation_title))
-                    }
+                        modifier = Modifier.clickable(enabled = !timerIsRunning) {
+                            isAnimationMenuExpanded = true
+                        }
+                    )
 
                     var isDurationMenuExpanded by remember { mutableStateOf(false) }
                     val durationLabel = stringResource(
@@ -426,15 +380,10 @@ fun SettingsScreen(
                         sunsetDurationSeconds
                     )
 
-                    ListItem(
+                    SettingsListItem(
+                        title = stringResource(R.string.settings_sunset_duration_title),
+                        leadingIcon = Icons.Rounded.Edit,
                         supportingContent = { Text(durationLabel) },
-                        leadingContent = {
-                            Icon(
-                                Icons.Rounded.Edit,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        },
                         trailingContent = {
                             SettingsDropdownPill(
                                 label = durationLabel,
@@ -460,17 +409,10 @@ fun SettingsScreen(
                                 }
                             }
                         },
-                        colors = ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceBright
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(enabled = !timerIsRunning) {
-                                isDurationMenuExpanded = true
-                            }
-                    ) {
-                        Text(stringResource(R.string.settings_sunset_duration_title))
-                    }
+                        modifier = Modifier.clickable(enabled = !timerIsRunning) {
+                            isDurationMenuExpanded = true
+                        }
+                    )
 
                     SettingsToggleRow(
                         title = stringResource(R.string.settings_sunset_audio_title),
@@ -489,123 +431,58 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_section_about))
 
             RoundedCardContainer(modifier = Modifier.fillMaxWidth()) {
-                ListItem(
-                    supportingContent = { Text(stringResource(R.string.settings_about_version_desc)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME))
-                }
+                SettingsActionRow(
+                    title = stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME),
+                    description = stringResource(R.string.settings_about_version_desc),
+                    icon = Icons.Rounded.Info,
+                )
 
-                ListItem(
-                    supportingContent = { Text(stringResource(R.string.settings_about_github_desc)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Code,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                SettingsActionRow(
+                    title = stringResource(R.string.settings_about_github),
+                    description = stringResource(R.string.settings_about_github_desc),
+                    icon = Icons.Rounded.Code,
+                    trailingIcon = Icons.AutoMirrored.Rounded.OpenInNew,
+                    onClick = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/JoestarLabs".toUri()
                         )
-                    },
-                    trailingContent = {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.OpenInNew,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                "https://github.com/JoestarLabs".toUri()
-                            )
-                            startActivitySafely(context, intent)
-                        }
-                ) {
-                    Text(stringResource(R.string.settings_about_github))
-                }
+                        startActivitySafely(context, intent)
+                    }
+                )
 
-                ListItem(
-                    supportingContent = { Text(stringResource(R.string.settings_about_dependencies_desc)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Extension,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                SettingsActionRow(
+                    title = stringResource(R.string.settings_about_dependencies),
+                    description = stringResource(R.string.settings_about_dependencies_desc),
+                    icon = Icons.Rounded.Extension,
+                    trailingIcon = Icons.AutoMirrored.Rounded.OpenInNew,
+                    onClick = {
+                        startActivitySafely(
+                            context,
+                            Intent(context, DependenciesActivity::class.java)
                         )
-                    },
-                    trailingContent = {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.OpenInNew,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            startActivitySafely(
-                                context,
-                                Intent(context, DependenciesActivity::class.java)
-                            )
-                        }
-                ) {
-                    Text(stringResource(R.string.settings_about_dependencies))
-                }
+                    }
+                )
 
-                ListItem(
-                    supportingContent = { Text(stringResource(R.string.settings_about_debug_info_desc)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.BugReport,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    trailingContent = {
-                        Icon(
-                            Icons.Rounded.ContentCopy,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceBright
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            coroutineScope.launch {
-                                val formatted = withContext(Dispatchers.IO) {
-                                    DebugInfoFormatter.format(DebugInfoFormatter.collect(context))
-                                }
-                                val clipboard =
-                                    context.getSystemService(ClipboardManager::class.java)
-                                clipboard?.setPrimaryClip(
-                                    ClipData.newPlainText("Nightjar debug info", formatted)
-                                )
-                                snackbarHostState.showSnackbar(copiedMessage)
+                SettingsActionRow(
+                    title = stringResource(R.string.settings_about_debug_info),
+                    description = stringResource(R.string.settings_about_debug_info_desc),
+                    icon = Icons.Rounded.BugReport,
+                    trailingIcon = Icons.Rounded.ContentCopy,
+                    onClick = {
+                        coroutineScope.launch {
+                            val formatted = withContext(Dispatchers.IO) {
+                                DebugInfoFormatter.format(DebugInfoFormatter.collect(context))
                             }
+                            val clipboard =
+                                context.getSystemService(ClipboardManager::class.java)
+                            clipboard?.setPrimaryClip(
+                                ClipData.newPlainText("Nightjar debug info", formatted)
+                            )
+                            snackbarHostState.showSnackbar(copiedMessage)
                         }
-                ) {
-                    Text(stringResource(R.string.settings_about_debug_info))
-                }
+                    }
+                )
             }
 
             Spacer(Modifier.height(24.dp))
