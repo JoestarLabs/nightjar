@@ -71,6 +71,18 @@ class TimerPreferencesDataSourceTest {
     }
 
     @Test
+    fun testClearActiveTimerIfMatches() = runTest(testDispatcher) {
+        dataSource.saveTimerStarted(1200L, 111111L)
+        // Mismatched timestamp must NOT clear the newer timer
+        dataSource.clearActiveTimerIfMatches(999999L)
+        assertEquals(111111L, dataSource.preferences.first().startedAtMillis)
+
+        // Matching timestamp clears the active timer
+        dataSource.clearActiveTimerIfMatches(111111L)
+        assertEquals(0L, dataSource.preferences.first().startedAtMillis)
+    }
+
+    @Test
     fun testSaveCommitmentMode() = runTest(testDispatcher) {
         dataSource.saveCommitmentMode(true)
         var prefs = dataSource.preferences.first()
