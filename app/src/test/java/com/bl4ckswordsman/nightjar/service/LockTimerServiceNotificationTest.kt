@@ -59,4 +59,77 @@ class LockTimerServiceNotificationTest {
         val iconRes = LockTimerService.resolveSmallIconRes(isUrgent = true)
         assertEquals(R.drawable.outline_error_24, iconRes)
     }
+
+    @Test
+    fun shouldUpdateNotification_throttlesOneSecondTicksBetweenIntervals() {
+        assertFalse(
+            LockTimerService.shouldUpdateNotification(
+                durationSeconds = 300L,
+                remainingSeconds = 299L,
+                lastNotifiedRemaining = 300L,
+                isUrgent = false,
+                lastNotifiedUrgent = false,
+                isAlertTick = false,
+            )
+        )
+        assertTrue(
+            LockTimerService.shouldUpdateNotification(
+                durationSeconds = 300L,
+                remainingSeconds = 285L,
+                lastNotifiedRemaining = 300L,
+                isUrgent = false,
+                lastNotifiedUrgent = false,
+                isAlertTick = false,
+            )
+        )
+    }
+
+    @Test
+    fun shouldUpdateNotification_scalesIntervalForLongTimers() {
+        // 3600s / 20 = 180s interval
+        assertFalse(
+            LockTimerService.shouldUpdateNotification(
+                durationSeconds = 3600L,
+                remainingSeconds = 3500L,
+                lastNotifiedRemaining = 3600L,
+                isUrgent = false,
+                lastNotifiedUrgent = false,
+                isAlertTick = false,
+            )
+        )
+        assertTrue(
+            LockTimerService.shouldUpdateNotification(
+                durationSeconds = 3600L,
+                remainingSeconds = 3420L,
+                lastNotifiedRemaining = 3600L,
+                isUrgent = false,
+                lastNotifiedUrgent = false,
+                isAlertTick = false,
+            )
+        )
+    }
+
+    @Test
+    fun shouldUpdateNotification_firesImmediatelyOnUrgencyOrAlertTick() {
+        assertTrue(
+            LockTimerService.shouldUpdateNotification(
+                durationSeconds = 300L,
+                remainingSeconds = 60L,
+                lastNotifiedRemaining = 61L,
+                isUrgent = true,
+                lastNotifiedUrgent = false,
+                isAlertTick = true,
+            )
+        )
+        assertTrue(
+            LockTimerService.shouldUpdateNotification(
+                durationSeconds = 300L,
+                remainingSeconds = 60L,
+                lastNotifiedRemaining = 61L,
+                isUrgent = true,
+                lastNotifiedUrgent = false,
+                isAlertTick = false,
+            )
+        )
+    }
 }
