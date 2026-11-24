@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -40,55 +41,19 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.roundToInt
 import kotlin.math.sin
-import kotlin.random.Random
 
 private object FluidTuning {
     const val PARTICLES_FULL = 130
     const val PARTICLES_REDUCED = 80
-    const val BUBBLES_FULL = 18
 
     const val BACKGROUND_DIM_MAX_ALPHA = 0.22f
-    const val METABALL_THRESHOLD = 0.30f
+    const val METABALL_THRESHOLD = 0.28f
     const val NORMAL_STEP_DP = 2.5f
     const val SPRITE_RADIUS_SCALE = 1.25f
 
     const val GRAVITY_SMOOTH_RATE = 10f
     const val WATCHDOG_FRAME_MS = 25f
     const val WATCHDOG_SUSTAINED_SEC = 1.5f
-}
-
-private class FluidBubblePool(val capacity: Int) {
-    val relX = FloatArray(capacity)
-    val depth = FloatArray(capacity)
-    val speed = FloatArray(capacity)
-    val radiusDp = FloatArray(capacity)
-    val wobbleFreq = FloatArray(capacity)
-    val wobblePhase = FloatArray(capacity)
-    val alpha = FloatArray(capacity)
-
-    private val rng = Random(42)
-
-    init {
-        for (i in 0 until capacity) {
-            relX[i] = (rng.nextFloat() * 2f - 1f) * 0.85f
-            depth[i] = rng.nextFloat()
-            speed[i] = 0.12f + rng.nextFloat() * 0.18f
-            radiusDp[i] = 2.2f + rng.nextFloat() * 3.4f
-            wobbleFreq[i] = 2.5f + rng.nextFloat() * 2f
-            wobblePhase[i] = rng.nextFloat() * (2f * PI.toFloat())
-            alpha[i] = 0.32f + rng.nextFloat() * 0.30f
-        }
-    }
-
-    fun step(count: Int, dtSec: Float) {
-        for (i in 0 until count.coerceAtMost(capacity)) {
-            depth[i] -= speed[i] * dtSec
-            if (depth[i] <= 0f) {
-                depth[i] = 1f
-                relX[i] = (rng.nextFloat() * 2f - 1f) * 0.85f
-            }
-        }
-    }
 }
 
 /**
@@ -117,13 +82,12 @@ fun FluidLiquidOverlay(
 
     val maxParticles = if (isFull) FluidTuning.PARTICLES_FULL else FluidTuning.PARTICLES_REDUCED
     val sim = remember(maxParticles) { FluidParticleSimulation(maxParticles = maxParticles) }
-    val bubbles = remember { FluidBubblePool(FluidTuning.BUBBLES_FULL) }
     val metaballSprite = remember { createMetaballSpriteBitmap(64) }
 
     val smoothedAngleState = remember { mutableFloatStateOf(gravityAngleRad()) }
     val frameTick = remember { mutableLongStateOf(0L) }
 
-    // Single unified vsync loop driving 2D particle fluid physics, bubble drift,
+    // Single unified vsync loop driving 2D particle fluid physics
     // and the frame-budget watchdog with zero per-frame recompositions.
     LaunchedEffect(quality, sim) {
         if (isMinimal) {
@@ -165,10 +129,6 @@ fun FluidLiquidOverlay(
                         .coerceIn(if (progress > 0.01f) 4 else 0, sim.maxParticles)
                     sim.setActiveCount(targetCount, gravityX = -ax, gravityY = ay)
                     sim.step(dtSec = dtSec, accelX = ax, accelY = ay)
-
-                    if (isFull) {
-                        bubbles.step(FluidTuning.BUBBLES_FULL, dtSec)
-                    }
                 }
 
                 if (isFull) {
@@ -255,15 +215,15 @@ fun FluidLiquidOverlay(
                     drawRect(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = 0.58f),
-                                secondaryColor.copy(alpha = 0.72f),
-                                deepColor.copy(alpha = 0.80f),
+                                primaryColor.copy(alpha = 0.52f),
+                                secondaryColor.copy(alpha = 0.64f),
+                                deepColor.copy(alpha = 0.72f),
                             ),
                             startY = baseLineY,
                             endY = bottomExtent,
                         ),
                         topLeft = Offset(-wProj, baseLineY),
-                        size = androidx.compose.ui.geometry.Size(wProj * 2f, (bottomExtent - baseLineY).coerceAtLeast(0f)),
+                        size = Size(wProj * 2f, (bottomExtent - baseLineY).coerceAtLeast(0f)),
                     )
                 }
             }
@@ -280,8 +240,7 @@ fun FluidLiquidOverlay(
                             renderEffect = shaderHolder.buildRenderEffect(
                                 threshold = FluidTuning.METABALL_THRESHOLD,
                                 normalStepPx = FluidTuning.NORMAL_STEP_DP.dp.toPx(),
-                                timeSec = countdown.elapsedSeconds.floatValue,
-                                causticsEnabled = isFull,
+                                shadingEnabled = isFull,
                                 top = primaryColor,
                                 mid = secondaryColor,
                                 deep = deepColor,
@@ -318,50 +277,6 @@ fun FluidLiquidOverlay(
                                 radius = fallbackRadius,
                                 center = Offset(sim.x[i], sim.y[i]),
                             )
-                        }
-                    }
-                }
-            }
-
-            // Subtle rising micro-bubbles inside the pooled liquid at FULL quality
-            if (isFull) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    frameTick.longValue
-                    val progress = countdown.progress.floatValue
-                    if (progress <= 0.05f) return@Canvas
-
-                    val width = size.width
-                    val height = size.height
-                    val angle = smoothedAngleState.floatValue
-                    val hProj = width * abs(sin(angle)) + height * abs(cos(angle))
-                    val wProj = width * abs(cos(angle)) + height * abs(sin(angle))
-                    val halfVisWidth = wProj * 0.5f
-                    val halfVisHeight = hProj * 0.5f
-                    val baseLineY = halfVisHeight - progress * hProj
-                    val fluidDepth = (halfVisHeight - baseLineY).coerceAtLeast(10f)
-                    val timeSec = countdown.elapsedSeconds.floatValue
-                    val wobblePx = 4.dp.toPx()
-                    val surfaceMarginPx = 14.dp.toPx()
-                    val rotationDegrees = -Math.toDegrees(angle.toDouble()).toFloat()
-
-                    withTransform({
-                        translate(left = width * 0.5f, top = height * 0.5f)
-                        rotate(degrees = rotationDegrees, pivot = Offset.Zero)
-                    }) {
-                        for (i in 0 until FluidTuning.BUBBLES_FULL) {
-                            val currentY = baseLineY + bubbles.depth[i] * fluidDepth
-                            if (currentY > baseLineY + surfaceMarginPx && currentY < halfVisHeight) {
-                                val currentX = bubbles.relX[i] * halfVisWidth +
-                                    sin(timeSec * bubbles.wobbleFreq[i] + bubbles.wobblePhase[i]) * wobblePx
-                                val rPx = bubbles.radiusDp[i].dp.toPx()
-                                val a = bubbles.alpha[i]
-
-                                drawCircle(
-                                    color = Color.White.copy(alpha = a),
-                                    radius = rPx,
-                                    center = Offset(currentX, currentY),
-                                )
-                            }
                         }
                     }
                 }

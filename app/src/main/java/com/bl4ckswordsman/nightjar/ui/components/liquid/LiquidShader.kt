@@ -1,5 +1,7 @@
 package com.bl4ckswordsman.nightjar.ui.components.liquid
 
+import android.graphics.Bitmap
+import android.graphics.Color as AndroidColor
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.util.Log
@@ -7,20 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import org.intellij.lang.annotations.Language
-import android.graphics.Bitmap
-import android.graphics.Color as AndroidColor
 
 @Language("AGSL")
 internal const val LIQUID_METABALL_AGSL = """
     uniform shader inputShader;
     uniform float uThreshold;
     uniform float uNormalStep;
-    uniform float uTime;
-    uniform float uCausticsEnabled;
+    uniform float uShadingEnabled;
     uniform half3 uTop;
     uniform half3 uMid;
     uniform half3 uDeep;
@@ -31,28 +29,24 @@ internal const val LIQUID_METABALL_AGSL = """
             return half4(0.0);
         }
 
-        float dx = inputShader.eval(p + float2(uNormalStep, 0.0)).a
-                 - inputShader.eval(p - float2(uNormalStep, 0.0)).a;
-        float dy = inputShader.eval(p + float2(0.0, uNormalStep)).a
-                 - inputShader.eval(p - float2(0.0, uNormalStep)).a;
-        float3 n = normalize(float3(-dx, -dy, 0.14));
-
         float edge = smoothstep(uThreshold - 0.04, uThreshold + 0.04, d);
         float depth = clamp((d - uThreshold) / max(1.0 - uThreshold, 0.001), 0.0, 1.0);
 
-        float spec = pow(max(dot(n, normalize(float3(-0.35, -0.65, 0.68))), 0.0), 18.0);
-        float fresnel = pow(1.0 - max(n.z, 0.0), 2.5);
+        half3 col = mix(uTop, mix(uMid, uDeep, half(depth)), half(depth * 0.78));
 
-        float c = 0.0;
-        if (uCausticsEnabled > 0.5) {
-            float wave = sin(p.x * 0.018 + uTime * 1.6 + sin(p.y * 0.015 + uTime));
-            c = pow(clamp(0.5 + 0.5 * wave * sin(p.y * 0.02 - uTime * 1.1), 0.0, 1.0), 6.0);
+        if (uShadingEnabled > 0.5) {
+            float dx = inputShader.eval(p + float2(uNormalStep, 0.0)).a
+                     - inputShader.eval(p - float2(uNormalStep, 0.0)).a;
+            float dy = inputShader.eval(p + float2(0.0, uNormalStep)).a
+                     - inputShader.eval(p - float2(0.0, uNormalStep)).a;
+            float3 n = normalize(float3(-dx, -dy, 0.14));
+
+            float spec = pow(max(dot(n, normalize(float3(-0.35, -0.65, 0.68))), 0.0), 18.0);
+            float fresnel = pow(1.0 - max(n.z, 0.0), 2.5);
+            col += half3(spec * 0.42 + fresnel * 0.18);
         }
 
-        half3 col = mix(uTop, mix(uMid, uDeep, half(depth)), half(depth));
-        col += half3(spec * 0.48 + fresnel * 0.22 + c * depth * 0.28);
-
-        float alpha = mix(0.56, 0.80, depth) * edge;
+        float alpha = mix(0.48, 0.72, depth) * edge;
         return half4(col * half(alpha), half(alpha));
     }
 """
@@ -68,16 +62,14 @@ internal class LiquidMetaballShaderHolder(
     fun buildRenderEffect(
         threshold: Float,
         normalStepPx: Float,
-        timeSec: Float,
-        causticsEnabled: Boolean,
+        shadingEnabled: Boolean,
         top: Color,
         mid: Color,
         deep: Color,
     ): androidx.compose.ui.graphics.RenderEffect {
         shader.setFloatUniform("uThreshold", threshold)
         shader.setFloatUniform("uNormalStep", normalStepPx)
-        shader.setFloatUniform("uTime", timeSec)
-        shader.setFloatUniform("uCausticsEnabled", if (causticsEnabled) 1f else 0f)
+        shader.setFloatUniform("uShadingEnabled", if (shadingEnabled) 1f else 0f)
         shader.setFloatUniform("uTop", top.red, top.green, top.blue)
         shader.setFloatUniform("uMid", mid.red, mid.green, mid.blue)
         shader.setFloatUniform("uDeep", deep.red, deep.green, deep.blue)
