@@ -45,7 +45,7 @@ private data class LiquidBubble(
     val relX: Float,          // -1f to 1f across fluid width
     var currentDepth: Float,  // 0f (surface) to 1f (deep bottom)
     val speed: Float,         // depth decrement per second
-    val radiusPx: Float,
+    val radiusDp: Float,
     val wobbleFrequency: Float,
     val wobblePhase: Float,
     val alpha: Float
@@ -250,10 +250,10 @@ fun FluidLiquidOverlay(
                 relX = (rng.nextFloat() * 2f - 1f) * 0.75f,
                 currentDepth = rng.nextFloat(),
                 speed = 0.08f + rng.nextFloat() * 0.14f,
-                radiusPx = 1.5f + rng.nextFloat() * 2.2f,
+                radiusDp = 2.5f + rng.nextFloat() * 4.0f,
                 wobbleFrequency = 2.5f + rng.nextFloat() * 2f,
                 wobblePhase = rng.nextFloat() * (2f * PI.toFloat()),
-                alpha = 0.35f + rng.nextFloat() * 0.45f
+                alpha = 0.45f + rng.nextFloat() * 0.40f
             )
         }
     }
@@ -389,21 +389,23 @@ fun FluidLiquidOverlay(
                 // ── 4. Rising buoyant micro-bubbles ──
                 val fluidDepth = (r - baseLineY).coerceAtLeast(10f)
                 val timeSec = countdown.elapsedSeconds.floatValue
+                val wobblePx = 4.dp.toPx()
                 for (b in bubbles) {
                     val currentY = baseLineY + (1f - ((b.currentDepth + b.speed * timeSec) % 1f)) * fluidDepth
-                    val currentX = b.relX * (r * 0.7f) + sin(timeSec * b.wobbleFrequency + b.wobblePhase) * 8f
+                    val currentX = b.relX * (r * 0.7f) + sin(timeSec * b.wobbleFrequency + b.wobblePhase) * wobblePx
+                    val bubbleRadiusPx = b.radiusDp.dp.toPx()
 
                     // Only draw if fully submerged
-                    if (currentY > baseLineY + 12f && currentY < r) {
+                    if (currentY > baseLineY + 12.dp.toPx() && currentY < r) {
                         drawCircle(
                             color = Color.White.copy(alpha = b.alpha),
-                            radius = b.radiusPx,
+                            radius = bubbleRadiusPx,
                             center = Offset(currentX, currentY)
                         )
                         drawCircle(
                             color = primaryColor.copy(alpha = b.alpha * 0.8f),
-                            radius = b.radiusPx * 0.5f,
-                            center = Offset(currentX - b.radiusPx * 0.3f, currentY - b.radiusPx * 0.3f)
+                            radius = bubbleRadiusPx * 0.5f,
+                            center = Offset(currentX - bubbleRadiusPx * 0.3f, currentY - bubbleRadiusPx * 0.3f)
                         )
                     }
                 }

@@ -9,9 +9,8 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -56,7 +55,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -346,35 +344,8 @@ fun SettingsScreen(
                     val animationLabel = stringResource(sunsetAnimation.labelRes())
 
                     ListItem(
-                        supportingContent = { Text(animationLabel) },
-                        leadingContent = {
-                            Icon(
-                                Icons.Rounded.AutoAwesome,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        },
-                        trailingContent = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                IconButton(
-                                    onClick = { showAnimationPreview = true },
-                                    enabled = !timerIsRunning,
-                                    shapes = IconButtonDefaults.shapes(
-                                        shape = CircleShape,
-                                        pressedShape = RoundedCornerShape(percent = 18)
-                                    )
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Visibility,
-                                        contentDescription = stringResource(R.string.settings_sunset_animation_preview_cd),
-                                        tint = if (!timerIsRunning) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                    )
-                                }
-
+                        supportingContent = {
+                            Box(modifier = Modifier.padding(top = 6.dp)) {
                                 SettingsDropdownPill(
                                     label = animationLabel,
                                     expanded = isAnimationMenuExpanded,
@@ -396,6 +367,30 @@ fun SettingsScreen(
                                         )
                                     }
                                 }
+                            }
+                        },
+                        leadingContent = {
+                            Icon(
+                                Icons.Rounded.AutoAwesome,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        trailingContent = {
+                            IconButton(
+                                onClick = { showAnimationPreview = true },
+                                enabled = !timerIsRunning,
+                                shapes = IconButtonDefaults.shapes(
+                                    shape = CircleShape,
+                                    pressedShape = RoundedCornerShape(percent = 18)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Visibility,
+                                    contentDescription = stringResource(R.string.settings_sunset_animation_preview_cd),
+                                    tint = if (!timerIsRunning) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
                             }
                         },
                         colors = ListItemDefaults.colors(
