@@ -1,5 +1,6 @@
 package com.bl4ckswordsman.nightjar.ui.screen
 
+import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -212,5 +213,32 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText(context.getString(R.string.dialog_invalid_input)).assertExists()
         verify(mockDataSource, never()).saveCustomPresets(any())
+    }
+
+    @Test
+    fun copyDebugInfo_copiesFormattedSnapshotToClipboard() = runTest {
+        composeTestRule.setContent {
+            NightjarTheme {
+                SettingsScreen(
+                    onNavigateBack = {},
+                    timerViewModel = viewModel
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_about_debug_info))
+            .performScrollTo()
+            .performClick()
+
+        composeTestRule.waitForIdle()
+
+        val clipboard = context.getSystemService(ClipboardManager::class.java)
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            clipboard?.primaryClip != null
+        }
+        val clipText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString().orEmpty()
+        assert(clipText.contains("App: Nightjar "))
+        assert(clipText.contains("Android: "))
+        assert(clipText.contains("Permissions: "))
     }
 }

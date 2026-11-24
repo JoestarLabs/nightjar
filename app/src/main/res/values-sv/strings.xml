@@ -113,6 +113,9 @@
     <string name="settings_about_github_desc">Utforska öppen källkods-projekt på GitHub</string>
     <string name="settings_about_dependencies">Bibliotek</string>
     <string name="settings_about_dependencies_desc">Öppen källkod-bibliotek som används i appen</string>
+    <string name="settings_about_debug_info">Kopiera felsökningsinfo</string>
+    <string name="settings_about_debug_info_desc">Kopiera enhets-, OS- och appinfo för felrapporter</string>
+    <string name="settings_about_debug_info_copied">Felsökningsinfo kopierad till urklipp</string>
     <string name="dependencies_title">Bibliotek</string>
     <string name="dependencies_subtitle">Öppen källkod-bibliotek som används i Nightjar</string>
     <string name="hint_commitment_hold_to_stop">Tryck och håll i 5 sekunder för att visa slidern för nödstopp</string>

@@ -113,6 +113,9 @@
     <string name="settings_about_github_desc">Explore open-source projects on GitHub</string>
     <string name="settings_about_dependencies">Dependencies</string>
     <string name="settings_about_dependencies_desc">Open-source libraries used in the app</string>
+    <string name="settings_about_debug_info">Copy debug info</string>
+    <string name="settings_about_debug_info_desc">Copy device, OS, and app info for bug reports</string>
+    <string name="settings_about_debug_info_copied">Debug info copied to clipboard</string>
     <string name="dependencies_title">Dependencies</string>
     <string name="dependencies_subtitle">Open-source libraries used in Nightjar</string>
     <string name="hint_commitment_hold_to_stop">Press &amp; hold for 5 seconds to reveal emergency unlock slider</string>

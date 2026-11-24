@@ -2,6 +2,8 @@ package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.app.LocaleManager
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -25,7 +27,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Code
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Info
@@ -45,6 +49,8 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -53,6 +59,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -75,7 +82,11 @@ import com.bl4ckswordsman.nightjar.data.TimerState
 import com.bl4ckswordsman.nightjar.receiver.LockDeviceAdminReceiver
 import com.bl4ckswordsman.nightjar.ui.components.SunsetAnimationPreviewDialog
 import com.bl4ckswordsman.nightjar.ui.components.labelRes
+import com.bl4ckswordsman.nightjar.util.DebugInfoFormatter
 import com.bl4ckswordsman.nightjar.viewmodel.TimerViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Settings and customization screen for Nightjar.
@@ -151,9 +162,13 @@ fun SettingsScreen(
     val overlayEnabled = remember(refreshTrigger) { Settings.canDrawOverlays(context) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val copiedMessage = stringResource(R.string.settings_about_debug_info_copied)
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             MediumFlexibleTopAppBar(
                 title = { Text(text = stringResource(R.string.settings_title)) },
@@ -552,6 +567,44 @@ fun SettingsScreen(
                         }
                 ) {
                     Text(stringResource(R.string.settings_about_dependencies))
+                }
+
+                ListItem(
+                    supportingContent = { Text(stringResource(R.string.settings_about_debug_info_desc)) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.BugReport,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            Icons.Rounded.ContentCopy,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceBright
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            coroutineScope.launch {
+                                val formatted = withContext(Dispatchers.IO) {
+                                    DebugInfoFormatter.format(DebugInfoFormatter.collect(context))
+                                }
+                                val clipboard =
+                                    context.getSystemService(ClipboardManager::class.java)
+                                clipboard?.setPrimaryClip(
+                                    ClipData.newPlainText("Nightjar debug info", formatted)
+                                )
+                                snackbarHostState.showSnackbar(copiedMessage)
+                            }
+                        }
+                ) {
+                    Text(stringResource(R.string.settings_about_debug_info))
                 }
             }
 
