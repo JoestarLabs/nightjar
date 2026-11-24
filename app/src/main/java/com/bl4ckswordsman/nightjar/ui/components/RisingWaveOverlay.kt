@@ -1,6 +1,5 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -11,31 +10,17 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameMillis
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.bl4ckswordsman.nightjar.R
 
 /**
  * Builds a sine-wave-shaped [Path] using cubic Bézier segments — one [Path.cubicTo] per
@@ -165,44 +150,8 @@ fun RisingWaveOverlay(
     )
 
     // ── Wall-clock progress (updated every display frame) ────────────────────
-    // When startedAtMillis is available we compute progress directly from the wall
-    // clock at vsync rate. This eliminates the 0.5–1 s lag that a spring/tween
-    // chasing 1-second ticks would introduce. Fall back to a simple calculation
-    // if the caller doesn't provide the start time.
-    val continuousProgress = remember { mutableFloatStateOf(
-        if (totalSeconds > 0L && startedAtMillis != null) {
-            val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1_000f
-            (elapsed / totalSeconds).coerceIn(0f, 1f)
-        } else if (totalSeconds > 0L) {
-            (totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()
-        } else 1f
-    ) }
-    val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
-
-    LaunchedEffect(startedAtMillis, totalSeconds) {
-        if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
-        while (true) {
-            // withFrameMillis fires each vsync frame but its timestamp is from
-            // System.nanoTime() — a monotonic clock with an arbitrary epoch that CANNOT
-            // be subtracted from the wall-clock startedAtMillis. Use it only as a
-            // vsync synchronisation point and read System.currentTimeMillis() instead.
-            withFrameMillis {
-                val elapsed = (System.currentTimeMillis() - startedAtMillis).coerceAtLeast(0L)
-                continuousProgress.floatValue =
-                    (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
-                // displayRemaining must use the SAME formula as the Chronometer:
-                // floor((endTimeMs - now) / 1000) = floor((totalSeconds*1000 - elapsed) / 1000).
-                // Using totalSeconds - elapsed/1000 is NOT equivalent: floor(A-B) ≠ A - floor(B).
-                displayRemaining.longValue = ((totalSeconds * 1_000L - elapsed) / 1_000L).coerceAtLeast(0L)
-            }
-            if (continuousProgress.floatValue >= 1f) break
-        }
-    }
-
-    val animatedProgress = continuousProgress.floatValue
-    // Wall-clock remaining to display — matches the notification Chronometer exactly.
-    // Falls back to the service-pushed remainingSeconds if startedAtMillis isn't available.
-    val shownRemaining = if (startedAtMillis != null) displayRemaining.longValue else remainingSeconds
+    val countdown = rememberSunsetCountdownState(remainingSeconds, totalSeconds, startedAtMillis)
+    val shownRemaining = if (startedAtMillis != null) countdown.displayRemaining.longValue else remainingSeconds
 
     // Smoothly animate tilt changes
     val animatedTilt by animateFloatAsState(
@@ -214,26 +163,6 @@ fun RisingWaveOverlay(
         label = "wave_tilt"
     )
 
-    // Pulse animation for the countdown text — keyed on shownRemaining so it fires at the
-    // exact wall-clock second boundary, matching the notification Chronometer.
-    val textScale = remember { Animatable(1f) }
-    LaunchedEffect(shownRemaining) {
-        textScale.animateTo(
-            targetValue = 1.2f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessHigh
-            )
-        )
-        textScale.animateTo(
-            targetValue = 1.0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        )
-    }
-
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
@@ -242,11 +171,12 @@ fun RisingWaveOverlay(
     val frontPath = remember { Path() }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.4f * animatedProgress)) // Gradual dimming of the background
+        modifier = modifier.fillMaxSize()
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val animatedProgress = countdown.progress.floatValue
+            drawRect(Color.Black.copy(alpha = 0.4f * animatedProgress))
+
             val width = size.width
             val height = size.height
 
@@ -317,40 +247,9 @@ fun RisingWaveOverlay(
             )
         }
 
-        // Center visual indicator
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                OutlinedText(
-                    text = shownRemaining.toString(),
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 120.sp,
-                        lineHeight = 120.sp
-                    ),
-                    outlineColor = Color.Black.copy(alpha = 0.8f),
-                    fillColor = Color.White,
-                    outlineWidth = 14f,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = textScale.value
-                        scaleY = textScale.value
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedText(
-                    text = stringResource(R.string.sunset_warning_text),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    outlineColor = Color.Black.copy(alpha = 0.8f),
-                    fillColor = Color.White,
-                    outlineWidth = 8f
-                )
-            }
-        }
+        SunsetCountdownOverlayText(
+            shownRemaining = shownRemaining,
+            outlineColor = Color.Black.copy(alpha = 0.8f),
+        )
     }
 }

@@ -1,24 +1,10 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameMillis
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -28,12 +14,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.bl4ckswordsman.nightjar.R
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -74,60 +55,11 @@ fun SnowflakesOverlay(
     remainingSeconds: Long,
     totalSeconds: Long,
     modifier: Modifier = Modifier,
-    gravityAngleRad: Float = 0f,
     startedAtMillis: Long? = null,
 ) {
     // ── Wall-clock continuous progress ──
-    val continuousProgress = remember {
-        mutableFloatStateOf(
-            if (totalSeconds > 0L && startedAtMillis != null) {
-                val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1_000f
-                (elapsed / totalSeconds).coerceIn(0f, 1f)
-            } else if (totalSeconds > 0L) {
-                (totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()
-            } else 1f
-        )
-    }
-    val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
-    val frameTimeMillis = remember { mutableLongStateOf(System.currentTimeMillis()) }
-
-    LaunchedEffect(startedAtMillis, totalSeconds) {
-        if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
-        while (true) {
-            withFrameMillis {
-                val now = System.currentTimeMillis()
-                frameTimeMillis.longValue = now
-                val elapsed = (now - startedAtMillis).coerceAtLeast(0L)
-                continuousProgress.floatValue =
-                    (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
-                displayRemaining.longValue =
-                    ((totalSeconds * 1_000L - elapsed) / 1_000L).coerceAtLeast(0L)
-            }
-            if (continuousProgress.floatValue >= 1f) break
-        }
-    }
-
-    val animatedProgress = continuousProgress.floatValue
-    val shownRemaining = if (startedAtMillis != null) displayRemaining.longValue else remainingSeconds
-
-    // Pulse animation for text
-    val textScale = remember { Animatable(1f) }
-    LaunchedEffect(shownRemaining) {
-        textScale.animateTo(
-            targetValue = 1.2f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessHigh
-            )
-        )
-        textScale.animateTo(
-            targetValue = 1.0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        )
-    }
+    val countdown = rememberSunsetCountdownState(remainingSeconds, totalSeconds, startedAtMillis)
+    val shownRemaining = if (startedAtMillis != null) countdown.displayRemaining.longValue else remainingSeconds
 
     // ── Pool of deterministic snowflakes ──
     val snowflakes = remember {
@@ -163,11 +95,13 @@ fun SnowflakesOverlay(
     val crystalPath = remember { Path() }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFF0F172A).copy(alpha = 0.55f * animatedProgress))
+        modifier = modifier.fillMaxSize()
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val animatedProgress = countdown.progress.floatValue
+            val frameNowMs = countdown.frameTimeMillis.longValue
+            drawRect(Color(0xFF0F172A).copy(alpha = 0.55f * animatedProgress))
+
             val width = size.width
             val height = size.height
 
@@ -182,7 +116,7 @@ fun SnowflakesOverlay(
             // Build undulating snow dune surface across width
             val duneAmp = 18.dp.toPx()
             val duneFreq = 0.005f
-            val dunePhase = (frameTimeMillis.longValue / 1000f) * 0.4f
+            val dunePhase = (frameNowMs / 1000f) * 0.4f
 
             fun duneY(x: Float): Float =
                 snowTopBaseY + sin(x * duneFreq + dunePhase) * duneAmp + cos(x * 0.01f) * (duneAmp * 0.4f)
@@ -190,26 +124,14 @@ fun SnowflakesOverlay(
             snowbankPath.lineTo(0f, duneY(0f))
             snowbankCrestPath.moveTo(0f, duneY(0f))
 
-            var curX = 0f
-            val step = 40f
-            while (curX < width) {
-                val nextX = (curX + step).coerceAtMost(width)
-                val midX = (curX + nextX) / 2f
-
-                val yCur = duneY(curX)
-                val yNext = duneY(nextX)
-                val yMid = duneY(midX)
-
-                val c1Y = yCur + (4f / 3f) * (yMid - (yCur + yNext) / 2f)
-                val c2Y = yNext + (4f / 3f) * (yMid - (yCur + yNext) / 2f)
-
-                val c1X = curX + (nextX - curX) / 3f
-                val c2X = curX + 2f * (nextX - curX) / 3f
-
-                snowbankPath.cubicTo(c1X, c1Y, c2X, c2Y, nextX, yNext)
-                snowbankCrestPath.cubicTo(c1X, c1Y, c2X, c2Y, nextX, yNext)
-                curX = nextX
-            }
+            buildCubicWaveCurve(
+                path = snowbankPath,
+                xStart = 0f,
+                xEnd = width,
+                step = 40f,
+                secondaryPath = snowbankCrestPath,
+                waveY = ::duneY,
+            )
 
             snowbankPath.lineTo(width, height + 50f)
             snowbankPath.close()
@@ -236,7 +158,7 @@ fun SnowflakesOverlay(
             )
 
             // ── 2. Falling snowflakes ──
-            val elapsedSec = (frameTimeMillis.longValue - (startedAtMillis ?: frameTimeMillis.longValue)) / 1000f
+            val elapsedSec = (frameNowMs - (startedAtMillis ?: frameNowMs)) / 1000f
             for (flake in snowflakes) {
                 val totalFall = flake.initialRelY * height + flake.speedPxPerSec * elapsedSec
                 val currentY = if (snowTopBaseY > 0f) totalFall % (snowTopBaseY + 30f) else -100f
@@ -272,41 +194,10 @@ fun SnowflakesOverlay(
             }
         }
 
-        // Center visual indicator
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                OutlinedText(
-                    text = shownRemaining.toString(),
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 120.sp,
-                        lineHeight = 120.sp
-                    ),
-                    outlineColor = Color(0xFF0F172A).copy(alpha = 0.9f),
-                    fillColor = Color.White,
-                    outlineWidth = 14f,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = textScale.value
-                        scaleY = textScale.value
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedText(
-                    text = stringResource(R.string.sunset_warning_text),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    outlineColor = Color(0xFF0F172A).copy(alpha = 0.9f),
-                    fillColor = Color.White,
-                    outlineWidth = 8f
-                )
-            }
-        }
+        SunsetCountdownOverlayText(
+            shownRemaining = shownRemaining,
+            outlineColor = Color(0xFF0F172A).copy(alpha = 0.9f),
+        )
     }
 }
 

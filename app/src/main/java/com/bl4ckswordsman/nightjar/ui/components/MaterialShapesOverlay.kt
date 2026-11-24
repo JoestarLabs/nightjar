@@ -1,36 +1,19 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameMillis
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.toPath
-import com.bl4ckswordsman.nightjar.R
 import kotlin.math.PI
 import kotlin.math.min
 import kotlin.math.sin
@@ -66,56 +49,16 @@ fun MaterialShapesOverlay(
     remainingSeconds: Long,
     totalSeconds: Long,
     modifier: Modifier = Modifier,
-    gravityAngleRad: Float = 0f,
     startedAtMillis: Long? = null,
 ) {
     // ── Wall-clock continuous progress ──
-    val continuousProgress = remember {
-        mutableFloatStateOf(
-            if (totalSeconds > 0L && startedAtMillis != null) {
-                val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1_000f
-                (elapsed / totalSeconds).coerceIn(0f, 1f)
-            } else if (totalSeconds > 0L) {
-                (totalSeconds - remainingSeconds).toFloat() / totalSeconds.toFloat()
-            } else 1f
-        )
-    }
-    val displayRemaining = remember { mutableLongStateOf(remainingSeconds) }
-
-    LaunchedEffect(startedAtMillis, totalSeconds) {
-        if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
-        while (true) {
-            withFrameMillis {
-                val now = System.currentTimeMillis()
-                val elapsed = (now - startedAtMillis).coerceAtLeast(0L)
-                continuousProgress.floatValue =
-                    (elapsed.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
-                displayRemaining.longValue =
-                    ((totalSeconds * 1_000L - elapsed) / 1_000L).coerceAtLeast(0L)
-            }
-            if (continuousProgress.floatValue >= 1f) break
-        }
-    }
-
-    val animatedProgress = continuousProgress.floatValue
-    val shownRemaining = if (startedAtMillis != null) displayRemaining.longValue else remainingSeconds
+    val countdown = rememberSunsetCountdownState(remainingSeconds, totalSeconds, startedAtMillis)
+    val shownRemaining = if (startedAtMillis != null) countdown.displayRemaining.longValue else remainingSeconds
 
     // Native Material 3 Expressive Motion Scheme for snappy spatial pulse
     val motionScheme = MaterialTheme.motionScheme
     val fastSpatial = motionScheme.fastSpatialSpec<Float>()
     val defaultSpatial = motionScheme.defaultSpatialSpec<Float>()
-
-    val textScale = remember { Animatable(1f) }
-    LaunchedEffect(shownRemaining) {
-        textScale.animateTo(
-            targetValue = 1.2f,
-            animationSpec = fastSpatial
-        )
-        textScale.animateTo(
-            targetValue = 1.0f,
-            animationSpec = defaultSpatial
-        )
-    }
 
     // ALL 35 official native Material 3 Expressive shapes paths (converted once to Compose Path)
     val nativeShapePaths = remember {
@@ -161,16 +104,19 @@ fun MaterialShapesOverlay(
     }
 
     // Material 3 Expressive Palette
-    val colors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.primaryContainer,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.secondaryContainer,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.tertiaryContainer,
-        MaterialTheme.colorScheme.surfaceVariant,
-        MaterialTheme.colorScheme.errorContainer
-    )
+    val colorScheme = MaterialTheme.colorScheme
+    val colors = remember(colorScheme) {
+        listOf(
+            colorScheme.primary,
+            colorScheme.primaryContainer,
+            colorScheme.secondary,
+            colorScheme.secondaryContainer,
+            colorScheme.tertiary,
+            colorScheme.tertiaryContainer,
+            colorScheme.surfaceVariant,
+            colorScheme.errorContainer
+        )
+    }
 
     // Grid layout: 6 columns x 13 rows = 78 shapes.
     // Calibrated so the final row finishes landing exactly ~0.5s before timer expiry.
@@ -229,11 +175,12 @@ fun MaterialShapesOverlay(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.55f * animatedProgress))
+        modifier = modifier.fillMaxSize()
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val animatedProgress = countdown.progress.floatValue
+            drawRect(Color.Black.copy(alpha = 0.55f * animatedProgress))
+
             val width = size.width
             val height = size.height
 
@@ -298,40 +245,11 @@ fun MaterialShapesOverlay(
             }
         }
 
-        // Center visual indicator
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                OutlinedText(
-                    text = shownRemaining.toString(),
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 120.sp,
-                        lineHeight = 120.sp
-                    ),
-                    outlineColor = Color.Black.copy(alpha = 0.85f),
-                    fillColor = Color.White,
-                    outlineWidth = 14f,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = textScale.value
-                        scaleY = textScale.value
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedText(
-                    text = stringResource(R.string.sunset_warning_text),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    outlineColor = Color.Black.copy(alpha = 0.85f),
-                    fillColor = Color.White,
-                    outlineWidth = 8f
-                )
-            }
-        }
+        SunsetCountdownOverlayText(
+            shownRemaining = shownRemaining,
+            outlineColor = Color.Black.copy(alpha = 0.85f),
+            expandSpec = fastSpatial,
+            settleSpec = defaultSpatial,
+        )
     }
 }

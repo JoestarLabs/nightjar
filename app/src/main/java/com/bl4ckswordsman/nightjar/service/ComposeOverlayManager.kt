@@ -148,7 +148,6 @@ class ComposeOverlayManager(private val context: Context) {
                             MaterialShapesOverlay(
                                 remainingSeconds = remainingSecondsState.longValue,
                                 totalSeconds = totalSecondsState.longValue,
-                                gravityAngleRad = gravityAngleRadState.floatValue,
                                 startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
                             )
                         }
@@ -156,7 +155,6 @@ class ComposeOverlayManager(private val context: Context) {
                             SnowflakesOverlay(
                                 remainingSeconds = remainingSecondsState.longValue,
                                 totalSeconds = totalSecondsState.longValue,
-                                gravityAngleRad = gravityAngleRadState.floatValue,
                                 startedAtMillis = startedAtMillisState.longValue.takeIf { it > 0L }
                             )
                         }
