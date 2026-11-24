@@ -87,8 +87,8 @@ fun SunsetAnimationPreviewDialog(
 
     var currentTilt by remember { mutableFloatStateOf(0f) }
     val currentGravityAngleRadState = remember { mutableFloatStateOf(0f) }
-    val currentLinearAccelXState = remember { mutableFloatStateOf(0f) }
-    val currentLinearAccelYState = remember { mutableFloatStateOf(0f) }
+    val currentRawAccelXState = remember { mutableFloatStateOf(0f) }
+    val currentRawAccelYState = remember { mutableFloatStateOf(9.8f) }
     var previewAnimation by rememberSaveable { mutableStateOf(initialAnimation) }
 
     // Accelerometer sensor lifecycle bound strictly to preview visibility
@@ -103,8 +103,8 @@ fun SunsetAnimationPreviewDialog(
                 tracker.update(event.values[0], event.values[1])
                 currentTilt = tracker.tilt
                 currentGravityAngleRadState.floatValue = tracker.gravityAngleRad
-                currentLinearAccelXState.floatValue = tracker.linearAccelX
-                currentLinearAccelYState.floatValue = tracker.linearAccelY
+                currentRawAccelXState.floatValue = tracker.rawAccelX
+                currentRawAccelYState.floatValue = tracker.rawAccelY
             }
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
@@ -161,8 +161,8 @@ fun SunsetAnimationPreviewDialog(
                         remainingSeconds = remainingSeconds,
                         totalSeconds = totalSeconds,
                         gravityAngleRad = { currentGravityAngleRadState.floatValue },
-                        linearAccelX = { currentLinearAccelXState.floatValue },
-                        linearAccelY = { currentLinearAccelYState.floatValue },
+                        rawAccelX = { currentRawAccelXState.floatValue },
+                        rawAccelY = { currentRawAccelYState.floatValue },
                         startedAtMillis = loopStartedAtMillis
                     )
                 }

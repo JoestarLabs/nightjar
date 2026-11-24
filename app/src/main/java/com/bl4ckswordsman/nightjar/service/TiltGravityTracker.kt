@@ -22,11 +22,20 @@ class TiltGravityTracker {
     var linearAccelY: Float = 0f
         private set
 
+    var rawAccelX: Float = 0f
+        private set
+
+    var rawAccelY: Float = 9.8f
+        private set
+
     /**
      * Incorporates an accelerometer `(x, y)` sample in m/s² and updates [tilt],
-     * [gravityAngleRad], and high-passed [linearAccelX]/[linearAccelY].
+     * [gravityAngleRad], high-passed [linearAccelX]/[linearAccelY], and clamped [rawAccelX]/[rawAccelY].
      */
     fun update(x: Float, y: Float) {
+        rawAccelX = x.coerceIn(-MAX_RAW_ACCEL, MAX_RAW_ACCEL)
+        rawAccelY = y.coerceIn(-MAX_RAW_ACCEL, MAX_RAW_ACCEL)
+
         filteredGx = filteredGx * FILTER_PREVIOUS_WEIGHT + x * FILTER_SAMPLE_WEIGHT
         filteredGy = filteredGy * FILTER_PREVIOUS_WEIGHT + y * FILTER_SAMPLE_WEIGHT
 
@@ -46,5 +55,6 @@ class TiltGravityTracker {
         const val FILTER_SAMPLE_WEIGHT = 0.15f
         const val TILT_NORMALIZATION_DIVISOR = 5.5f
         const val MIN_GRAVITY_MAGNITUDE = 1.2f
+        const val MAX_RAW_ACCEL = 35f
     }
 }
