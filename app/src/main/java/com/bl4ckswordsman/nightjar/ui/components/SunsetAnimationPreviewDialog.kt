@@ -55,6 +55,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.data.SunsetAnimation
+import com.bl4ckswordsman.nightjar.service.TiltGravityTracker
 import kotlinx.coroutines.delay
 
 /**
@@ -92,21 +93,14 @@ fun SunsetAnimationPreviewDialog(
     DisposableEffect(sensorManager, accelerometer) {
         if (sensorManager == null || accelerometer == null) return@DisposableEffect onDispose {}
 
-        var filteredGx = 0f
-        var filteredGy = 9.8f
+        val tracker = TiltGravityTracker()
 
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
                 if (event == null || event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-                val x = event.values[0]
-                val y = event.values[1]
-                filteredGx = filteredGx * 0.85f + x * 0.15f
-                filteredGy = filteredGy * 0.85f + y * 0.15f
-                currentTilt = (filteredGx / 5.5f).coerceIn(-1f, 1f)
-                val xyMagnitude = kotlin.math.hypot(filteredGx, filteredGy)
-                if (xyMagnitude > 1.2f) {
-                    currentGravityAngleRad = kotlin.math.atan2(-filteredGx, filteredGy)
-                }
+                tracker.update(event.values[0], event.values[1])
+                currentTilt = tracker.tilt
+                currentGravityAngleRad = tracker.gravityAngleRad
             }
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
@@ -170,7 +164,6 @@ fun SunsetAnimationPreviewDialog(
                     MaterialShapesOverlay(
                         remainingSeconds = remainingSeconds,
                         totalSeconds = totalSeconds,
-                        gravityAngleRad = currentGravityAngleRad,
                         startedAtMillis = loopStartedAtMillis
                     )
                 }
@@ -178,7 +171,6 @@ fun SunsetAnimationPreviewDialog(
                     SnowflakesOverlay(
                         remainingSeconds = remainingSeconds,
                         totalSeconds = totalSeconds,
-                        gravityAngleRad = currentGravityAngleRad,
                         startedAtMillis = loopStartedAtMillis
                     )
                 }
