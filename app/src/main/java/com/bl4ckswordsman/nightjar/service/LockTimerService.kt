@@ -265,22 +265,27 @@ class LockTimerService : Service() {
                 }
             }
 
-            nm.notify(
-                NOTIFICATION_ID,
-                buildNotification(
-                    durationSeconds,
-                    endTimeMs,
-                    remaining
-                )
-            )
-
             // ── 1-minute remaining alert (fires exactly once) ──────────
             // Use <= instead of == so the alert is never skipped if a tick lands
             // slightly past the 60-second boundary (e.g. remaining jumps 62→59).
-            if (remaining <= ONE_MINUTE_SECONDS && !alertFired && durationSeconds > ONE_MINUTE_SECONDS) {
+            val isAlertTick = remaining <= ONE_MINUTE_SECONDS &&
+                !alertFired &&
+                durationSeconds > ONE_MINUTE_SECONDS
+            if (isAlertTick) {
                 alertFired = true
-                postOneMinuteAlert(durationSeconds, endTimeMs, remaining)
+                postOneMinuteAlert()
             }
+
+            nm.notify(
+                NOTIFICATION_ID,
+                buildNotification(
+                    durationSeconds = durationSeconds,
+                    countdownEndEpochMs = endTimeMs,
+                    remainingSeconds = remaining,
+                    alertOnce = !isAlertTick,
+                    isUrgent = isAlertTick || isUrgent(remaining)
+                )
+            )
         }
         if (isActive) {
             onTimerExpired()
@@ -347,11 +352,7 @@ class LockTimerService : Service() {
      *   an amber segment colour as an in-chip visual cue. The chip's expand/pulse animation
      *   itself is entirely system-controlled and cannot be triggered programmatically.
      */
-    private fun postOneMinuteAlert(
-        durationSeconds: Long,
-        countdownEndEpochMs: Long,
-        remainingSeconds: Long
-    ) {
+    private fun postOneMinuteAlert() {
         // ── Heads-up alert (all API levels) ───────────────────────────────────
         nm.notify(NOTIFICATION_ALERT_ID, notificationFactory.buildOneMinuteAlertNotification())
 
@@ -359,19 +360,6 @@ class LockTimerService : Service() {
         serviceScope.launch {
             delay(5_000)
             nm.cancel(NOTIFICATION_ALERT_ID)
-        }
-
-        // ── Live Update chip colour change (Android 16+) ───────────────────
-        // Also update the chip to amber for the alert tick with alertOnce = false as an in-chip visual cue.
-        if (Build.VERSION.SDK_INT >= 36) {
-            val urgentNotification = buildNotification(
-                durationSeconds = durationSeconds,
-                countdownEndEpochMs = countdownEndEpochMs,
-                remainingSeconds = remainingSeconds,
-                alertOnce = false,
-                isUrgent = true
-            )
-            nm.notify(NOTIFICATION_ID, urgentNotification)
         }
     }
 
