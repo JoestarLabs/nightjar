@@ -5,13 +5,12 @@ on:
     branches:
       - master
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.app--release_created }}
       tag_name: ${{ steps.release.outputs.app--tag_name }}
@@ -26,6 +25,8 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -36,6 +37,9 @@ jobs:
           java-version: "25"
           distribution: "temurin"
           cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
       - name: Build unsigned Release APK
         run: ./gradlew assembleRelease
@@ -51,14 +55,17 @@ jobs:
           keyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
 
       - name: Rename APK
-        run: |
-          mv ${{ steps.sign_apk.outputs.signedFile }} nightjar-${{ needs.release-please.outputs.version }}.apk
+        env:
+          SIGNED_FILE: ${{ steps.sign_apk.outputs.signedFile }}
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}
+        run: mv "$SIGNED_FILE" "nightjar-${RELEASE_VERSION}.apk"
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload ${{ needs.release-please.outputs.tag_name }} nightjar-${{ needs.release-please.outputs.version }}.apk
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}
+        run: gh release upload "$TAG_NAME" "nightjar-${RELEASE_VERSION}.apk"
 
       - name: VirusTotal Scan
         id: vt
@@ -71,10 +78,10 @@ jobs:
       - name: Update Release Body with Scan Results
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          VT_LINK: ${{ steps.vt.outputs.analysis }}
         run: |
-          TAG="${{ needs.release-please.outputs.tag_name }}"
           CURRENT_BODY=$(gh release view "$TAG" --json body --jq .body)
-          VT_LINK="${{ steps.vt.outputs.analysis }}"
           VT_URL=$(echo "$VT_LINK" | cut -d'=' -f2-)
           NEW_BODY=$(printf "%s\n\n## Security Scan\n* [VirusTotal Analysis](%s)\n" "$CURRENT_BODY" "$VT_URL")
           gh release edit "$TAG" --notes "$NEW_BODY"
