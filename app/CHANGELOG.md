@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.0.7](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.6...nightjar-v0.0.7) (2026-11-24)
+
+
+### Features
+
+* **overlay:** add 1D wave physics, AGSL caustics, and flow-coupled bubbles to FluidLiquidOverlay ([16a80ce](https://github.com/JoestarLabs/nightjar/commit/16a80ce77f00398e0171bbf7c91ca800c0e4d51c))
+* **overlay:** replace 1D wave line with 2D particle fluid and translucent AGSL metaball shader ([8e1dc17](https://github.com/JoestarLabs/nightjar/commit/8e1dc17f94d0354c4ffc8d88f10aab2044cbc986))
+* **settings:** add copy debug info option in About section ([e1e22cc](https://github.com/JoestarLabs/nightjar/commit/e1e22cc54b5b51a0ec83cceffbc4b0ab7cac3341)), closes [#51](https://github.com/JoestarLabs/nightjar/issues/51)
+* **ui:** add adaptive EffectsQuality policy for power, thermal, and accessibility signals ([1e41d8e](https://github.com/JoestarLabs/nightjar/commit/1e41d8e2f0fb93fdfec9ec4c22e08625b533b15e))
+
+
+### Bug Fixes
+
+* address code review findings across timer lifecycle, effects quality, and fluid simulation ([223c928](https://github.com/JoestarLabs/nightjar/commit/223c92808e50c9582969b5d0fee4c622cde8811f))
+* **build,theme:** align Java 17 target, BuildConfig versionName, windowBackground, and single 1-min notify ([029e686](https://github.com/JoestarLabs/nightjar/commit/029e686169b0322a8f0d0cba427a9db16479278a))
+* **notification:** throttle Live Update posts and set accent color ([b99d3b8](https://github.com/JoestarLabs/nightjar/commit/b99d3b8b4213a3c63802b168d0ae7efb5d5b629d)), closes [#52](https://github.com/JoestarLabs/nightjar/issues/52)
+* **overlay:** calibrate full-screen liquid fill, lighten water feel, remove bubbles and caustic lines ([8c87f8d](https://github.com/JoestarLabs/nightjar/commit/8c87f8d525fae49ec0205a3ef1688a70d9feaa11))
+* **overlay:** compensate accelerometer for display rotation in landscape ([3985a5f](https://github.com/JoestarLabs/nightjar/commit/3985a5fadad43d0179c641329f479a5dcd6dc94b)), closes [#53](https://github.com/JoestarLabs/nightjar/issues/53)
+* **overlay:** fix Float32 epoch precision loss, slosh density scaling, and zero-width guards ([3811233](https://github.com/JoestarLabs/nightjar/commit/3811233e9bb88c8305563f351004d89dbc355f6a))
+* **overlay:** slightly reduce liquid transparency and refine droplet size ([6192966](https://github.com/JoestarLabs/nightjar/commit/61929660df246bcf8549dfa900b8f4b4bb754f32))
+* **service,boot,data:** harden lifecycle, race conditions, and DataStore resilience ([8f80b27](https://github.com/JoestarLabs/nightjar/commit/8f80b277ca3096b1c324299433528a54a5812f55))
+* **service:** align countdown tick phase and clamp notification progress ([17b83a0](https://github.com/JoestarLabs/nightjar/commit/17b83a0b5f037fc407c91ec232b8c2b225c0d1e9))
+* **timer:** guard expired-timer cleanup by start time and handle service shutdown IO errors ([b4f9334](https://github.com/JoestarLabs/nightjar/commit/b4f93343e6bcd4cf53e16ee6df41447d0973204d))
+* **ui,tests:** localize DurationPickerSheet, fix gesture/permission bugs, and repair androidTest build ([731aa5f](https://github.com/JoestarLabs/nightjar/commit/731aa5fdfdcee1f47551cefdbfcb65ae374346ff))
+* **ui:** scale liquid bubbles in dp, fix settings dropdown row layout, and configure sheet enabledValues ([3266f12](https://github.com/JoestarLabs/nightjar/commit/3266f12a5692b5b8db9365db2cb2c9c4f1fb7fa0))
+
+
+### Performance Improvements
+
+* eliminate idle animations, frame allocations, and deprecated Compose APIs ([b8de849](https://github.com/JoestarLabs/nightjar/commit/b8de8499f80ae22906dfc52d0fff13a1cde1101f))
+
 ## [0.0.6](https://github.com/JoestarLabs/nightjar/compare/nightjar-v0.0.5...nightjar-v0.0.6) (2026-11-11)
 
 
