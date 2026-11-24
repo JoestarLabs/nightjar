@@ -202,9 +202,3 @@ private fun LockButtonRunningPreview() {
 private fun LockButtonLockedPreview() {
     NightjarTheme { LockButton(isRunning = true, isLocked = true, onClick = {}) }
 }
-
-
-
-
-
-

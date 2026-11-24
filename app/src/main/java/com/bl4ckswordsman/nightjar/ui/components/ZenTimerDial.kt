@@ -256,17 +256,6 @@ fun ZenTimerDial(
                             },
                             onDragEnd = {
                                 isDragging = false
-                                // Spring-snap to the nearest second boundary
-                                scope.launch {
-                                    val snapped = sweepAnim.value
-                                    sweepAnim.animateTo(
-                                        targetValue = snapped,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                                            stiffness = Spring.StiffnessMedium,
-                                        )
-                                    )
-                                }
                             },
                             onDragCancel = {
                                 isDragging = false
