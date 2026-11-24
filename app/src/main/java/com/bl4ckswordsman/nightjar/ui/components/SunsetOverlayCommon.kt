@@ -89,7 +89,14 @@ internal fun rememberSunsetCountdownState(
     }
 
     LaunchedEffect(startedAtMillis, totalSeconds) {
-        if (startedAtMillis == null || totalSeconds <= 0L) return@LaunchedEffect
+        if (startedAtMillis == null || totalSeconds <= 0L) {
+            while (true) {
+                withFrameMillis {
+                    elapsedSeconds.floatValue =
+                        computeRelativeElapsedSeconds(System.currentTimeMillis(), fallbackAnchorMs)
+                }
+            }
+        }
         while (true) {
             withFrameMillis {
                 val now = System.currentTimeMillis()
@@ -97,8 +104,8 @@ internal fun rememberSunsetCountdownState(
                 elapsedSeconds.floatValue = elapsedMs / 1_000f
                 continuousProgress.floatValue =
                     (elapsedMs.toFloat() / (totalSeconds * 1_000f)).coerceIn(0f, 1f)
-                displayRemaining.longValue =
-                    ((totalSeconds * 1_000L - elapsedMs) / 1_000L).coerceAtLeast(0L)
+                val remainingMs = (totalSeconds * 1_000L - elapsedMs).coerceAtLeast(0L)
+                displayRemaining.longValue = if (remainingMs == 0L) 0L else (remainingMs + 999L) / 1_000L
             }
             if (continuousProgress.floatValue >= 1f) break
         }

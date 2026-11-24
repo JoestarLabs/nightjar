@@ -79,7 +79,7 @@ class BootReceiver : BroadcastReceiver() {
             val elapsedSeconds = (currentTimeMillis - startedAt) / 1_000
             if (elapsedSeconds < 0L) {
                 // Clock skewed backwards across reboot; clear stale timer rather than inflating duration
-                preferencesDataSource.clearActiveTimer()
+                preferencesDataSource.clearActiveTimerIfMatches(startedAt)
                 return
             }
             val remaining = duration - elapsedSeconds
@@ -95,10 +95,10 @@ class BootReceiver : BroadcastReceiver() {
                 }
             } else {
                 // If ≤ 5 s remain after reboot, clear persisted timer and skip.
-                preferencesDataSource.clearActiveTimer()
+                preferencesDataSource.clearActiveTimerIfMatches(startedAt)
             }
         } else if (startedAt > 0L) {
-            preferencesDataSource.clearActiveTimer()
+            preferencesDataSource.clearActiveTimerIfMatches(startedAt)
         }
     }
 

@@ -323,9 +323,11 @@ class LockTimerService : Service() {
                     Log.w(TAG, "Failed to clear active timer on stop", e)
                 }
             }
-            if (activeRunId != runId) return@launch
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+            withContext(Dispatchers.Main) {
+                if (activeRunId != runId) return@withContext
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
         }
     }
 
@@ -363,10 +365,12 @@ class LockTimerService : Service() {
             }
             // Small grace period to ensure lock action is dispatched
             delay(800)
-            if (activeRunId != runId) return@launch
-            timerRepository.updateState(TimerState.Idle)
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+            withContext(Dispatchers.Main) {
+                if (activeRunId != runId) return@withContext
+                timerRepository.updateState(TimerState.Idle)
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
         }
     }
 

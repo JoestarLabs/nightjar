@@ -11,6 +11,9 @@ class FluidParticleSimulationTest {
         val sim = FluidParticleSimulation(maxParticles = 60)
         sim.resize(width = 1080f, height = 2400f)
         sim.setActiveCount(targetCount = 40, gravityX = 0f, gravityY = 9.8f)
+        for (i in 0 until sim.activeCount) {
+            sim.y[i] = 480f
+        }
 
         repeat(90) {
             sim.step(dtSec = 1f / 60f, accelX = 0f, accelY = 9.8f)
@@ -23,7 +26,21 @@ class FluidParticleSimulationTest {
             sumY += sim.y[i]
         }
         val meanY = sumY / sim.activeCount
-        assertTrue("Expected particles pooled near bottom, got meanY=$meanY", meanY > 1400f)
+        assertTrue("Expected particles to move downward and pool near bottom, got meanY=$meanY", meanY > 1400f)
+    }
+
+    @Test
+    fun `setActiveCount before resize defers spawning until valid dimensions arrive`() {
+        val sim = FluidParticleSimulation(maxParticles = 40)
+        sim.setActiveCount(targetCount = 25, gravityX = 0f, gravityY = 9.8f)
+        assertEquals(0, sim.activeCount)
+
+        sim.resize(width = 400f, height = 80f)
+        assertEquals(25, sim.activeCount)
+        for (i in 0 until sim.activeCount) {
+            assertTrue("x[$i] out of bounds: ${sim.x[i]}", sim.x[i] in 0f..400f)
+            assertTrue("y[$i] out of bounds: ${sim.y[i]}", sim.y[i] in 0f..80f)
+        }
     }
 
     @Test

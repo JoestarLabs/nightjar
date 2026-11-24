@@ -5,6 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.runtime.Composable
@@ -86,6 +89,30 @@ fun rememberEffectsQualityController(): EffectsQualityController {
             IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED),
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
+        val currentPowerSave = powerManager?.isPowerSaveMode == true
+        if (signals.powerSaveMode != currentPowerSave) {
+            signals = signals.copy(powerSaveMode = currentPowerSave)
+        }
+
+        val animatorScaleObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                val disabled = readAnimationsDisabled(context)
+                if (signals.animationsDisabled != disabled) {
+                    signals = signals.copy(animationsDisabled = disabled)
+                }
+            }
+        }
+        runCatching {
+            context.contentResolver.registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE),
+                false,
+                animatorScaleObserver,
+            )
+        }
+        val currentAnimationsDisabled = readAnimationsDisabled(context)
+        if (signals.animationsDisabled != currentAnimationsDisabled) {
+            signals = signals.copy(animationsDisabled = currentAnimationsDisabled)
+        }
 
         val thermalListener = PowerManager.OnThermalStatusChangedListener { status ->
             if (signals.thermalStatus != status) {
@@ -96,6 +123,7 @@ fun rememberEffectsQualityController(): EffectsQualityController {
 
         onDispose {
             runCatching { context.unregisterReceiver(powerSaveReceiver) }
+            runCatching { context.contentResolver.unregisterContentObserver(animatorScaleObserver) }
             powerManager?.removeThermalStatusListener(thermalListener)
         }
     }
