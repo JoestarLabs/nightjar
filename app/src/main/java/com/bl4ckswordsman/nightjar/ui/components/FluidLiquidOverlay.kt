@@ -43,13 +43,13 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 private object FluidTuning {
-    const val PARTICLES_FULL = 130
-    const val PARTICLES_REDUCED = 80
+    const val PARTICLES_FULL = 220
+    const val PARTICLES_REDUCED = 130
 
-    const val BACKGROUND_DIM_MAX_ALPHA = 0.22f
-    const val METABALL_THRESHOLD = 0.28f
-    const val NORMAL_STEP_DP = 2.5f
-    const val SPRITE_RADIUS_SCALE = 1.25f
+    const val BACKGROUND_DIM_MAX_ALPHA = 0.25f
+    const val METABALL_THRESHOLD = 0.34f
+    const val NORMAL_STEP_DP = 2.0f
+    const val SPRITE_RADIUS_SCALE = 1.05f
 
     const val GRAVITY_SMOOTH_RATE = 10f
     const val WATCHDOG_FRAME_MS = 25f
@@ -215,9 +215,9 @@ fun FluidLiquidOverlay(
                     drawRect(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = 0.52f),
-                                secondaryColor.copy(alpha = 0.64f),
-                                deepColor.copy(alpha = 0.72f),
+                                primaryColor.copy(alpha = 0.62f),
+                                secondaryColor.copy(alpha = 0.74f),
+                                deepColor.copy(alpha = 0.82f),
                             ),
                             startY = baseLineY,
                             endY = bottomExtent,

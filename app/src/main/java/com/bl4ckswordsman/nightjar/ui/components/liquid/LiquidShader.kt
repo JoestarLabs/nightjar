@@ -46,7 +46,7 @@ internal const val LIQUID_METABALL_AGSL = """
             col += half3(spec * 0.42 + fresnel * 0.18);
         }
 
-        float alpha = mix(0.48, 0.72, depth) * edge;
+        float alpha = mix(0.60, 0.82, depth) * edge;
         return half4(col * half(alpha), half(alpha));
     }
 """
