@@ -1,5 +1,6 @@
 package com.bl4ckswordsman.nightjar.ui.components
 
+import android.os.SystemClock
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -29,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -99,12 +101,15 @@ fun LockButton(
         else -> MaterialTheme.colorScheme.onPrimaryContainer
     }
 
+    val currentOnRevealSlider by rememberUpdatedState(onRevealSlider)
+    val currentOnLockedShortTap by rememberUpdatedState(onLockedShortTap)
+
     val pointerModifier = if (isLocked && onRevealSlider != null) {
         Modifier.pointerInput(isLocked) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
                 down.consume()
-                val startTime = System.currentTimeMillis()
+                val startTime = SystemClock.uptimeMillis()
                 val totalDurationMs = 5000L
                 var revealed = false
 
@@ -112,16 +117,16 @@ fun LockButton(
                     delay(totalDurationMs)
                     if (isActive) {
                         revealed = true
-                        onRevealSlider()
+                        currentOnRevealSlider?.invoke()
                     }
                 }
 
                 val up = waitForUpOrCancellation()
-                val elapsed = System.currentTimeMillis() - startTime
+                val elapsed = SystemClock.uptimeMillis() - startTime
                 job.cancel()
 
                 if (!revealed && up != null && elapsed < 500L) {
-                    onLockedShortTap?.invoke()
+                    currentOnLockedShortTap?.invoke()
                 }
             }
         }

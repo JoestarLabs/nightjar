@@ -218,6 +218,7 @@ internal fun SettingsDropdownPill(
     Box {
         Surface(
             onClick = { if (enabled) onExpandedChange(true) },
+            enabled = enabled,
             interactionSource = interactionSource,
             shape = RoundedCornerShape(percent = cornerPercent),
             color = MaterialTheme.colorScheme.primaryContainer,

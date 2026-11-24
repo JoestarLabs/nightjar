@@ -1,10 +1,13 @@
 package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.app.LocaleManager
+import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -183,7 +185,6 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
-                .navigationBarsPadding()
         ) {
             Spacer(Modifier.height(8.dp))
 
@@ -223,7 +224,7 @@ fun SettingsScreen(
                             val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
                                 data = Uri.fromParts("package", context.packageName, null)
                             }
-                            context.startActivity(intent)
+                            startActivitySafely(context, intent)
                         }
                 ) {
                     Text(stringResource(R.string.settings_section_language))
@@ -247,7 +248,7 @@ fun SettingsScreen(
                     granted = adminEnabled,
                     clickableWhenGranted = false,
                     onClick = {
-                        context.startActivity(LockDeviceAdminReceiver.getRegisterIntent(context))
+                        startActivitySafely(context, LockDeviceAdminReceiver.getRegisterIntent(context))
                     }
                 )
 
@@ -262,7 +263,8 @@ fun SettingsScreen(
                     granted = notificationEnabled,
                     clickableWhenGranted = true,
                     onClick = {
-                        context.startActivity(
+                        startActivitySafely(
+                            context,
                             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                             }
@@ -285,7 +287,7 @@ fun SettingsScreen(
                             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             "package:${context.packageName}".toUri()
                         )
-                        context.startActivity(intent)
+                        startActivitySafely(context, intent)
                     }
                 )
             }
@@ -333,8 +335,9 @@ fun SettingsScreen(
                     onCheckedChange = { isChecked ->
                         if (isChecked && !Settings.canDrawOverlays(context)) {
                             showOverlayDialog = true
+                        } else {
+                            timerViewModel.setSunsetModeEnabled(isChecked)
                         }
-                        timerViewModel.setSunsetModeEnabled(isChecked)
                     }
                 )
 
@@ -515,15 +518,11 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            try {
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    "https://github.com/JoestarLabs".toUri()
-                                )
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                // Fallback if browser is missing
-                            }
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                "https://github.com/JoestarLabs".toUri()
+                            )
+                            startActivitySafely(context, intent)
                         }
                 ) {
                     Text(stringResource(R.string.settings_about_github))
@@ -551,13 +550,10 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            try {
-                                context.startActivity(
-                                    Intent(context, DependenciesActivity::class.java)
-                                )
-                            } catch (e: Exception) {
-                                // Fail-safe
-                            }
+                            startActivitySafely(
+                                context,
+                                Intent(context, DependenciesActivity::class.java)
+                            )
                         }
                 ) {
                     Text(stringResource(R.string.settings_about_dependencies))
@@ -602,9 +598,19 @@ fun SettingsScreen(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     "package:${context.packageName}".toUri()
                 )
-                context.startActivity(intent)
+                startActivitySafely(context, intent)
             },
             onDismiss = { showOverlayDialog = false }
         )
+    }
+}
+
+private fun startActivitySafely(context: Context, intent: Intent) {
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        Log.w("SettingsScreen", "No activity found for intent: ${intent.action}", e)
+    } catch (e: SecurityException) {
+        Log.w("SettingsScreen", "Unable to launch intent: ${intent.action}", e)
     }
 }

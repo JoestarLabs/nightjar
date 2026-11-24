@@ -120,4 +120,18 @@
     <string name="slider_release_to_cancel">Släpp för att avbryta</string>
     <string name="sheet_emergency_unlock_title">Nödstoppa timern</string>
     <string name="sheet_emergency_unlock_desc">Åtagandeläget är aktivt. Dra reglaget för att avbryta och stoppa timern.</string>
+
+    <!-- Duration Picker Sheet -->
+    <string name="duration_picker_title">Ange anpassad tid</string>
+    <string name="duration_picker_hours">Timmar</string>
+    <string name="duration_picker_minutes">Minuter</string>
+    <string name="duration_picker_seconds">Sekunder</string>
+    <string name="duration_picker_add_1m">+1m</string>
+    <string name="duration_picker_add_5m">+5m</string>
+    <string name="duration_picker_add_15m">+15m</string>
+    <string name="duration_picker_add_30m">+30m</string>
+    <string name="duration_picker_clear">Rensa</string>
+    <string name="duration_picker_set">Ställ in timer</string>
+    <string name="duration_picker_increment_cd">Öka %1$s</string>
+    <string name="duration_picker_decrement_cd">Minska %1$s</string>
 </resources>

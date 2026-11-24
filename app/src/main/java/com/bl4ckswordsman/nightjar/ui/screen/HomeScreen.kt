@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,10 +97,10 @@ fun HomeScreen(
     val runningStartedAt = runningState?.startedAtMillis
 
     // ── Permission dialog state ───────────────────────────────────────────────
-    var showNotifDialog by remember { mutableStateOf(false) }
-    var showAdminDialog by remember { mutableStateOf(false) }
-    var showDurationSheet by remember { mutableStateOf(false) }
-    var showEmergencySheet by remember { mutableStateOf(false) }
+    var showNotifDialog by rememberSaveable { mutableStateOf(false) }
+    var showAdminDialog by rememberSaveable { mutableStateOf(false) }
+    var showDurationSheet by rememberSaveable { mutableStateOf(false) }
+    var showEmergencySheet by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(isRunning) {
         if (!isRunning) {
@@ -226,8 +227,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding(),
+                .verticalScroll(rememberScrollState()),
         ) {
                 Spacer(Modifier.height(16.dp))
 

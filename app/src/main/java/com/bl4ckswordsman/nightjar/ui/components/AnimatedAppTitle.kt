@@ -13,8 +13,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -85,9 +88,10 @@ fun AnimatedAppTitle(
         )
     }
 
+    var dragWidth by remember { mutableFloatStateOf(120f) }
     val draggableState = rememberDraggableState { delta ->
-        val currentVal = titleWidth.value
-        val newVal = (currentVal + delta * 0.5f).coerceIn(25f, 150f)
+        val newVal = (dragWidth + delta * 0.5f).coerceIn(25f, 150f)
+        dragWidth = newVal
         scope.launch {
             titleWidth.snapTo(newVal)
         }
@@ -102,6 +106,9 @@ fun AnimatedAppTitle(
             .draggable(
                 orientation = Orientation.Horizontal,
                 state = draggableState,
+                onDragStarted = {
+                    dragWidth = titleWidth.value
+                },
                 onDragStopped = {
                     scope.launch {
                         titleWidth.animateTo(

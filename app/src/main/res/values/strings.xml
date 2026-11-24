@@ -120,4 +120,18 @@
     <string name="slider_release_to_cancel">Release to cancel</string>
     <string name="sheet_emergency_unlock_title">Emergency Stop Timer</string>
     <string name="sheet_emergency_unlock_desc">Commitment mode is active. Slide the track to override and stop the timer.</string>
+
+    <!-- Duration Picker Sheet -->
+    <string name="duration_picker_title">Set Custom Duration</string>
+    <string name="duration_picker_hours">Hours</string>
+    <string name="duration_picker_minutes">Minutes</string>
+    <string name="duration_picker_seconds">Seconds</string>
+    <string name="duration_picker_add_1m">+1m</string>
+    <string name="duration_picker_add_5m">+5m</string>
+    <string name="duration_picker_add_15m">+15m</string>
+    <string name="duration_picker_add_30m">+30m</string>
+    <string name="duration_picker_clear">Clear</string>
+    <string name="duration_picker_set">Set Timer</string>
+    <string name="duration_picker_increment_cd">Increment %1$s</string>
+    <string name="duration_picker_decrement_cd">Decrement %1$s</string>
 </resources>

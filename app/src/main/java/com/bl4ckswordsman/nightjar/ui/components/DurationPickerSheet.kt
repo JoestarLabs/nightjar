@@ -46,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.horizontalScroll
@@ -54,11 +55,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.bl4ckswordsman.nightjar.R
+import java.util.Locale
 
 /**
  * Playful, Material 3 Expressive Modal Bottom Sheet that allows parents to easily
@@ -76,13 +80,14 @@ fun DurationPickerSheet(
         confirmValueChange = { it != SheetValue.PartiallyExpanded },
     )
 
-    var hours by remember { mutableIntStateOf((initialSeconds / 3600).toInt().coerceIn(0, 2)) }
-    var minutes by remember {
+    val maxHours = (maxSeconds / 3600L).toInt().coerceAtLeast(0)
+    var hours by rememberSaveable { mutableIntStateOf((initialSeconds / 3600).toInt().coerceIn(0, maxHours)) }
+    var minutes by rememberSaveable {
         mutableIntStateOf(
             ((initialSeconds % 3600) / 60).toInt().coerceIn(0, 59)
         )
     }
-    var seconds by remember { mutableIntStateOf((initialSeconds % 60).toInt().coerceIn(0, 59)) }
+    var seconds by rememberSaveable { mutableIntStateOf((initialSeconds % 60).toInt().coerceIn(0, 59)) }
 
     fun clampToMax() {
         val total = hours * 3600L + minutes * 60L + seconds
@@ -115,7 +120,7 @@ fun DurationPickerSheet(
                 .padding(bottom = 32.dp, top = 8.dp)
         ) {
             Text(
-                text = "Set Custom Duration",
+                text = stringResource(R.string.duration_picker_title),
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold
                 ),
@@ -140,12 +145,12 @@ fun DurationPickerSheet(
                 ) {
                     UnitColumn(
                         value = hours,
-                        label = "Hours",
+                        label = stringResource(R.string.duration_picker_hours),
                         onValueChange = {
                             hours = it
                             clampToMax()
                         },
-                        max = 2
+                        max = maxHours
                     )
 
                     Text(
@@ -159,7 +164,7 @@ fun DurationPickerSheet(
 
                     UnitColumn(
                         value = minutes,
-                        label = "Minutes",
+                        label = stringResource(R.string.duration_picker_minutes),
                         onValueChange = {
                             minutes = it
                             clampToMax()
@@ -178,7 +183,7 @@ fun DurationPickerSheet(
 
                     UnitColumn(
                         value = seconds,
-                        label = "Seconds",
+                        label = stringResource(R.string.duration_picker_seconds),
                         onValueChange = {
                             seconds = it
                             clampToMax()
@@ -197,23 +202,23 @@ fun DurationPickerSheet(
                     .padding(bottom = 28.dp)
             ) {
                 PlayfulShortcutButton(
-                    text = "+1m",
+                    text = stringResource(R.string.duration_picker_add_1m),
                     onClick = { addSeconds(60L) }
                 )
                 PlayfulShortcutButton(
-                    text = "+5m",
+                    text = stringResource(R.string.duration_picker_add_5m),
                     onClick = { addSeconds(300L) }
                 )
                 PlayfulShortcutButton(
-                    text = "+15m",
+                    text = stringResource(R.string.duration_picker_add_15m),
                     onClick = { addSeconds(900L) }
                 )
                 PlayfulShortcutButton(
-                    text = "+30m",
+                    text = stringResource(R.string.duration_picker_add_30m),
                     onClick = { addSeconds(1800L) }
                 )
                 PlayfulShortcutButton(
-                    text = "Clear",
+                    text = stringResource(R.string.duration_picker_clear),
                     onClick = {
                         hours = 0
                         minutes = 0
@@ -221,6 +226,8 @@ fun DurationPickerSheet(
                     }
                 )
             }
+
+            val totalSeconds = hours * 3600L + minutes * 60L + seconds
 
             // Confirm & Cancel Buttons
             Row(
@@ -235,21 +242,27 @@ fun DurationPickerSheet(
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(text = "Cancel", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = stringResource(android.R.string.cancel),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
 
                 Button(
                     onClick = {
-                        val totalSeconds = hours * 3600L + minutes * 60L + seconds
                         onConfirm(totalSeconds.coerceIn(0L, maxSeconds))
                     },
+                    enabled = totalSeconds > 0L,
                     shapes = ButtonDefaults.shapes(
                         shape = CircleShape,
                         pressedShape = RoundedCornerShape(percent = 18)
                     ),
                     modifier = Modifier.weight(1.5f)
                 ) {
-                    Text(text = "Set Timer", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = stringResource(R.string.duration_picker_set),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }
@@ -263,14 +276,14 @@ private fun UnitColumn(
     onValueChange: (Int) -> Unit,
     max: Int
 ) {
-    var textValue by remember { mutableStateOf("%02d".format(value)) }
+    var textValue by remember { mutableStateOf(String.format(Locale.US, "%02d", value)) }
     var isFocused by remember { mutableStateOf(false) }
 
     // Sync textValue with value when value changes externally (e.g. arrow keys, shortcuts)
     LaunchedEffect(value) {
         val parsed = textValue.toIntOrNull() ?: 0
         if (parsed != value) {
-            textValue = "%02d".format(value)
+            textValue = String.format(Locale.US, "%02d", value)
         }
     }
 
@@ -288,7 +301,7 @@ private fun UnitColumn(
         ) {
             Icon(
                 imageVector = Icons.Rounded.KeyboardArrowUp,
-                contentDescription = "Increment $label",
+                contentDescription = stringResource(R.string.duration_picker_increment_cd, label),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp)
             )
@@ -297,12 +310,11 @@ private fun UnitColumn(
         BasicTextField(
             value = textValue,
             onValueChange = { newValue ->
-                val filtered = newValue.filter { it.isDigit() }.take(2)
+                val filtered = newValue.filter { it in '0'..'9' }.take(2)
                 textValue = filtered
-                if (filtered.isNotEmpty()) {
-                    val parsed = filtered.toInt()
-                    val constrained = parsed.coerceIn(0, max)
-                    onValueChange(constrained)
+                val parsed = filtered.toIntOrNull()
+                if (parsed != null) {
+                    onValueChange(parsed.coerceIn(0, max))
                 } else {
                     onValueChange(0)
                 }
@@ -329,7 +341,7 @@ private fun UnitColumn(
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
                     if (!focusState.isFocused) {
-                        textValue = "%02d".format(value)
+                        textValue = String.format(Locale.US, "%02d", value)
                     }
                 }
                 .border(
@@ -364,7 +376,7 @@ private fun UnitColumn(
         ) {
             Icon(
                 imageVector = Icons.Rounded.KeyboardArrowDown,
-                contentDescription = "Decrement $label",
+                contentDescription = stringResource(R.string.duration_picker_decrement_cd, label),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp)
             )

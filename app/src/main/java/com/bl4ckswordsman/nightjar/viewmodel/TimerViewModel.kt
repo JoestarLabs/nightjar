@@ -14,6 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -119,13 +120,15 @@ class TimerViewModel @Inject constructor(
 
     /** Starts the countdown timer service with the currently selected duration. */
     fun startTimer() {
-        if (selectedSeconds <= 0) return
-        ContextCompat.startForegroundService(
-            context,
-            LockTimerService.startIntent(context, selectedSeconds, _commitmentMode.value)
-        )
+        val duration = selectedSeconds
+        if (duration <= 0) return
         viewModelScope.launch {
-            repository.preferencesDataSource.saveLastDuration(selectedSeconds)
+            val currentCommitment = repository.preferencesDataSource.preferences.first().commitmentMode
+            ContextCompat.startForegroundService(
+                context,
+                LockTimerService.startIntent(context, duration, currentCommitment)
+            )
+            repository.preferencesDataSource.saveLastDuration(duration)
         }
     }
 
