@@ -202,8 +202,8 @@ fun FluidLiquidOverlay(
     remainingSeconds: Long,
     totalSeconds: Long,
     gravityAngleRad: Float,
+    modifier: Modifier = Modifier,
     startedAtMillis: Long? = null,
-    modifier: Modifier = Modifier
 ) {
     // ── Multi-frequency wave phase oscillators ──
     val infiniteTransition = rememberInfiniteTransition(label = "fluid_waves")

@@ -5,6 +5,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import androidx.core.content.getSystemService
 import com.bl4ckswordsman.nightjar.R
 
 class LockDeviceAdminReceiver : DeviceAdminReceiver() {
@@ -14,13 +15,13 @@ class LockDeviceAdminReceiver : DeviceAdminReceiver() {
         }
 
         fun isEnabled(context: Context): Boolean {
-            val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            val dpm = context.getSystemService<DevicePolicyManager>() ?: return false
             return dpm.isAdminActive(getComponentName(context))
         }
 
         fun requestLock(context: Context): Boolean {
-            val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-            return if (isEnabled(context)) {
+            val dpm = context.getSystemService<DevicePolicyManager>() ?: return false
+            return if (dpm.isAdminActive(getComponentName(context))) {
                 dpm.lockNow()
                 true
             } else {

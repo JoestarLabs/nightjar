@@ -1,7 +1,7 @@
 package com.bl4ckswordsman.nightjar.ui.screen
 
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -127,7 +127,7 @@ fun DependenciesScreen(
                             val url = library.website ?: library.licenses.firstOrNull()?.url
                             if (!url.isNullOrBlank()) {
                                 try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
                                     // Fallback if browser is missing or URI invalid

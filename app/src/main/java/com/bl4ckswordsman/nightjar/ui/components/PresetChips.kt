@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.bl4ckswordsman.nightjar.R
 import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
@@ -32,7 +33,7 @@ import com.bl4ckswordsman.nightjar.ui.theme.NightjarTheme
  */
 sealed interface PresetDurationFormat {
     data class Minutes(val minutes: Long) : PresetDurationFormat
-    object HourOne : PresetDurationFormat
+    data object HourOne : PresetDurationFormat
     data class HourMany(val hours: Long) : PresetDurationFormat
     data class HourMin(val hours: Long, val minutes: Long) : PresetDurationFormat
 }
@@ -94,8 +95,8 @@ fun formatPresetDuration(seconds: Long): String {
 fun PresetChips(
     selectedSeconds: Long,
     onPresetSelected: (Long) -> Unit,
-    enabled: Boolean = true,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     presets: List<Long> = listOf(300L, 900L, 1800L, 3600L),
 ) {
     Row(
@@ -162,7 +163,7 @@ fun PresetChips(
                 ),
                 modifier = Modifier
                     .scale(scale)
-                    .offset(y = yOffset)
+                    .offset { IntOffset(0, yOffset.roundToPx()) }
                     .padding(vertical = 2.dp),
             )
         }

@@ -4,6 +4,7 @@ import android.app.LocaleManager
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.core.net.toUri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
@@ -67,6 +68,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -125,7 +127,7 @@ private fun RoundedCardContainer(
  *
  * @param onNavigateBack Callback invoked when navigating back from the settings screen.
  * @param modifier Modifier applied to the root layout.
- * @param timerViewModel Shared [TimerViewModel] instance providing timer configuration state.
+ * @param timerViewModel [TimerViewModel] instance providing timer configuration state.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -163,7 +165,7 @@ fun SettingsScreen(
     }
 
     // Trigger state to force recomposition when returning to settings screen (on resume)
-    var refreshTrigger by remember { mutableStateOf(0) }
+    var refreshTrigger by remember { mutableIntStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
@@ -453,7 +455,7 @@ fun SettingsScreen(
                         .clickable {
                             val intent = Intent(
                                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                android.net.Uri.parse("package:${context.packageName}")
+                                "package:${context.packageName}".toUri()
                             )
                             context.startActivity(intent)
                         }
@@ -880,7 +882,7 @@ fun SettingsScreen(
                             try {
                                 val intent = Intent(
                                     Intent.ACTION_VIEW,
-                                    android.net.Uri.parse("https://github.com/JoestarLabs")
+                                    "https://github.com/JoestarLabs".toUri()
                                 )
                                 context.startActivity(intent)
                             } catch (e: Exception) {
@@ -1090,7 +1092,7 @@ fun SettingsScreen(
                         showOverlayDialog = false
                         val intent = Intent(
                             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            android.net.Uri.parse("package:${context.packageName}")
+                            "package:${context.packageName}".toUri()
                         )
                         context.startActivity(intent)
                     },

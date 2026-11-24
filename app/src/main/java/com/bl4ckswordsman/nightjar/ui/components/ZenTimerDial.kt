@@ -79,6 +79,7 @@ fun ZenTimerDial(
     selectedSeconds: Long,
     runningSeconds: Long?,          // non-null while timer is running
     onSecondsChanged: (Long) -> Unit,
+    modifier: Modifier = Modifier,
     maxSeconds: Long = 7_200L,      // 2 hours
     runningTotalSeconds: Long? = null,
     /** Epoch-ms when the timer started. Enables wall-clock-accurate sweep animation. */
@@ -86,7 +87,6 @@ fun ZenTimerDial(
     onDialClicked: (() -> Unit)? = null,
     size: Dp = 280.dp,
     contentDesc: String = "",
-    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val currentOnSecondsChanged by rememberUpdatedState(onSecondsChanged)
