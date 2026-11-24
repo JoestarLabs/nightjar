@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -89,6 +90,69 @@ internal fun SettingsSectionHeader(title: String) {
 }
 
 /**
+ * Unified Material 3 [ListItem] wrapper for all settings rows, ensuring consistent surface colors
+ * and uniform vertical centering of leading and trailing content regardless of line count.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun SettingsListItem(
+    title: String,
+    leadingIcon: ImageVector,
+    modifier: Modifier = Modifier,
+    leadingIconTint: Color = MaterialTheme.colorScheme.primary,
+    supportingContent: (@Composable () -> Unit)? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
+) {
+    ListItem(
+        supportingContent = supportingContent,
+        leadingContent = {
+            Icon(
+                imageVector = leadingIcon,
+                contentDescription = null,
+                tint = leadingIconTint,
+            )
+        },
+        trailingContent = trailingContent,
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceBright
+        ),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Text(title)
+    }
+}
+
+/**
+ * Standard clickable (or informational) settings row built on [SettingsListItem].
+ */
+@Composable
+internal fun SettingsActionRow(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    trailingIcon: ImageVector? = null,
+    onClick: (() -> Unit)? = null,
+) {
+    SettingsListItem(
+        title = title,
+        leadingIcon = icon,
+        supportingContent = { Text(description) },
+        trailingContent = trailingIcon?.let {
+            {
+                Icon(
+                    imageVector = it,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        modifier = if (onClick != null) modifier.clickable(onClick = onClick) else modifier,
+    )
+}
+
+/**
  * Full-row toggleable setting item with synchronized switch thumb press feedback and Switch semantics.
  */
 @Composable
@@ -102,15 +166,10 @@ internal fun SettingsToggleRow(
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    ListItem(
+    SettingsListItem(
+        title = title,
+        leadingIcon = icon,
         supportingContent = { Text(description) },
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        },
         trailingContent = {
             Switch(
                 checked = checked,
@@ -119,22 +178,15 @@ internal fun SettingsToggleRow(
                 enabled = enabled,
             )
         },
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceBright
-        ),
-        modifier = modifier
-            .fillMaxWidth()
-            .toggleable(
-                value = checked,
-                interactionSource = interactionSource,
-                indication = ripple(),
-                enabled = enabled,
-                role = Role.Switch,
-                onValueChange = onCheckedChange
-            )
-    ) {
-        Text(title)
-    }
+        modifier = modifier.toggleable(
+            value = checked,
+            interactionSource = interactionSource,
+            indication = ripple(),
+            enabled = enabled,
+            role = Role.Switch,
+            onValueChange = onCheckedChange
+        )
+    )
 }
 
 /**
@@ -152,7 +204,10 @@ internal fun SettingsPermissionRow(
     modifier: Modifier = Modifier,
 ) {
     val statusColor = if (granted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-    ListItem(
+    SettingsListItem(
+        title = title,
+        leadingIcon = icon,
+        leadingIconTint = statusColor,
         supportingContent = {
             Column {
                 Text(
@@ -169,13 +224,6 @@ internal fun SettingsPermissionRow(
                 )
             }
         },
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = statusColor,
-            )
-        },
         trailingContent = {
             Icon(
                 imageVector = if (granted) Icons.Rounded.CheckCircle else Icons.Rounded.Warning,
@@ -183,15 +231,8 @@ internal fun SettingsPermissionRow(
                 tint = statusColor,
             )
         },
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceBright
-        ),
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(enabled = clickableWhenGranted || !granted, onClick = onClick)
-    ) {
-        Text(title)
-    }
+        modifier = modifier.clickable(enabled = clickableWhenGranted || !granted, onClick = onClick)
+    )
 }
 
 /**
